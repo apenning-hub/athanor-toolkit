@@ -138,6 +138,11 @@
       <div class="field"><label>Along the beam — Y <span class="val" id="v_stxgy">8.4 m</span></label>
         <input type="range" id="stx_gy" min="5" max="18" value="8.4" step="0.3">
         <div class="presetrow"><button class="pchip on" data-t="stx_gy" data-v="8.4">8.4 · ½ park module</button><button class="pchip" data-t="stx_gy" data-v="16.8">16.8 · clear-span module</button></div></div>
+      <div class="field"><label>Building footprint — plan <span class="tip" data-tip="The whole floor plate. The grid tiles across it, columns land on every gridline intersection, and the carpark or rack overlay fills the plate. The last row or column of bays can be a partial (dashed) edge bay. Try 60 × 40 for the bathhouse wing, or match the Egress plate."></span></label>
+        <div style="display:flex;gap:10px">
+          <div style="flex:1"><input id="stx_fw" type="number" value="50" min="8" max="200" step="1"><div class="unit">width m</div></div>
+          <div style="flex:1"><input id="stx_fd" type="number" value="30" min="8" max="200" step="1"><div class="unit">depth m</div></div>
+        </div></div>
       <div class="field"><label>Floor system</label><select id="stx_sys"></select><div class="unit" id="stx_note"></div></div>
       <div id="stx_sel" style="background:#fff;border:1px solid var(--rule);border-radius:12px;padding:10px 12px;font-size:11.5px;line-height:1.5;margin-bottom:13px"></div>
       <div class="field"><label>Overlay</label>
@@ -153,7 +158,7 @@
     <div>
       <div class="out" id="stx_out"></div>
       <div class="checks" id="stx_chk"></div>
-      <div class="svgwrap"><h4>Plan — one structural module<span class="tip" data-tip="Thick lines: primary beams spanning Y between columns. Thin lines: secondary beams at ≤3 m centres. Overlays sit BETWEEN the columns — bays to AS/NZS 2890.1, racks at 600 mm. Dashed edge = cantilever."></span></h4><svg id="stx_plan"></svg></div>
+      <div class="svgwrap"><h4>Floor plate — the grid across the building<span class="tip" data-tip="The whole footprint. Blue lines: primary beams spanning Y, on every column gridline. Grey lines: bay-row column lines + secondary beams at ≤3 m centres. Black squares: columns at every intersection. Overlays fill BETWEEN the columns — carpark bays to AS/NZS 2890.1, racks at 600 mm. Orange dashed: a partial edge bay and/or the cantilever."></span></h4><svg id="stx_plan"></svg></div>
       <div class="svgwrap"><h4>Section — one bay, column to column<span class="tip" data-tip="Slab drawn with its real depth, sitting on wide-but-shallow beams. Services (from the Ceiling Services module) NEST between the beams where they fit — that's the trick that keeps commercial floors thin. Ceiling: 50 mm suspended, or nothing when exposed."></span></h4><svg id="stx_sec"></svg></div>
       <div class="svgwrap"><h4>Typical span ranges — where your grid sits</h4><svg id="stx_bars"></svg></div>
       <p class="note">Column quick-size (Ching via Madigan, 3.6 m height): 100 SHS/150 UC ≤ 70 m² · 150 SHS ≤ 220 m² · 200 UC ≤ 280 m² · 250 UC ≤ 420 m² · 300 UC ≤ 560 m² · 350 UC ≤ 1,115 m² supported. Data-hall loading roughly halves each size’s capacity. Stock UB depths: 150/180/200/250/310/360/410/460/530/610.</p>
@@ -1168,7 +1173,7 @@ const STX_FLAT=["RC flat slab / plate †","Post-tensioned flat slab †","Preca
 const STX_LOAD={light:{t:0.85,m:0.8,d:"light"},med:{t:0.5,m:1.0,d:"median"},heavy:{t:0.15,m:1.4,d:"deep end"},vheavy:{t:0,m:2.5,d:"deep end + margin"}};
 const STX_COL=[[70,"100 SHS / 150 UC"],[220,"150 SHS / CHS"],[280,"200 UC"],[420,"250 UC"],[560,"300 UC"],[1115,"350 UC"]];
 const STX_UB=[150,180,200,250,310,360,410,460,530,610];
-const SST={gx:8.4,gy:8.4,cant:0,ov:"park"};
+const SST={gx:8.4,gy:8.4,cant:0,ov:"park",fw:50,fd:30};
 
 const stxSel=$("stx_sys");
 STX.forEach((s,i)=>{if(!s[7])return;const o=document.createElement("option");o.value=i;o.textContent=s[0];if(s[0].startsWith("RC band"))o.selected=true;stxSel.appendChild(o);});
@@ -1199,11 +1204,16 @@ function stxCalc(){
   const col=STX_COL.find(c=>eff<=c[0]);
   const bays=Math.max(2,Math.floor(gx/2.4));
   const stock=(!flat&&s[5]==="steel")?STX_UB.find(u=>u>=govern):null;
+  /* whole-building footprint: tile the grid across the plate */
+  const footW=Math.max(gx,SST.fw), footD=Math.max(gy,SST.fd);
+  const nxb=Math.max(1,Math.ceil((footW-0.05)/gx)), nyb=Math.max(1,Math.ceil((footD-0.05)/gy));
+  const cols=(nxb+1)*(nyb+1), cars=Math.round(footW*footD/26);
   stats($("stx_out"),[
     [flat?f0(dSec)+" mm slab":f0(dSec)+" / "+f0(dPri)+" mm",flat?"no beams — slab does everything":"secondary / primary beams","Span ÷ "+f1(ratioSec)+" ("+L.d+")"+(flat?".":"; primary = Grid Y ÷ "+f1(s[1]*0.85)+"."+(stock?" Next stock: "+stock+" UB.":""))],
     ["≈ "+f0(zone)+" mm","floor zone",nested?"Services ("+effSvc+" mm) NEST between the "+f0(govern)+" mm beams — the zone is just slab + beam + ceiling. This is why beams want to be wide, not deep.":(flat?"Slab + services below ("+effSvc+" mm) + ceiling — flat soffits give services a clean run.":"Services ("+f0(effSvc)+" mm) DON'T fit between the "+f0(govern)+" mm beams — they hang below. Deepen the beams, go cellular, or pick a shallower air system in Ceiling Services.")],
     [col?col[1]:"Engineer / core","column @ "+f1(gx)+"×"+f1(gy)+"×"+st,"Effective "+f0(eff)+" m² (load ×"+L.m+"). Ching via Madigan @3.6 m."],
     [bays+" × "+f1(gx/Math.max(2,bays))+" m","bays between columns","Bays run gridline to gridline with columns at the shared corners — "+f1(gx)+" m ÷ "+bays+" = "+f1(gx/Math.max(2,bays))+" m bays ("+(gx/Math.max(2,bays)>=2.4?"≥ 2.4 m ✓":"UNDER 2.4 m — drop a bay")+"). Same bay carries "+Math.floor(gx/0.6)+" racks or 3 lap lanes."],
+    [nxb+" × "+nyb+" = "+(nxb*nyb)+" bays",cols+" columns · "+f0(footW*footD)+" m² plate","The "+f1(gx)+" × "+f1(gy)+" grid tiles the "+f0(footW)+" × "+f0(footD)+" m footprint: "+(nxb*nyb)+" structural bays on "+cols+" columns"+(SST.ov==="park"?", ≈ "+f0(cars)+" cars at 26 m²/bay":"")+". A short last row/column shows as a partial (dashed) edge bay."],
   ]);
   const chks=[];
   const inX=gx>=s[3]&&gx<=s[4], inY=flat?true:(gy>=s[3]&&gy<=s[4]*1.25);
@@ -1240,66 +1250,73 @@ function parkFit(gy,ny){
 /* ---------- plan: overlays BETWEEN columns ---------- */
 function stxPlan(s,flat,gx,gy,cant){
   const svg=$("stx_plan");
-  const nx=2,ny=2;
-  const Wm=nx*gx+cant, Hm=ny*gy;
-  const pad=34, maxW=780, maxH=430;
+  /* whole floor plate: grid tiled across the footprint, last bay may be partial */
+  const footW=Math.max(gx,SST.fw), footD=Math.max(gy,SST.fd);
+  const xs=[]; for(let x=0;x<footW-0.05;x+=gx)xs.push(x); xs.push(footW);
+  const ys=[]; for(let y=0;y<footD-0.05;y+=gy)ys.push(y); ys.push(footD);
+  const nx=xs.length-1, ny=ys.length-1;
+  const Wm=footW+cant, Hm=footD;
+  const pad=34, maxW=820, maxH=470;
   const sc=Math.min(maxW/Wm,maxH/Hm);
-  const W=Wm*sc+2*pad, H=Hm*sc+2*pad+18;
+  const W=Wm*sc+2*pad, H=Hm*sc+2*pad+22;
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
-  let out="";
   const X=m=>pad+m*sc, Y=m=>pad+m*sc;
-  const CZ=0.3; /* column clear zone each side of a gridline */
+  const partialX=xs[nx]-xs[nx-1]<gx-0.05, partialY=ys[ny]-ys[ny-1]<gy-0.05;
+  let out="";
+  /* ---- overlay fills the whole plate ---- */
   if(SST.ov==="park"){
+    const module=16.8, pf=parkFit(gy,ny);
     for(let i=0;i<nx;i++){
-      /* convention: bays run gridline to gridline; columns sit at shared bay corners */
-      const n=Math.max(2,Math.floor(gx/2.4));
-      const bwm=gx/n; /* actual bay width, e.g. 8.4/3 = 2.8 m generous */
-      const cellX0=i*gx, inset=0;
-      const module=16.8;
-      const pf=parkFit(gy,ny);
+      const bw0=xs[i+1]-xs[i], n=Math.max(1,Math.floor(bw0/2.4)), bwm=bw0/n;
       let ym=-pf.o;
       while(ym<Hm){
-        if(ym+module<=0){ym+=module;continue;}
         for(const [by0,bl0] of [[ym,5.4],[ym+11.4,5.4]]){
           const by=Math.max(by0,0), bend=Math.min(by0+bl0,Hm), bl=bend-by;
           if(bl<1.2)continue;
-          for(let b=0;b<n;b++){
-            const bx=cellX0+b*bwm;
-            out+=`<rect x="${X(bx)+1.5}" y="${Y(by)+1}" width="${bwm*sc-3}" height="${bl*sc-2}" fill="rgba(88,86,214,.10)" stroke="#5856d6" stroke-width=".7"/>`;
-          }
-          if(i===0&&by<6)out+=`<text x="${X(cellX0+bwm/2)}" y="${Y(by+2.7)+4}" text-anchor="middle" font-size="9" font-weight="700" fill="#5856d6" opacity=".8">${f1(bwm)} m</text>`;
+          for(let b=0;b<n;b++)out+=`<rect x="${X(xs[i]+b*bwm)+1.5}" y="${Y(by)+1}" width="${bwm*sc-3}" height="${bl*sc-2}" fill="rgba(88,86,214,.10)" stroke="#5856d6" stroke-width=".7"/>`;
         }
         const ay=ym+8.4;
-        if(ay>0.5&&ay<Hm-0.5)out+=`<text x="${X(i*gx+gx/2)}" y="${Y(ay)+4}" text-anchor="middle" font-size="10" font-weight="700" fill="#5856d6" opacity=".75">AISLE 6.0 m</text>`;
+        if(i===0&&ay>0.6&&ay<Hm-0.6)out+=`<text x="${X(gx/2)}" y="${Y(ay)+4}" text-anchor="middle" font-size="10" font-weight="700" fill="#5856d6" opacity=".75">AISLE 6.0 m</text>`;
         ym+=module;
       }
+      if(i===0)out+=`<text x="${X(bwm/2)}" y="${Y(0.35)+10}" text-anchor="middle" font-size="9" font-weight="700" fill="#5856d6" opacity=".85">${f1(bwm)} m</text>`;
     }
   } else if(SST.ov==="racks"){
-    const rw=0.6*sc, rd=1.2*sc, ca=1.2*sc, ha=1.0*sc;
+    const CZ=0.3, rw=0.6*sc, rd=1.2*sc, ca=1.2*sc, ha=1.0*sc;
     for(let i=0;i<nx;i++){
-      const x0=X(i*gx+CZ), x1=X((i+1)*gx-CZ);
+      const x0=X(xs[i]+CZ), x1=X(xs[i+1]-CZ);
       let yy=Y(0)+0.9*sc, hot=false;
-      while(yy+rd<=Y(Hm)){
+      while(yy+rd<=Y(footD)){
         for(let bx=x0;bx+rw<=x1;bx+=rw)out+=`<rect x="${bx}" y="${yy}" width="${rw-1}" height="${rd}" fill="rgba(29,29,31,.75)"/>`;
         yy+=rd+(hot?ha:ca); hot=!hot;
       }
     }
   }
-  const nsec=Math.ceil(gy/3);
-  if(!flat)for(let j=0;j<ny;j++)for(let k=1;k<nsec;k++){
-    const yy=Y(j*gy+k*gy/nsec);
-    out+=`<line x1="${X(0)}" y1="${yy}" x2="${X(nx*gx+cant)}" y2="${yy}" stroke="#86868b" stroke-width="1.3"/>`;
+  /* ---- secondary beams within each bay row (≤3 m centres) ---- */
+  if(!flat)for(let j=0;j<ny;j++){
+    const h=ys[j+1]-ys[j], nsec=Math.max(1,Math.round(h/3));
+    for(let k=1;k<nsec;k++){const yy=Y(ys[j]+k*h/nsec);out+=`<line x1="${X(0)}" y1="${yy}" x2="${X(footW)}" y2="${yy}" stroke="#c9c9ce" stroke-width="1"/>`;}
   }
-  for(let i=0;i<=nx;i++)
-    out+=`<line x1="${X(i*gx)}" y1="${Y(0)}" x2="${X(i*gx)}" y2="${Y(Hm)}" stroke="#0071e3" stroke-width="${flat?1:4.5}" ${flat?'stroke-dasharray="2 4"':''}/>`;
-  out+=`<rect x="${X(0)}" y="${Y(0)}" width="${(nx*gx)*sc}" height="${Hm*sc}" fill="none" stroke="#1d1d1f" stroke-width="2"/>`;
-  if(cant>0)out+=`<rect x="${X(nx*gx)}" y="${Y(0)}" width="${cant*sc}" height="${Hm*sc}" fill="rgba(255,149,0,.14)" stroke="#ff9500" stroke-width="1.6" stroke-dasharray="6 4"/><text x="${X(nx*gx+cant/2)}" y="${Y(Hm/2)}" text-anchor="middle" font-size="10" font-weight="800" fill="#c46a00" transform="rotate(-90 ${X(nx*gx+cant/2)} ${Y(Hm/2)})">CANTILEVER ${f1(cant)} m</text>`;
-  for(let i=0;i<=nx;i++)for(let j=0;j<=ny;j++)
-    out+=`<rect x="${X(i*gx)-7}" y="${Y(j*gy)-7}" width="14" height="14" fill="#1d1d1f"/>`;
-  out+=`<line x1="${X(0)}" y1="${Y(Hm)+14}" x2="${X(gx)}" y2="${Y(Hm)+14}" stroke="#0071e3" stroke-width="1.4"/>
-    <text x="${X(gx/2)}" y="${Y(Hm)+28}" text-anchor="middle" font-size="11" font-weight="800" fill="#0071e3">X ${f1(gx)} m</text>
-    <line x1="${X(nx*gx+cant)+12}" y1="${Y(0)}" x2="${X(nx*gx+cant)+12}" y2="${Y(gy)}" stroke="#af52de" stroke-width="1.4"/>
-    <text x="${X(nx*gx+cant)+24}" y="${Y(gy/2)}" font-size="11" font-weight="800" fill="#af52de" transform="rotate(90 ${X(nx*gx+cant)+24} ${Y(gy/2)})">Y ${f1(gy)} m</text>`;
+  /* ---- column-line beams (grid rows) ---- */
+  for(let j=1;j<ny;j++)out+=`<line x1="${X(0)}" y1="${Y(ys[j])}" x2="${X(footW)}" y2="${Y(ys[j])}" stroke="#86868b" stroke-width="1.4"/>`;
+  /* ---- primary beams (grid columns, spanning Y) ---- */
+  for(let i=0;i<=nx;i++)out+=`<line x1="${X(xs[i])}" y1="${Y(0)}" x2="${X(xs[i])}" y2="${Y(footD)}" stroke="#0071e3" stroke-width="${flat?1:3.5}" ${flat?'stroke-dasharray="2 4"':''}/>`;
+  /* ---- partial edge bays ---- */
+  if(partialX)out+=`<rect x="${X(xs[nx-1])}" y="${Y(0)}" width="${(footW-xs[nx-1])*sc}" height="${footD*sc}" fill="rgba(255,149,0,.07)" stroke="#ff9500" stroke-width="1" stroke-dasharray="4 3"/>`;
+  if(partialY)out+=`<rect x="${X(0)}" y="${Y(ys[ny-1])}" width="${footW*sc}" height="${(footD-ys[ny-1])*sc}" fill="rgba(255,149,0,.07)" stroke="#ff9500" stroke-width="1" stroke-dasharray="4 3"/>`;
+  /* ---- footprint outline ---- */
+  out+=`<rect x="${X(0)}" y="${Y(0)}" width="${footW*sc}" height="${footD*sc}" fill="none" stroke="#1d1d1f" stroke-width="2.4"/>`;
+  /* ---- cantilever overhang on the right edge ---- */
+  if(cant>0)out+=`<rect x="${X(footW)}" y="${Y(0)}" width="${cant*sc}" height="${footD*sc}" fill="rgba(255,149,0,.14)" stroke="#ff9500" stroke-width="1.6" stroke-dasharray="6 4"/><text x="${X(footW+cant/2)}" y="${Y(footD/2)}" text-anchor="middle" font-size="10" font-weight="800" fill="#c46a00" transform="rotate(-90 ${X(footW+cant/2)} ${Y(footD/2)})">CANTILEVER ${f1(cant)} m</text>`;
+  /* ---- columns at every gridline intersection ---- */
+  const cs=Math.max(6,Math.min(13,sc*0.55));
+  for(let i=0;i<=nx;i++)for(let j=0;j<=ny;j++)out+=`<rect x="${X(xs[i])-cs/2}" y="${Y(ys[j])-cs/2}" width="${cs}" height="${cs}" rx="1.5" fill="#1d1d1f"/>`;
+  /* ---- grid-dimension callouts (one bay) ---- */
+  out+=`<line x1="${X(0)}" y1="${Y(footD)+13}" x2="${X(gx)}" y2="${Y(footD)+13}" stroke="#0071e3" stroke-width="1.4"/>
+    <text x="${X(gx/2)}" y="${Y(footD)+27}" text-anchor="middle" font-size="11" font-weight="800" fill="#0071e3">X ${f1(gx)} m</text>
+    <line x1="${X(footW+cant)+12}" y1="${Y(0)}" x2="${X(footW+cant)+12}" y2="${Y(gy)}" stroke="#af52de" stroke-width="1.4"/>
+    <text x="${X(footW+cant)+24}" y="${Y(gy/2)}" font-size="11" font-weight="800" fill="#af52de" transform="rotate(90 ${X(footW+cant)+24} ${Y(gy/2)})">Y ${f1(gy)} m</text>
+    <text x="${X(footW)}" y="${Y(footD)+27}" text-anchor="end" font-size="10.5" font-weight="700" fill="#86868b">${nx} × ${ny} bays · ${f0(footW)} × ${f0(footD)} m plate</text>`;
   svg.innerHTML=out;
 }
 
@@ -1394,6 +1411,7 @@ document.querySelectorAll(".pchip").forEach(b=>b.addEventListener("click",()=>{
 seg2("stx_ov",k=>{SST.ov=k;stxCalc();});
 function seg2(id,cb){const s=$(id);[...s.children].forEach(b=>b.addEventListener("click",()=>{[...s.children].forEach(x=>x.classList.remove("on"));b.classList.add("on");cb(b.dataset.k);}));}
 ["stx_sys","stx_load","stx_st"].forEach(id=>$(id).addEventListener("input",stxCalc));
+["stx_fw","stx_fd"].forEach(id=>$(id).addEventListener("input",()=>{SST[id==="stx_fw"?"fw":"fd"]=Math.max(8,+$(id).value||0);stxCalc();}));
 
 /* init */
 stCalc();egCalc();pkCalc();hvCalc();plCalc();exDefaults();exCalc();svcCalc();
