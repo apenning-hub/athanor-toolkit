@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Athanor Project Web — ARCH 5004 + 6004</title>
+<style>
+  :root{
+    --ink:#1d1d1f; --sec:#86868b; --panel:#f5f5f7; --rule:#d2d2d7; --muted:#aeaeb2;
+    --contract:#af52de; --compliance:#0071e3; --planning:#ff9500; --design:#34c759; --governance:#5856d6;
+    --fire:#ff3b30; --water:#30b0c7;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased}
+  /* ---------- nav ---------- */
+  nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:22px;padding:11px 40px;font-size:12px;overflow-x:auto;white-space:nowrap}
+  nav a{color:var(--ink);text-decoration:none;padding-bottom:2px}
+  nav a:hover{text-decoration:underline}
+  nav .right{margin-left:auto;color:var(--sec)}
+  /* ---------- hero ---------- */
+  header{background:#000;color:#fff;padding:90px 40px 100px;display:grid;grid-template-columns:1.2fr .8fr;gap:60px;align-items:center}
+  header h1{font-size:clamp(48px,7vw,88px);font-weight:700;line-height:1.02;letter-spacing:-.02em}
+  header p.sub{color:#a1a1a6;font-size:17px;line-height:1.5;margin-top:26px;max-width:52ch}
+  header p.tag{color:#6e6e73;font-size:12px;margin-top:44px}
+  .mosaic{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .mosaic div{border-radius:16px;height:110px}
+  .mosaic div:nth-child(odd){height:140px}
+  /* ---------- sections ---------- */
+  section{padding:80px 40px;max-width:1280px;margin:0 auto}
+  section h2{font-size:clamp(34px,4.4vw,54px);font-weight:700;letter-spacing:-.015em;margin-bottom:14px}
+  section p.lede{color:var(--sec);font-size:16px;line-height:1.55;max-width:74ch;margin-bottom:40px}
+  .divider{border:none;border-top:1px solid var(--rule);max-width:1280px;margin:0 auto}
+  /* ---------- domain cards ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+  .card{background:var(--panel);border-radius:18px;padding:26px 24px;display:flex;flex-direction:column;gap:10px}
+  .card .dot{width:12px;height:12px;border-radius:50%}
+  .card h3{font-size:17px;font-weight:700}
+  .card p{font-size:12.5px;line-height:1.5;color:var(--sec)}
+  .card ul{list-style:none;font-size:12px;line-height:1.7;color:var(--ink);margin-top:2px}
+  .card ul li::before{content:"—  ";color:var(--muted)}
+  /* ---------- web diagram ---------- */
+  .weblayout{display:grid;grid-template-columns:1.6fr 1fr;gap:28px;align-items:start}
+  #websvg{width:100%;height:auto;background:var(--panel);border-radius:18px;touch-action:none}
+  #websvg text{pointer-events:none;user-select:none}
+  .node{cursor:grab}
+  .node.dragging{cursor:grabbing}
+  .node circle{transition:stroke-width .15s}
+  .node:hover circle{stroke-width:3.5}
+  #websvg .dim{opacity:.12;transition:opacity .2s}
+  #websvg .lit{opacity:1;transition:opacity .2s}
+  .filterbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .filterbar button{border:1px solid var(--rule);background:#fff;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:7px}
+  .filterbar button span{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .filterbar button.active{background:#1d1d1f;color:#fff;border-color:#1d1d1f}
+  .hint{font-size:11.5px;color:var(--sec);margin-top:8px}
+  #webinfo,#orginfo{background:var(--panel);border-radius:18px;padding:26px;min-height:320px;position:sticky;top:60px}
+  #webinfo .chip,#orginfo .chip{display:inline-block;font-size:11px;font-weight:700;color:#fff;border-radius:20px;padding:3px 12px;margin-bottom:12px}
+  #webinfo h3,#orginfo h3{font-size:19px;margin-bottom:8px}
+  #webinfo p,#orginfo p{font-size:13px;line-height:1.55;color:var(--ink);margin-bottom:10px}
+  #webinfo .links,#orginfo .links{font-size:12px;color:var(--sec);line-height:1.7}
+  #orginfo ul{list-style:none;font-size:12.5px;line-height:1.7;margin:4px 0 10px}
+  #orginfo ul li::before{content:"— ";color:var(--muted)}
+  #orgsvg{width:100%;height:auto;background:var(--panel);border-radius:18px}
+  /* ---------- people ---------- */
+  .archcard{background:#000;color:#fff;border-radius:18px;padding:34px 36px;margin-bottom:26px;display:grid;grid-template-columns:1fr 1.4fr;gap:34px}
+  .archcard h3{font-size:26px;font-weight:700;margin-bottom:8px}
+  .archcard .role{color:#a1a1a6;font-size:13px}
+  .archcard p{font-size:13px;line-height:1.55;color:#d2d2d7}
+  .clusters{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px}
+  .cluster h4{font-size:13px;font-weight:700;padding:8px 4px;display:flex;align-items:center;gap:8px}
+  .cluster h4 span{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .person{background:var(--panel);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:background .15s}
+  .person:hover{background:#ececee}
+  .person .name{font-size:13px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+  .person .name .plus{color:var(--muted);font-weight:400;font-size:16px}
+  .person .rel{font-size:10.5px;color:var(--sec);margin-top:2px}
+  .person .resp{display:none;font-size:12px;line-height:1.55;color:var(--ink);margin-top:10px;border-top:1px solid var(--rule);padding-top:10px}
+  .person.open .resp{display:block}
+  .person.open .plus{transform:rotate(45deg)}
+  .legendline{font-size:11.5px;color:var(--sec);margin:6px 0 26px}
+  .legendline b{color:var(--ink)}
+  /* ---------- matrix ---------- */
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{background:#000;color:#fff;text-align:left;padding:10px 12px;font-weight:700;position:sticky;top:38px}
+  td{padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.45}
+  tr:nth-child(even) td{background:var(--panel)}
+  td.lead{font-weight:700}
+  .pill{display:inline-block;border-radius:20px;padding:2px 9px;font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap;margin:1px 2px 1px 0}
+  /* ---------- resources ---------- */
+  .res{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+  .res .card{flex-direction:row;align-items:center;gap:16px}
+  .res .num{font-size:26px;font-weight:700;min-width:40px}
+  .res h3{font-size:14px}
+  .res p{font-size:11.5px}
+  footer{background:var(--panel);color:var(--sec);font-size:11px;line-height:1.6;padding:34px 40px;margin-top:60px}
+  @media(max-width:860px){header{grid-template-columns:1fr}.weblayout{grid-template-columns:1fr}.archcard{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#web"><b>The Web</b></a>
+  <a href="#domains">Five Domains</a>
+  <a href="#people">People Map</a>
+  <a href="#control">Project Control</a>
+  <a href="#matrix">Responsibilities</a>
+  <a href="#resources">Resources</a>
+  <a href="Athanor_Design_Calculators.html" style="color:#0071e3"><b>Calculators ↗</b></a>
+  <a href="Athanor_DataCentre_NetZero.html" style="color:#34c759"><b>Net-Zero DC ↗</b></a>
+  <a href="Athanor_Embodied_Carbon.html" style="color:#34c759"><b>Embodied Carbon ↗</b></a>
+  <a href="Athanor_Glossary.html" style="color:#5856d6"><b>Glossary ↗</b></a>
+  <span class="right">ARCH 5004 + 6004 · Athanor · Semester 2 2026</span>
+</nav>
+
+<header>
+  <div>
+    <h1>The Athanor<br>Project Web</h1>
+    <p class="sub">A building is realised through a web of obligations — contractual, compliance, planning, design and governance — held together by people. This map shows how the Southwark Thermal Commons moves from idea to operation, and who carries each thread.</p>
+    <p class="tag">The Southwark Thermal Commons · Southwark Grounds, Thebarton SA · ~10,000 m² · covering studio year 2026</p>
+  </div>
+  <div class="mosaic">
+    <div style="background:linear-gradient(135deg,#af52de,#5856d6)"></div>
+    <div style="background:linear-gradient(135deg,#0071e3,#30b0c7)"></div>
+    <div style="background:linear-gradient(135deg,#ff9500,#ff3b30)"></div>
+    <div style="background:linear-gradient(135deg,#34c759,#30b0c7)"></div>
+  </div>
+</header>
+
+<!-- ================= THE WEB ================= -->
+<section id="web">
+  <h2>How it fits together</h2>
+  <p class="lede">Every instrument in the project — a contract, a code clause, a planning consent, a design ambition, an operating licence — sits in one of five domains. The domains are not silos: the NCC serves both compliance and good design; Green Star is a design tool and a governance promise; the district-heating network needs a licence before it needs a pipe. <b>Drag the nodes. Hover to trace connections. Click for detail.</b></p>
+  <div class="weblayout">
+    <div>
+      <div class="filterbar" id="filterbar"></div>
+      <svg id="websvg" viewBox="0 0 900 640" xmlns="http://www.w3.org/2000/svg" aria-label="Project web diagram"></svg>
+      <p class="hint">Live force-directed map — nodes settle where their relationships pull them. Dotted lines are cross-domain pulls.</p>
+    </div>
+    <div id="webinfo">
+      <span class="chip" style="background:#1d1d1f">Start here</span>
+      <h3>The Southwark Thermal Commons</h3>
+      <p>Data centre + bathhouse + greenhouse + energy centre + community programme: one building, five overlapping webs of obligation.</p>
+      <p class="links">Click a coloured domain to see what it contains, or a small node to see a single instrument and what it connects to.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ================= DOMAINS ================= -->
+<section id="domains">
+  <h2>Five domains</h2>
+  <p class="lede">Use these as the columns of your own project-governance tracker. An architect's real skill is knowing which domain a problem lives in — and which people can move it.</p>
+  <div class="cards">
+    <div class="card">
+      <span class="dot" style="background:var(--contract)"></span>
+      <h3>Contractual</h3>
+      <p>The promises. Who is engaged, by whom, to do what, for how much, bearing which risks.</p>
+      <ul><li>Client–architect agreement</li><li>Consultant agreements + novation</li><li>Head contract (e.g. AS 4902 D&amp;C or AS 4000)</li><li>Energy off-take / heat supply agreements</li><li>Data centre colocation leases</li><li>Operator agreements (bathhouse, farm)</li></ul>
+    </div>
+    <div class="card">
+      <span class="dot" style="background:var(--compliance)"></span>
+      <h3>Compliance</h3>
+      <p>The rules. Minimum legal standards the built work must demonstrably meet.</p>
+      <ul><li>NCC 2022 Vol One (SA) — Resources 01–04</li><li>Australian Standards — Resource 06</li><li>SA Public Health regs (pools)</li><li>WHS Regulations (plant, confined spaces)</li><li>Disability Access to Premises Standards</li><li>Certificate of Occupancy</li></ul>
+    </div>
+    <div class="card">
+      <span class="dot" style="background:var(--planning)"></span>
+      <h3>Planning</h3>
+      <p>The permission. Whether this use, at this scale, in this place, is allowed at all.</p>
+      <ul><li>PDI Act 2016 + Planning &amp; Design Code</li><li>Southwark Grounds masterplan (Renewal SA)</li><li>Development approval (Plan SA / SCAP)</li><li>Heritage — Brew Tower, Copper Kettle</li><li>Infrastructure agreements + easements</li><li>Traffic, noise, interface conditions</li></ul>
+    </div>
+    <div class="card">
+      <span class="dot" style="background:var(--design)"></span>
+      <h3>Good design</h3>
+      <p>The ambition. Everything beyond the minimum: the reason the project deserves to exist.</p>
+      <ul><li>The brief — four simultaneous roles</li><li>Green Star 5-Star / Communities 6-Star</li><li>ODASA design review (state projects)</li><li>PUE / WUE / NABERS targets</li><li>Universal + climate-adaptive design</li><li>Civic legibility of infrastructure</li></ul>
+    </div>
+    <div class="card">
+      <span class="dot" style="background:var(--governance)"></span>
+      <h3>Governance</h3>
+      <p>The stewardship. How decisions are made, risks owned and the thing operated for 100 years.</p>
+      <ul><li>Project control group + design gateways</li><li>Energy utility licensing (ESCOSA / OTR)</li><li>District heat network ownership model</li><li>Digital twin + data governance</li><li>Community reference group</li><li>Commissioning, soft landings, POE</li></ul>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ================= PEOPLE ================= -->
+<section id="people">
+  <h2>People map</h2>
+  <p class="lede">The architect never works alone. Around them sit five constellations — client, design team, statutory, delivery, operations — each with distinct duties, contracts and moments of power. Click any card for responsibilities.</p>
+
+  <div class="archcard">
+    <div>
+      <h3>The Architect</h3>
+      <p class="role">Lead consultant · design author · often contract administrator</p>
+    </div>
+    <p>Translates the brief into a buildable, approvable, code-compliant proposition; coordinates every consultant into one set of documents; administers the building contract impartially between client and builder; and — uniquely on this project — choreographs infrastructure, civic space and public narrative into a single architectural idea. The architect is rarely the decision-maker; they are the <b>integrator</b> through whom every domain passes.</p>
+  </div>
+
+  <p class="legendline">Relationship key — <b>C</b>: contracted to client · <b>A</b>: engaged/coordinated by architect · <b>S</b>: statutory (owes duty to the law, not the client) · <b>D</b>: delivery contract chain · <b>O</b>: operations &amp; community</p>
+
+  <div class="clusters" id="clusters"></div>
+</section>
+
+<hr class="divider">
+
+<!-- ================= PROJECT CONTROL ================= -->
+<section id="control">
+  <h2>Project control</h2>
+  <p class="lede">Above every drawing sits a <b>Project Control Group</b> — the governance table where client, developer and advisors make the decisions that bind everyone below. What changes between projects is not the PCG but the <b>delivery structure underneath it</b>: the contract type rewires who the architect answers to, who owns design risk, and when the builder arrives. Pick a contract type to redraw the hierarchy.</p>
+  <div class="filterbar" id="ctoggle"></div>
+  <div class="weblayout">
+    <div>
+      <svg id="orgsvg" viewBox="0 0 880 560" xmlns="http://www.w3.org/2000/svg" aria-label="Project organigram"></svg>
+      <p class="hint">Solid lines = contractual relationships (money + liability flow along these). Dashed = reporting / coordination. The orange arrow in D&amp;C is the <b>novation</b> — the moment the architect's contract is legally transferred from client to builder.</p>
+    </div>
+    <div id="orginfo">
+      <span class="chip" style="background:#1d1d1f">Delivery model</span>
+      <h3>—</h3><p>—</p><p class="links">—</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ================= MATRIX ================= -->
+<section id="matrix">
+  <h2>Who leads what</h2>
+  <p class="lede">A simplified responsibility map across the project lifecycle. Lead is shown bold; the domain colour shows which web each activity primarily belongs to.</p>
+  <div style="overflow-x:auto">
+  <table id="mtx">
+    <thead><tr><th style="width:26%">Activity</th><th style="width:10%">Domain</th><th style="width:20%">Leads</th><th>Supports / approves</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ================= RESOURCES ================= -->
+<section id="resources">
+  <h2>Dossier resources</h2>
+  <p class="lede">The compliance domain in depth — six themed PDFs in <i>dossier / NCC + regulatory resources</i>, colour-coded by aspect.</p>
+  <div class="res">
+    <div class="card"><span class="num" style="color:var(--compliance)">01</span><div><h3>Classification &amp; Type of Construction</h3><p>Class per programme element · rise in storeys · compartment limits</p></div></div>
+    <div class="card"><span class="num" style="color:var(--fire)">02</span><div><h3>Fire Safety, Compartmentation &amp; Egress</h3><p>Sections C, D, E · occupant loads · special hazards</p></div></div>
+    <div class="card"><span class="num" style="color:var(--water)">03</span><div><h3>Accessibility, Health &amp; Amenity</h3><p>D4 access · pool 40/70 m rules · SA pool regulation</p></div></div>
+    <div class="card"><span class="num" style="color:var(--planning)">04</span><div><h3>Section J Energy &amp; Data-Centre Metrics</h3><p>J8 reclaimed energy · PUE / WUE / NABERS · Green Star</p></div></div>
+    <div class="card"><span class="num" style="color:var(--contract)">05</span><div><h3>Building Services: Spatial Requirements</h3><p>BUIL 3004 checklist, tailored to this programme</p></div></div>
+    <div class="card"><span class="num" style="color:var(--governance)">06</span><div><h3>Standards &amp; SA Regulatory References</h3><p>The citation library for technical documentation</p></div></div>
+  </div>
+</section>
+
+<footer>
+  ARCH 5004 / ARCH 6004 studio teaching resource — Southwark Thermal Commons, prepared July 2026. Indicative guidance only; roles, instruments and approval pathways are simplified for teaching. Verify statutory processes with Plan SA, the City of West Torrens and current legislation, and all NCC references against NCC 2022 (as adopted in SA) at ncc.abcb.gov.au.
+</footer>
+
+<script>
+/* ==================== WEB DIAGRAM ==================== */
+const DOM = {
+  contract:  {c:"#af52de", label:"Contractual"},
+  compliance:{c:"#0071e3", label:"Compliance"},
+  planning:  {c:"#ff9500", label:"Planning"},
+  design:    {c:"#34c759", label:"Good design"},
+  governance:{c:"#5856d6", label:"Governance"},
+};
+const CENTER = {id:"center", x:450, y:320, label:["Southwark","Thermal","Commons"],
+  info:{chip:"#1d1d1f", chipText:"The project", title:"The Southwark Thermal Commons",
+  body:"Data centre + bathhouse + greenhouse + energy centre + community programme: one building, five overlapping webs of obligation.",
+  links:"Click a coloured domain, or a small node, to explore."}};
+
+const domainNodes = [
+  {id:"contract",  x:450, y:90},
+  {id:"compliance",x:790, y:230},
+  {id:"planning",  x:665, y:555},
+  {id:"design",    x:235, y:555},
+  {id:"governance",x:110, y:230},
+];
+const domainInfo = {
+  contract:"The promises: client–architect agreement, consultant deeds (often novated to the builder), the head contract, heat-supply off-take agreements, colocation leases, operator agreements. Contracts allocate risk — read them as risk maps.",
+  compliance:"The rules: NCC 2022 (SA), Australian Standards, SA public-health pool regulation, WHS plant law, access-to-premises standards. Compliance is evidenced, not asserted — certificates, inspections, commissioning results.",
+  planning:"The permission: PDI Act 2016 and the Planning & Design Code, the Southwark Grounds masterplan, development approval through Plan SA / SCAP, heritage constraints, infrastructure agreements. Planning decides whether; the NCC decides how.",
+  design:"The ambition: the studio brief's four simultaneous roles, Green Star targets, ODASA design review, PUE/WUE/NABERS performance, universal design, and the civic legibility of infrastructure — everything above the legal minimum.",
+  governance:"The stewardship: project control group, gateway approvals, the licensing of a heat network as a utility (ESCOSA / Office of the Technical Regulator), digital-twin data governance, community reference group, commissioning and post-occupancy review."
+};
+const subNodes = [
+  // contractual
+  {id:"s1", d:"contract", x:275, y:65,  label:"Client–architect agreement", info:"Defines the architect's scope, fee, liability and — critically — authority. On complex civic projects the architect's coordination role must be explicit and priced."},
+  {id:"s2", d:"contract", x:625, y:65,  label:"Head contract (AS 4902 / AS 4000)", info:"D&C (AS 4902) shifts design risk to the builder and usually novates the architect; construct-only (AS 4000) keeps the architect client-side as contract administrator. The choice reshapes every relationship on the people map."},
+  {id:"s3", d:"contract", x:450, y:180, label:"Heat off-take agreements", info:"1,300 dwellings buy heat from the network. Someone must own, price and guarantee that supply — a contract type architects rarely meet, sitting between contractual and governance webs.", x2:true},
+  // compliance
+  {id:"s4", d:"compliance", x:855, y:120, label:"NCC 2022 (SA)", info:"The technical floor: classification, fire, egress, access, amenity, energy. See Resources 01–04. NCC 2025 is deferred in SA until 1 May 2027."},
+  {id:"s5", d:"compliance", x:855, y:345, label:"Building certification", info:"A building surveyor (council or private) audits the documentation, issues building consent, inspects, and grants the Certificate of Occupancy. They answer to legislation — not to the client."},
+  {id:"s6", d:"compliance", x:740, y:400, label:"SA Health pool standards", info:"Public pools operate under the SA Public Health (General) Regulations 2013 and the SA pool operation Standard — water quality, turnover, chemical storage. Enforced by council EHOs, forever."},
+  // planning
+  {id:"s7", d:"planning", x:800, y:600, label:"Plan SA / SCAP approval", info:"At this scale within a Renewal SA precinct, assessment likely sits with the State Commission Assessment Panel. Conditions of consent bind the design before the NCC is even opened."},
+  {id:"s8", d:"planning", x:530, y:610, label:"Masterplan (Renewal SA)", info:"6-Star Green Star Communities, 30% canopy, 20% affordable housing, heritage anchors. The masterplan is the client's promise to the state — your building inherits it."},
+  // design
+  {id:"s9", d:"design", x:370, y:610, label:"Green Star 5-Star", info:"A voluntary rating that became obligatory the moment the masterplan promised it — the clearest example of good design hardening into governance."},
+  {id:"s10",d:"design", x:100, y:600, label:"ODASA design review", info:"The Office for Design and Architecture SA reviews significant projects. Design quality gets an institutional seat at the table."},
+  // governance
+  {id:"s11",d:"governance", x:45,  y:345, label:"Energy licensing (ESCOSA / OTR)", info:"Selling heat and running a distribution network makes you a utility. ESCOSA licenses energy retail/distribution; the Office of the Technical Regulator oversees technical safety. No licence, no network."},
+  {id:"s12",d:"governance", x:45,  y:120, label:"Community reference group", info:"1,300 households are stakeholders, customers and neighbours at once. Structured community governance keeps the 'commons' in Thermal Commons."},
+  {id:"s13",d:"governance", x:160, y:400, label:"Digital twin governance", info:"The building publishes its own metabolism. Who owns the data, who may act on it, what is public? A new governance question your generation will own."},
+];
+const crossLinks = [
+  ["s4","design"],["s9","governance"],["s7","compliance"],["s3","governance"],
+  ["s2","governance"],["s6","governance"],["s11","s3"],["s8","design"]
+];
+
+/* ---------- build node + link model ---------- */
+const svg = document.getElementById("websvg");
+const NS = "http://www.w3.org/2000/svg";
+function el(t,attrs,parent){const e=document.createElementNS(NS,t);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e;}
+
+const nodes = [];
+const nodeById = {};
+function addNode(n){nodes.push(n);nodeById[n.id]=n;}
+addNode({id:"center",type:"center",x:450,y:320,vx:0,vy:0,r:46,fixed:true});
+domainNodes.forEach(n=>addNode({id:n.id,type:"domain",d:n.id,x:n.x,y:n.y,vx:0,vy:0,r:34}));
+subNodes.forEach(n=>addNode({id:n.id,type:"sub",d:n.d,x:n.x,y:n.y,vx:0,vy:0,r:9,label:n.label,info:n.info}));
+
+const links = [];
+domainNodes.forEach(n=>links.push({a:"center",b:n.id,rest:235,k:0.028,dashed:false}));
+subNodes.forEach(n=>links.push({a:n.d,b:n.id,rest:128,k:0.030,dashed:false}));
+crossLinks.forEach(([a,b])=>links.push({a,b,rest:255,k:0.006,dashed:true}));
+
+/* adjacency for hover highlighting */
+const adj = {};
+nodes.forEach(n=>adj[n.id]=new Set([n.id]));
+links.forEach((l,i)=>{adj[l.a].add(l.b);adj[l.b].add(l.a);l.i=i;});
+
+/* ---------- render elements ---------- */
+const gE = el("g",{});
+links.forEach(l=>{
+  l.el = el("line",{stroke:l.dashed?"#aeaeb2":"#d2d2d7","stroke-width":l.dashed?1:1.4,
+    ...(l.dashed?{"stroke-dasharray":"3 4"}:{})},gE);
+});
+const info = document.getElementById("webinfo");
+function showInfo(chipColor, chipText, title, body, extra){
+  info.innerHTML = `<span class="chip" style="background:${chipColor}">${chipText}</span>
+    <h3>${title}</h3><p>${body}</p><p class="links">${extra||""}</p>`;
+}
+nodes.forEach(n=>{
+  const g = el("g",{class:"node"}); n.el = g;
+  if(n.type==="center"){
+    el("circle",{r:n.r,fill:"#1d1d1f"},g);
+    CENTER.label.forEach((w,i)=>{const t=el("text",{x:0,y:-9+i*11,"text-anchor":"middle","font-size":"9.5","font-weight":"700",fill:"#fff"},g);t.textContent=w;});
+  } else if(n.type==="domain"){
+    el("circle",{r:n.r,fill:DOM[n.d].c,stroke:"#fff","stroke-width":2},g);
+    const t=el("text",{x:0,y:3.5,"text-anchor":"middle","font-size":"10","font-weight":"700",fill:"#fff"},g);
+    t.textContent=DOM[n.d].label;
+  } else {
+    el("circle",{r:n.r,fill:"#fff",stroke:DOM[n.d].c,"stroke-width":2},g);
+    n.txt=el("text",{x:14,y:3,"text-anchor":"start","font-size":"10.5","font-weight":"600",fill:"#1d1d1f"},g);
+    n.txt.textContent=n.label;
+  }
+});
+
+/* ---------- physics ---------- */
+const CX=450, CY=320, W=900, H=640;
+function physics(){
+  // repulsion
+  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+    const a=nodes[i],b=nodes[j];
+    let dx=b.x-a.x, dy=b.y-a.y, d2=dx*dx+dy*dy;
+    if(d2<1)d2=1;
+    const d=Math.sqrt(d2);
+    const f=Math.min(12,(a.r+b.r)*160/d2);
+    const fx=f*dx/d, fy=f*dy/d;
+    if(!a.fixed&&!a.drag){a.vx-=fx;a.vy-=fy;}
+    if(!b.fixed&&!b.drag){b.vx+=fx;b.vy+=fy;}
+  }
+  // springs
+  links.forEach(l=>{
+    const a=nodeById[l.a],b=nodeById[l.b];
+    const dx=b.x-a.x, dy=b.y-a.y, d=Math.max(1,Math.hypot(dx,dy));
+    const f=l.k*(d-l.rest), fx=f*dx/d, fy=f*dy/d;
+    if(!a.fixed&&!a.drag){a.vx+=fx;a.vy+=fy;}
+    if(!b.fixed&&!b.drag){b.vx-=fx;b.vy-=fy;}
+  });
+  // gravity + integrate
+  nodes.forEach(n=>{
+    if(n.fixed||n.drag)return;
+    n.vx+=(CX-n.x)*0.0012; n.vy+=(CY-n.y)*0.0012;
+    n.vx*=0.80; n.vy*=0.80;
+    n.x+=n.vx; n.y+=n.vy;
+    const m=n.r+8;
+    n.x=Math.max(m,Math.min(W-m,n.x));
+    n.y=Math.max(m+14,Math.min(H-m-6,n.y));
+  });
+}
+function draw(){
+  links.forEach(l=>{
+    const a=nodeById[l.a],b=nodeById[l.b];
+    l.el.setAttribute("x1",a.x);l.el.setAttribute("y1",a.y);
+    l.el.setAttribute("x2",b.x);l.el.setAttribute("y2",b.y);
+  });
+  nodes.forEach(n=>{
+    n.el.setAttribute("transform",`translate(${n.x},${n.y})`);
+    if(n.txt){ // flip label side + clamp inside frame
+      const left = n.x>W-190;
+      n.txt.setAttribute("x",left?-14:14);
+      n.txt.setAttribute("text-anchor",left?"end":"start");
+    }
+  });
+}
+function tick(){ physics(); draw(); requestAnimationFrame(tick); }
+/* prefers-reduced-motion: settle the layout instantly (no animated intro), then
+   keep the loop running only so dragging stays live — at equilibrium it's static. */
+const REDUCE_MOTION = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+if(REDUCE_MOTION){ for(let s=0;s<600;s++) physics(); draw(); }
+requestAnimationFrame(tick);
+
+/* ---------- hover highlighting + filter ---------- */
+let activeFilter=null;
+function related(nodeId){return adj[nodeId];}
+function applyEmphasis(set){ // set of node ids to light; null = clear
+  nodes.forEach(n=>{
+    n.el.classList.toggle("dim", !!set && !set.has(n.id));
+    n.el.classList.toggle("lit", !!set && set.has(n.id));
+  });
+  links.forEach(l=>{
+    const on = !!set && set.has(l.a) && set.has(l.b);
+    l.el.classList.toggle("dim", !!set && !on);
+    l.el.classList.toggle("lit", !!set && on);
+  });
+}
+function filterSet(){
+  if(!activeFilter)return null;
+  const s=new Set(["center",activeFilter]);
+  nodes.forEach(n=>{if(n.d===activeFilter)s.add(n.id);});
+  crossLinks.forEach(([a,b])=>{
+    if(s.has(a)||s.has(b)){s.add(a);s.add(b);}
+  });
+  return s;
+}
+nodes.forEach(n=>{
+  n.el.addEventListener("mouseenter",()=>applyEmphasis(related(n.id)));
+  n.el.addEventListener("mouseleave",()=>applyEmphasis(filterSet()));
+});
+
+/* filter buttons */
+const fb=document.getElementById("filterbar");
+function mkBtn(label,color,id){
+  const b=document.createElement("button");
+  b.innerHTML=(color?`<span style="background:${color}"></span>`:"")+label;
+  b.addEventListener("click",()=>{
+    activeFilter=id;
+    [...fb.children].forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    applyEmphasis(filterSet());
+    if(id)showInfo(DOM[id].c,"Domain",DOM[id].label,domainInfo[id],"Solid lines: contains · dotted: cross-domain pull.");
+  });
+  fb.appendChild(b);return b;
+}
+mkBtn("All",null,null).classList.add("active");
+Object.keys(DOM).forEach(k=>mkBtn(DOM[k].label,DOM[k].c,k));
+
+/* ---------- drag + click ---------- */
+function svgPoint(evt){
+  const pt=svg.createSVGPoint();
+  pt.x=evt.clientX;pt.y=evt.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+nodes.forEach(n=>{
+  let start=null;
+  n.el.addEventListener("pointerdown",e=>{
+    e.preventDefault();
+    n.el.setPointerCapture(e.pointerId);
+    n.drag=true; n.el.classList.add("dragging");
+    start={x:e.clientX,y:e.clientY};
+  });
+  n.el.addEventListener("pointermove",e=>{
+    if(!n.drag)return;
+    const p=svgPoint(e);
+    n.x=Math.max(n.r,Math.min(W-n.r,p.x));
+    n.y=Math.max(n.r,Math.min(H-n.r,p.y));
+    n.vx=0;n.vy=0;
+  });
+  n.el.addEventListener("pointerup",e=>{
+    n.drag=false; n.el.classList.remove("dragging");
+    const moved = start ? Math.hypot(e.clientX-start.x,e.clientY-start.y) : 99;
+    if(moved<5){ // click
+      if(n.type==="center")showInfo("#1d1d1f","The project",CENTER.info.title,CENTER.info.body,CENTER.info.links);
+      else if(n.type==="domain")showInfo(DOM[n.d].c,"Domain",DOM[n.d].label,domainInfo[n.d],"Solid lines: contains · dotted: cross-domain pull.");
+      else showInfo(DOM[n.d].c,DOM[n.d].label,n.label,n.info,"Domain: "+DOM[n.d].label);
+    }
+    start=null;
+  });
+});
+
+/* ==================== PEOPLE MAP ==================== */
+const CLUSTERS = [
+ {name:"Client side", color:"#af52de", key:"C", people:[
+  ["Renewal SA","Master developer — state","Sets the masterplan, sells the vision, carries the public-interest obligations (affordable housing, Green Star Communities, heritage). Approves precinct-level moves your building depends on.","C"],
+  ["Commercial & General","Developer (⅔ of site)","Delivery developer for much of Southwark Grounds, including the Brew Tower reuse. Commercial appetite shapes what gets funded and when.","C"],
+  ["Project manager","Client's representative","Runs the client side day-to-day: programme, budget, consultant procurement, approvals strategy, reporting to the project control group.","C"],
+  ["Quantity surveyor","Cost consultant","Cost plans at every stage, value management, progress-claim assessment. The first person to say 'the thermal storage tanks just got smaller'.","C"],
+  ["Superintendent","Contract administrator (if not the architect)","Administers the head contract impartially: instructions, claims, extensions of time, certification of payment and completion.","C"],
+ ]},
+ {name:"Design team", color:"#0071e3", key:"A", people:[
+  ["Structural engineer","Consultant","Designs the frame: 12–20 kPa data-hall floors, 2,500 kN thermal tanks, long-span pool halls, the greenhouse's light-touch roof. Certifies structural documentation.","A"],
+  ["Building services engineers","Mech · elec · hydraulic","The largest consultant scope on this project: HVAC, pool-hall dehumidification, HV supply, liquid cooling, heat-recovery loop, pumps and pipes. Their plant needs your Resource 05 rooms.","A"],
+  ["ESD consultant","Sustainability","Section J / JV3 modelling, Green Star pathway, PUE/WUE modelling, materials and embodied carbon. Quantifies the project's central claim.","A"],
+  ["Fire safety engineer","Performance solutions","Engineers the alternative solutions: public access to the Energy Exchange Hall, the greenhouse envelope, the server-hall viewing window. Negotiates with the certifier and MFS.","A"],
+  ["Access consultant","Universal design","Audits against D4, AS 1428.1 and the Premises Standards; advises on pool entries, AACF, change villages. Engaged early, not at the end.","A"],
+  ["Specialists","Data centre · aquatics · heritage · acoustics · landscape · geotech · planning","Niche expertise: white-space design, pool plant, Brew Tower fabric, plant-noise at dwellings, the courtyard, BTES feasibility, Code pathways. The architect orchestrates them into one coherent set.","A"],
+ ]},
+ {name:"Statutory", color:"#ff9500", key:"S", people:[
+  ["Plan SA / SCAP","Planning authority","Assesses the development application against the Planning & Design Code; imposes conditions. Owes its duty to the legislation and the public.","S"],
+  ["Building certifier","Building surveyor","Audits NCC compliance, issues building consent, mandatory inspections, Certificate of Occupancy. Can accept or reject performance solutions.","S"],
+  ["City of West Torrens","Council + EHO","Local authority for Thebarton: public health licensing of the pools (EHO inspections), local infrastructure, waste, and ongoing compliance once operating.","S"],
+  ["SA Power Networks & SA Water","Utilities","Negotiate the HV connection (2–3 MW), water supply, trade waste and recycled-water access. Their easements and lead times sit on the critical path.","S"],
+  ["ESCOSA / Technical Regulator","Energy regulation","License the heat network as a utility and regulate its technical safety. The quiet approval nobody budgets time for.","S"],
+  ["MFS / SafeWork SA / ODASA / GBCA","Referral & review bodies","Fire brigade referral on performance solutions; WHS on plant and construction; design review; Green Star certification audit.","S"],
+ ]},
+ {name:"Delivery", color:"#34c759", key:"D", people:[
+  ["Head contractor","Builder","Prices, programmes and constructs the works; owns site safety; under D&C also owns design completion with novated consultants. Selects and manages all subcontractors.","D"],
+  ["Specialist subcontractors","Trade delivery","Data-centre fit-out, pool construction, district-heating pipework, facade, greenhouse systems — each a design-assist partner as much as an installer.","D"],
+  ["Commissioning agent","Independent Cx","Plans and witnesses commissioning of the thermal network, data hall and pool plant; runs seasonal tuning. The bridge from construction to operation.","D"],
+  ["Independent certifiers","Verification","Structural, services and fire-safety certifications at completion; essential safety provision schedules the operator must maintain.","D"],
+ ]},
+ {name:"Operations & community", color:"#5856d6", key:"O", people:[
+  ["Energy utility operator","Heat network + data centre","Operates the athanor: the licensed entity selling heat and computation. May be a council enterprise, a private utility or a community energy company — a governance design decision.","O"],
+  ["Bathhouse operator","Aquatic facility","Runs the pools under SA Health standards: water quality, lifeguards (GSPO), programming. Their operational needs must be designed in now.","O"],
+  ["Greenhouse / farm operator","Food + education","Market garden, community growing, school programmes. Possibly a social enterprise; needs back-of-house logistics designed like a small business.","O"],
+  ["Facilities manager","Whole-building FM","Maintains essential safety provisions, plant, the digital twin. Reads your O&M manuals — write them like you mean it.","O"],
+  ["Residents & community","1,300 households","Customers of the heat network, users of the commons, neighbours of the plant. Represented through the community reference group; the ultimate client.","O"],
+ ]},
+];
+const cwrap = document.getElementById("clusters");
+CLUSTERS.forEach(cl=>{
+  const div=document.createElement("div"); div.className="cluster";
+  div.innerHTML=`<h4><span style="background:${cl.color}"></span>${cl.name}</h4>`;
+  cl.people.forEach(p=>{
+    const d=document.createElement("div"); d.className="person";
+    d.innerHTML=`<div class="name">${p[0]}<span class="plus">＋</span></div>
+      <div class="rel">${p[1]} · ${p[3]}</div><div class="resp">${p[2]}</div>`;
+    d.addEventListener("click",()=>d.classList.toggle("open"));
+    div.appendChild(d);
+  });
+  cwrap.appendChild(div);
+});
+
+/* ==================== PROJECT CONTROL ORGANIGRAM ==================== */
+const ORG = {
+  traditional:{
+    label:"Traditional — construct only (AS 4000)", color:"#0071e3",
+    body:"The client engages the architect and full consultant team, the design is completed and documented, then builders tender on finished documents. The architect typically administers the contract as Superintendent.",
+    points:["Architect's design control: <b>maximum</b> — the builder prices what you drew","Design risk: stays with the <b>client</b> (and the consultants' documents)","Price certainty: high at award, but the process is <b>slowest</b> — no overlap of design and construction","The ARCH 5004 documentation package assumes this world: your drawings ARE the contract"],
+    boxes:[
+      ["pcg","PROJECT CONTROL GROUP",340,20,200,44,"#1d1d1f","#fff","Renewal SA · C&G · PM (chair) · advisors"],
+      ["client","CLIENT",360,110,160,40,"#1d1d1f","#fff",""],
+      ["arch","ARCHITECT (lead consultant + Superintendent)",90,210,240,48,"#0071e3","#fff",""],
+      ["cons","CONSULTANTS — structure · services · ESD · fire · access",60,300,300,44,"#7db8ef","#1d1d1f",""],
+      ["hc","HEAD CONTRACTOR (AS 4000)",560,210,230,48,"#34c759","#fff",""],
+      ["subs","SUBCONTRACTORS + suppliers",575,300,200,44,"#a7e3b8","#1d1d1f",""],
+      ["cert","BUILDING CERTIFIER (statutory)",330,410,220,44,"#ff9500","#fff",""],
+    ],
+    lines:[["pcg","client","d"],["client","arch","s"],["arch","cons","s"],["client","hc","s"],["hc","subs","s"],["arch","hc","d","administers"],["cert","hc","d"],["cert","arch","d"]]
+  },
+  dc:{
+    label:"Design & Construct — novated (AS 4902)", color:"#af52de",
+    body:"The client develops the brief and a partial design (often to design development), then transfers — 'novates' — the architect and consultants to the D&C contractor, who completes design and builds it under one contract.",
+    points:["Architect's design control: <b>reduced</b> after novation — the builder is now your client","Design risk: transferred to the <b>contractor</b> (single point of responsibility)","Speed: design and construction <b>overlap</b>; cost driven down — sometimes at quality's expense","The client protects quality through the Principal's Project Requirements + an independent client-side advisor — a role architects also play"],
+    boxes:[
+      ["pcg","PROJECT CONTROL GROUP",340,20,200,44,"#1d1d1f","#fff",""],
+      ["client","CLIENT + client-side advisor / independent certifier",300,110,280,44,"#1d1d1f","#fff",""],
+      ["hc","D&C CONTRACTOR (AS 4902)",330,210,220,48,"#34c759","#fff",""],
+      ["arch","ARCHITECT (novated)",90,310,190,48,"#af52de","#fff",""],
+      ["cons","CONSULTANTS (novated)",320,310,190,44,"#d5b3ef","#1d1d1f",""],
+      ["subs","SUBCONTRACTORS",580,310,180,44,"#a7e3b8","#1d1d1f",""],
+      ["cert","BUILDING CERTIFIER (statutory)",330,420,220,44,"#ff9500","#fff",""],
+    ],
+    lines:[["pcg","client","d"],["client","hc","s"],["hc","arch","s"],["hc","cons","s"],["hc","subs","s"],["client","arch","n","novation"],["cert","hc","d"]]
+  },
+  mc:{
+    label:"Managing Contractor / staged delivery", color:"#5856d6",
+    body:"The client engages a managing contractor early — for a fee — to advise on buildability, program and cost while the client-side design team keeps designing. Works are let progressively as trade packages. The natural fit for staged, infrastructure-heavy precincts like Southwark.",
+    points:["Architect's design control: <b>high</b> — the design team stays client-side throughout","Buildability: contractor's knowledge arrives <b>early</b>, before the design is frozen","Cost risk: substantially stays with the <b>client</b> — strong PCG governance is essential","Perfect for this project: the energy centre, data hall and bathhouse can be delivered as staged packages while the network grows"],
+    boxes:[
+      ["pcg","PROJECT CONTROL GROUP",340,20,200,44,"#1d1d1f","#fff",""],
+      ["client","CLIENT",360,110,160,40,"#1d1d1f","#fff",""],
+      ["arch","ARCHITECT + design team (client side)",70,210,250,48,"#0071e3","#fff",""],
+      ["mc","MANAGING CONTRACTOR (fee + packages)",530,210,270,48,"#5856d6","#fff",""],
+      ["p1","Pkg 1 — Energy centre",470,320,150,40,"#c3c2ef","#1d1d1f",""],
+      ["p2","Pkg 2 — Data hall",640,320,140,40,"#c3c2ef","#1d1d1f",""],
+      ["p3","Pkg 3 — Bathhouse fit-out",545,390,180,40,"#c3c2ef","#1d1d1f",""],
+      ["cert","BUILDING CERTIFIER (statutory)",100,320,220,44,"#ff9500","#fff",""],
+    ],
+    lines:[["pcg","client","d"],["client","arch","s"],["client","mc","s"],["mc","p1","s"],["mc","p2","s"],["mc","p3","s"],["arch","mc","d","coordinates"],["cert","arch","d"]]
+  }
+};
+const orgSvg=$id("orgsvg"), orgInfo=$id("orginfo");
+function $id(x){return document.getElementById(x);}
+function drawOrg(key){
+  const m=ORG[key];
+  const bx={};
+  let out="";
+  // lines first
+  m.lines.forEach(l=>{
+    const A=m.boxes.find(b=>b[0]===l[0]), B=m.boxes.find(b=>b[0]===l[1]);
+    const ax=A[2]+A[4]/2, ay=A[3]+A[5], bxx=B[2]+B[4]/2, by=B[3];
+    const top=ay<by;
+    const x1=ax, y1=top?ay:A[3], x2=bxx, y2=top?by:B[3]+B[5];
+    const midy=(y1+y2)/2;
+    const style=l[2]==="s"?'stroke="#1d1d1f" stroke-width="1.8"':l[2]==="n"?'stroke="#ff9500" stroke-width="2.4" stroke-dasharray="6 4" marker-end="url(#arr)"':'stroke="#aeaeb2" stroke-width="1.4" stroke-dasharray="3 4"';
+    out+=`<path d="M ${x1} ${y1} C ${x1} ${midy}, ${x2} ${midy}, ${x2} ${y2}" fill="none" ${style}/>`;
+    if(l[3])out+=`<text x="${(x1+x2)/2}" y="${midy-6}" text-anchor="middle" font-size="10" font-weight="700" fill="${l[2]==="n"?"#ff9500":"#86868b"}">${l[3].toUpperCase()}</text>`;
+  });
+  // boxes
+  m.boxes.forEach(b=>{
+    out+=`<rect x="${b[2]}" y="${b[3]}" width="${b[4]}" height="${b[5]}" rx="10" fill="${b[6]}"/>`;
+    const words=b[1].split(" ");
+    let lines=[""],li=0;
+    words.forEach(w=>{if((lines[li]+w).length>Math.floor(b[4]/6.4)){li++;lines[li]="";}lines[li]+=(lines[li]?" ":"")+w;});
+    lines.forEach((t,i)=>{
+      out+=`<text x="${b[2]+b[4]/2}" y="${b[3]+b[5]/2+(i-(lines.length-1)/2)*12+4}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${b[7]}">${t}</text>`;
+    });
+    if(b[8])out+=`<text x="${b[2]+b[4]/2}" y="${b[3]+b[5]+14}" text-anchor="middle" font-size="9.5" fill="#86868b">${b[8]}</text>`;
+  });
+  orgSvg.innerHTML=`<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ff9500"/></marker></defs>`+out;
+  orgInfo.innerHTML=`<span class="chip" style="background:${m.color}">Delivery model</span>
+    <h3>${m.label}</h3><p>${m.body}</p><ul>${m.points.map(p=>`<li>${p}</li>`).join("")}</ul>
+    <p class="links">The PCG sits above all three models — its membership barely changes; its leverage does. Statutory players (certifier, Plan SA, SA Health) never move inside the contract chain: their duty is to the law.</p>`;
+}
+const ct=$id("ctoggle");
+Object.keys(ORG).forEach((k,i)=>{
+  const b=document.createElement("button");
+  b.innerHTML=`<span style="background:${ORG[k].color}"></span>${ORG[k].label.split(" — ")[0]}`;
+  b.addEventListener("click",()=>{
+    [...ct.children].forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    drawOrg(k);
+  });
+  if(i===0)b.classList.add("active");
+  ct.appendChild(b);
+});
+drawOrg("traditional");
+
+/* ==================== MATRIX ==================== */
+const DPILL = {contract:["Contractual","#af52de"],compliance:["Compliance","#0071e3"],planning:["Planning","#ff9500"],design:["Good design","#34c759"],governance:["Governance","#5856d6"]};
+const ROWS = [
+ ["Masterplan & precinct vision","planning","Renewal SA","Commercial & General · ODASA · community"],
+ ["Brief & feasibility","design","Client PM + Architect","QS · ESD · data-centre specialist"],
+ ["Development application","planning","Architect + planning consultant","Plan SA/SCAP assesses · heritage · council"],
+ ["Concept & design development","design","Architect","All consultants · design review · client gateways"],
+ ["NCC compliance strategy","compliance","Architect + building certifier","Fire engineer · access consultant · services engineers"],
+ ["Performance solutions","compliance","Fire safety engineer","Certifier accepts · MFS referral · architect coordinates"],
+ ["Section J / Green Star","design","ESD consultant","Services engineers · GBCA audits · architect integrates"],
+ ["Cost planning & procurement","contract","Quantity surveyor + client PM","Architect · legal advisers · market"],
+ ["Head contract & consultant deeds","contract","Client (legal advice)","Architect (novation position) · contractor"],
+ ["Heat network licensing","governance","Energy utility operator","ESCOSA · Technical Regulator · client legal"],
+ ["Construction","contract","Head contractor","Superintendent/architect administers · subcontractors"],
+ ["Inspections & certification","compliance","Building certifier","Independent certifiers · engineers · SafeWork SA"],
+ ["Commissioning & handover","governance","Commissioning agent","Contractor · FM · operators · digital twin team"],
+ ["Pool licensing & operation","compliance","Bathhouse operator","Council EHO inspects · SA Health standards"],
+ ["Operation & community stewardship","governance","Energy utility + FM","Operators · community reference group · residents"],
+];
+const tb=document.querySelector("#mtx tbody");
+ROWS.forEach(r=>{
+  const tr=document.createElement("tr");
+  const [label,color]=DPILL[r[1]];
+  tr.innerHTML=`<td>${r[0]}</td><td><span class="pill" style="background:${color}">${label}</span></td><td class="lead">${r[2]}</td><td>${r[3]}</td>`;
+  tb.appendChild(tr);
+});
+</script>
+<style>
+abbr.ab{text-decoration:underline dotted #9a9aa0;text-underline-offset:2px;text-decoration-thickness:1px;cursor:help;font-style:normal}
+</style>
+<script>
+/* ACRO_GLOSSARY — auto-tooltips for every acronym. Hover any dotted term. */
+(function(){
+const G={
+"NCC":"National Construction Code — Australia's technical building code; Volume One is the Building Code of Australia for Class 2–9 buildings",
+"BCA":"Building Code of Australia — NCC Volumes One and Two",
+"DtS":"Deemed-to-Satisfy — the NCC's prescriptive compliance pathway; the alternative is a Performance Solution",
+"FRL":"Fire Resistance Level — structural adequacy / integrity / insulation, in minutes (e.g. 120/120/120)",
+"AS/NZS":"Joint Australian / New Zealand Standard",
+"JV3":"NCC verification method: whole-building energy modelling against a reference building",
+"AACF":"Accessible Adult Change Facility — hoist + adult change table, required in large aquatic venues",
+"TGSI":"Tactile Ground Surface Indicators — warning studs/bars at stairs, ramps and crossings",
+"GSPO":"Guidelines for Safe Pool Operations — Royal Life Saving Australia's national aquatic practice guidance",
+"EHO":"Environmental Health Officer — council officer who licenses and inspects public pools",
+"MFS":"South Australian Metropolitan Fire Service",
+"EWIS":"Emergency Warning and Intercom System — the evacuation speakers and wardens' phones",
+"FIP":"Fire Indicator Panel — where the brigade reads the alarm state",
+"MECP":"Master Emergency Control Panel",
+"VESDA":"Very Early Smoke Detection Apparatus — aspirating smoke detection, standard in data halls",
+"BMS":"Building Management System — the software brain running HVAC, metering and alarms",
+"MDF":"Main Distribution Frame — where communications cabling enters and is distributed",
+"RCP":"Reflected Ceiling Plan — the drawing convention: the ceiling as seen in a mirror on the floor",
+"HVAC":"Heating, Ventilation and Air Conditioning",
+"AHU":"Air Handling Unit — the big box of fans, coils and filters that conditions supply air",
+"VAV":"Variable Air Volume — ducted air conditioning that throttles airflow per zone",
+"VRF":"Variable Refrigerant Flow — multi-head refrigerant systems (ceiling cassettes)",
+"FCU":"Fan Coil Unit — a small local fan + coil serving one zone",
+"TABS":"Thermally Activated Building Systems — heating/cooling pipes cast into the structure itself",
+"ACH":"Air Changes per Hour — how many times the room's air volume is replaced hourly",
+"COP":"Coefficient of Performance — heat moved ÷ electricity used; a heat pump at COP 4 moves 4 kWh of heat per 1 kWh in",
+"DLC":"Direct Liquid Cooling — cold plates on the chips; heat leaves in water, not air",
+"CRAC":"Computer Room Air Conditioner — refrigerant-based data hall cooling unit",
+"CRAH":"Computer Room Air Handler — chilled-water data hall cooling unit",
+"CDU":"Coolant Distribution Unit — pumps and heat exchangers feeding liquid-cooled racks",
+"UPS":"Uninterruptible Power Supply — batteries (or flywheels) that carry the load until generators start",
+"DRUPS":"Diesel Rotary UPS — a flywheel + diesel engine in one machine",
+"BESS":"Battery Energy Storage System — grid-scale battery containers",
+"PPA":"Power Purchase Agreement — a long-term contract to buy renewable electricity from an off-site wind/solar farm; the standard route to claiming 100% renewable operation",
+"PUE":"Power Usage Effectiveness — total facility power ÷ IT power; 1.0 is perfect, ~1.3 is good, air-cooled legacy runs 1.5+",
+"WUE":"Water Usage Effectiveness — litres of water per kWh of IT energy",
+"BTES":"Borehole Thermal Energy Storage — summer heat banked in the ground via borehole arrays, recovered in winter",
+"ATES":"Aquifer Thermal Energy Storage — seasonal heat storage in groundwater",
+"HVO":"Hydrotreated Vegetable Oil — renewable drop-in diesel, ~90% lifecycle carbon cut",
+"PEM":"Proton Exchange Membrane — the fuel-cell type used for hydrogen standby power",
+"EV":"Electric Vehicle",
+"HX":"Heat exchanger — transfers heat between two fluids that never mix",
+"TIA":"Telecommunications Industry Association — TIA-942 is the (voluntary) data centre facility standard",
+"ASHRAE":"American Society of Heating, Refrigerating and Air-Conditioning Engineers — sets server thermal envelopes (TC 9.9)",
+"AFCOM":"Data centre industry association — publishes the State of the Data Center reports",
+"IEA":"International Energy Agency",
+"NGA":"National Greenhouse Accounts — Australia's official emission factors",
+"OCA":"Open Connect Appliance — Netflix's caching server placed inside local networks",
+"HDFS":"Hadoop Distributed File System — its default of 3 copies per file is the storage-redundancy convention",
+"ISP":"Internet Service Provider",
+"IT load":"Information Technology load — the electricity the servers themselves draw, excluding cooling and overheads",
+"UB":"Universal Beam — the standard hot-rolled steel I-beam",
+"UC":"Universal Column — the squat I-section used for columns",
+"PFC":"Parallel Flange Channel — C-shaped steel section",
+"RHS":"Rectangular Hollow Section",
+"SHS":"Square Hollow Section",
+"CHS":"Circular Hollow Section",
+"CLT":"Cross-Laminated Timber — massive plywood-like slabs and walls",
+"LVL":"Laminated Veneer Lumber — engineered timber beam",
+"PSL":"Parallel Strand Lumber — engineered timber",
+"RC":"Reinforced Concrete",
+"PT":"Post-Tensioned — concrete with stressed tendons, allowing thinner longer slabs",
+"DfMA":"Design for Manufacture and Assembly — factory-made components, bolted together on site, un-boltable later",
+"LCA":"Life Cycle Assessment — the accounting of a building's environmental impacts from cradle to grave",
+"GFA":"Gross Floor Area",
+"NFA":"Net Floor Area",
+"O&M":"Operations and Maintenance (manuals)",
+"POE":"Post-Occupancy Evaluation",
+"PCG":"Project Control Group — the client-side governance table above the whole project",
+"D&C":"Design and Construct — contract where the builder owns design completion (AS 4902); consultants are usually novated",
+"QS":"Quantity Surveyor — the cost consultant",
+"PM":"Project Manager",
+"SCAP":"State Commission Assessment Panel — SA's planning authority for major applications",
+"ODASA":"Office for Design and Architecture South Australia — state design review",
+"ESCOSA":"Essential Services Commission of South Australia — licenses energy utilities, including heat networks",
+"OTR":"Office of the Technical Regulator (SA) — technical safety of energy infrastructure",
+"PDI":"Planning, Development and Infrastructure Act 2016 (SA)",
+"WHS":"Work Health and Safety",
+"DDA":"Disability Discrimination Act 1992",
+"GBCA":"Green Building Council of Australia — runs Green Star",
+"NABERS":"National Australian Built Environment Rating System — operational (and now embodied) performance ratings",
+"LETI":"London Energy Transformation Initiative — publishes widely-used embodied carbon targets",
+"RIBA":"Royal Institute of British Architects — its 2030 Climate Challenge sets carbon targets",
+"EPiC":"Environmental Performance in Construction — University of Melbourne's Australian material carbon database",
+"MBR":"Membrane Bioreactor — compact biological water treatment",
+"UF":"Ultrafiltration — membrane water filtering",
+"RO":"Reverse Osmosis",
+"MVA":"Megavolt-ampere — transformer capacity rating",
+"kWp":"Kilowatts-peak — a solar array's rated output in full sun",
+"kPa":"Kilopascal — pressure/load; floor loads: office ≈ 3 kPa, data hall 12–20 kPa",
+"N+1":"Redundancy: the number of units needed, plus one spare",
+"2N":"Redundancy: full duplication — two complete independent systems",
+"FI passage":"Fire-isolated passageway — a fire-rated corridor that is legally part of the exit",
+"kWh":"Kilowatt-hour — the unit of energy: 1 kW running for 1 hour (a dishwasher cycle ≈ 1 kWh)",
+"MWh":"Megawatt-hour — 1,000 kWh (an Australian home uses ~5–6 MWh a year)",
+"GWh":"Gigawatt-hour — 1,000 MWh (this precinct's heat demand ≈ 9 GWh/yr)",
+"PB":"Petabyte — 1,000 terabytes",
+"TB":"Terabyte — 1,000 gigabytes"
+};
+const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+const esc=s=>s.replace(/[.*+?^${}()|[\]\\/]/g,"\\$&");
+const rx=new RegExp("(?<![A-Za-z0-9])("+keys.map(esc).join("|")+")(?![A-Za-z0-9])","g");
+const SKIP=new Set(["SCRIPT","STYLE","ABBR","TEXTAREA","OPTION","TITLE"]);
+let busy=false;
+function annotate(root){
+  busy=true;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){
+    const p=n.parentElement;
+    if(!p||SKIP.has(p.tagName)||p.closest("svg,abbr,.tip"))return NodeFilter.FILTER_REJECT;
+    rx.lastIndex=0;
+    return rx.test(n.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
+  }});
+  const nodes=[];
+  while(walker.nextNode())nodes.push(walker.currentNode);
+  nodes.forEach(n=>{
+    const frag=document.createDocumentFragment();
+    let last=0; rx.lastIndex=0; let m; const txt=n.nodeValue;
+    while((m=rx.exec(txt))){
+      if(m.index>last)frag.appendChild(document.createTextNode(txt.slice(last,m.index)));
+      const a=document.createElement("abbr");
+      a.className="ab"; a.title=G[m[1]]; a.textContent=m[1];
+      frag.appendChild(a);
+      last=m.index+m[1].length;
+    }
+    if(last<txt.length)frag.appendChild(document.createTextNode(txt.slice(last)));
+    n.parentNode.replaceChild(frag,n);
+  });
+  busy=false;
+}
+function run(){annotate(document.body);}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run);else run();
+let t=null;
+new MutationObserver(muts=>{
+  if(busy)return;
+  clearTimeout(t);
+  t=setTimeout(run,300);
+}).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
+</body>
+</html>

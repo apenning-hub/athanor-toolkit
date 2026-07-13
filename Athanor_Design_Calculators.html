@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Athanor Design Calculators — ARCH 5004 + 6004</title>
+<style>
+  :root{
+    --ink:#1d1d1f; --sec:#86868b; --panel:#f5f5f7; --rule:#d2d2d7; --muted:#aeaeb2;
+    --contract:#af52de; --compliance:#0071e3; --planning:#ff9500; --design:#34c759; --governance:#5856d6;
+    --fire:#ff3b30; --water:#30b0c7;
+    --ok:#34c759; --warn:#ff9500; --bad:#ff3b30;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased}
+  nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:18px;padding:11px 40px;font-size:12px;overflow-x:auto;white-space:nowrap}
+  nav a{color:var(--ink);text-decoration:none}
+  nav a:hover{text-decoration:underline}
+  nav .right{margin-left:auto;color:var(--sec)}
+  header{background:#000;color:#fff;padding:70px 40px 76px}
+  header h1{font-size:clamp(40px,6vw,72px);font-weight:700;line-height:1.04;letter-spacing:-.02em}
+  header p.sub{color:#a1a1a6;font-size:16px;line-height:1.5;margin-top:22px;max-width:66ch}
+  header p.tag{color:#6e6e73;font-size:12px;margin-top:30px}
+  section.tool{padding:64px 40px;max-width:1280px;margin:0 auto}
+  section.tool h2{font-size:clamp(28px,3.6vw,44px);font-weight:700;letter-spacing:-.015em;margin-bottom:6px;display:flex;align-items:center;gap:14px}
+  section.tool h2 .dot{width:14px;height:14px;border-radius:50%;flex:none}
+  section.tool p.lede{color:var(--sec);font-size:14.5px;line-height:1.55;max-width:80ch;margin-bottom:28px}
+  .divider{border:none;border-top:1px solid var(--rule);max-width:1280px;margin:0 auto}
+  .grid{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}}
+  .inputs{background:var(--panel);border-radius:18px;padding:22px}
+  .inputs h3{font-size:13px;font-weight:700;margin-bottom:14px}
+  .field{margin-bottom:13px}
+  .field label{display:flex;align-items:center;font-size:11.5px;font-weight:600;color:var(--sec);margin-bottom:4px}
+  .field input,.field select{width:100%;border:1px solid var(--rule);border-radius:10px;padding:8px 10px;font-size:13.5px;font-family:inherit;background:#fff;color:var(--ink)}
+  .field input:focus,.field select:focus{outline:2px solid #0071e3;border-color:transparent}
+  .field .unit{font-size:10.5px;color:var(--muted);margin-top:2px}
+  .out{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+  .stat{background:var(--panel);border-radius:14px;padding:16px 18px}
+  .stat .v{font-size:22px;font-weight:700;letter-spacing:-.01em}
+  .stat .l{font-size:11px;color:var(--sec);margin-top:3px;line-height:1.35;display:inline}
+  .checks{display:flex;flex-direction:column;gap:8px}
+  .chk{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.45;background:var(--panel);border-radius:12px;padding:10px 14px}
+  .chk .b{width:9px;height:9px;border-radius:50%;flex:none;margin-top:4px}
+  .chk.ok .b{background:var(--ok)} .chk.warn .b{background:var(--warn)} .chk.bad .b{background:var(--bad)} .chk.info .b{background:var(--muted)}
+  .svgwrap{background:var(--panel);border-radius:18px;padding:18px;margin-top:16px}
+  .svgwrap h4{font-size:12px;font-weight:700;margin-bottom:8px;display:flex;align-items:center}
+  .svgwrap svg{width:100%;height:auto;display:block}
+  .note{font-size:11px;color:var(--sec);line-height:1.55;margin-top:14px;max-width:90ch}
+  table.mini{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+  table.mini th{text-align:left;font-size:10.5px;color:var(--sec);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--rule)}
+  table.mini td{padding:7px 8px;border-bottom:1px solid var(--rule)}
+  table.mini td input{width:70px;border:1px solid var(--rule);border-radius:8px;padding:4px 6px;font-size:12px;font-family:inherit}
+  table.mini tr.hl td{background:#e8f1fd;font-weight:700}
+  footer{background:var(--panel);color:var(--sec);font-size:11px;line-height:1.6;padding:34px 40px;margin-top:40px}
+  /* tooltips */
+  .tip{display:inline-flex;width:14px;height:14px;border-radius:50%;background:var(--rule);color:#57575b;font-size:9.5px;align-items:center;justify-content:center;cursor:help;position:relative;margin-left:6px;font-weight:700;flex:none;vertical-align:middle}
+  .tip::after{content:attr(data-tip);position:absolute;bottom:145%;left:50%;transform:translateX(-50%);background:#1d1d1f;color:#fff;font-size:11px;line-height:1.45;font-weight:400;padding:9px 11px;border-radius:9px;width:250px;opacity:0;pointer-events:none;transition:opacity .15s;z-index:70;text-align:left;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+  .tip:hover::after{opacity:1}
+  th .tip{background:#e4e4e7}
+  .presetrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+  .pchip{font-size:10.5px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid var(--rule);background:#fff;color:var(--sec);cursor:pointer;font-family:inherit}
+  .pchip.on,.pchip:hover{border-color:#0071e3;color:#0071e3}
+  .field input[type=range]{width:100%;accent-color:#0071e3}
+  .field label .val{color:#0071e3;font-weight:700;background:#e8f1fd;border-radius:12px;padding:1px 9px;font-size:11px;margin-left:auto}
+  /* segmented controls */
+  .seg{display:flex;background:#e8e8ea;border-radius:12px;padding:3px;gap:3px;flex-wrap:wrap}
+  .seg button{flex:1;min-width:70px;padding:8px 6px;border:none;border-radius:9px;background:transparent;font-size:11.5px;font-weight:600;color:var(--sec);cursor:pointer;font-family:inherit;transition:background .12s,color .12s}
+  .seg button:hover{color:var(--ink)}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .seg button:focus-visible{outline:2px solid #0071e3;outline-offset:1px}
+  /* fine-tune disclosure */
+  .why{background:#fff;border:1px solid var(--rule);border-radius:14px;margin-top:14px;overflow:hidden}
+  .why summary{cursor:pointer;padding:11px 14px;font-size:12px;font-weight:700;color:var(--compliance);list-style:none;display:flex;align-items:center;gap:8px}
+  .why summary::-webkit-details-marker{display:none}
+  .why summary::before{content:"?";width:16px;height:16px;border-radius:50%;background:#e8f1fd;color:var(--compliance);display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex:none}
+  .why[open] summary{border-bottom:1px solid var(--rule)}
+  .why .body{padding:6px 14px 12px}
+  /* ceiling-services cycler */
+  .cybtn{flex:none;width:36px;height:36px;border:1px solid var(--rule);background:#fff;border-radius:10px;font-size:16px;font-weight:600;line-height:1;color:var(--ink);cursor:pointer;font-family:inherit;transition:background .12s,border-color .12s}
+  .cybtn:hover{background:var(--panel);border-color:var(--muted)}
+  .cybtn:focus-visible{outline:2px solid #0071e3;outline-offset:1px}
+  .cypill{min-width:28px;height:28px;padding:0 7px;border:1px solid var(--rule);background:#fff;border-radius:8px;font-size:12.5px;font-weight:700;color:var(--sec);cursor:pointer;font-family:inherit;transition:background .12s,color .12s,border-color .12s}
+  .cypill:hover{border-color:var(--muted);color:var(--ink)}
+  .cypill.on{background:#1d1d1f;color:#fff;border-color:#1d1d1f}
+  .cypill:focus-visible{outline:2px solid #0071e3;outline-offset:1px}
+  #cy_card tr.head td{background:var(--panel);font-weight:700;font-size:12.5px;border-bottom:1px solid var(--rule)}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="Athanor_Project_Web.html">← Project Web</a>
+  <a href="Athanor_DataCentre_NetZero.html"><b>Net-Zero Data Centre ↗</b></a>
+  <a href="#structure">Structure</a>
+  <a href="#services">Ceiling Services</a>
+  <a href="Data_Footprint_Calculator.html">Data Footprint ↗</a>
+  <a href="Athanor_Embodied_Carbon.html" style="color:#34c759"><b>Embodied Carbon ↗</b></a>
+  <a href="Athanor_Glossary.html" style="color:#5856d6"><b>Glossary ↗</b></a>
+  <a href="#stairs">Stairs</a>
+  <a href="#egress">Egress</a>
+  <a href="#sanitary">Sanitary</a>
+  <a href="#parking">Parking</a>
+  <a href="#hvac">HVAC Plant</a>
+  <a href="#pool">Pool Plant</a>
+  <a href="#verify"><b>Verify Register</b></a>
+  <span class="right">ARCH 5004 + 6004 · Athanor · Assessment 1 toolkit</span>
+</nav>
+
+<header>
+  <h1>Design<br>Calculators</h1>
+  <p class="sub">Live sizing feedback for the constraints that shape your building — server halls and aisle containment, stairs, egress, sanitary facilities, parking, HVAC plant and pool plant. Type your numbers; the diagrams redraw and the checks tell you when a constraint bites. Hover any <span class="tip" data-tip="Like this. Every figure in this toolkit has one of these — it tells you exactly which document, standard or precedent the number comes from, so you can cite it in your A1 documentation strategy.">i</span> to see where a number comes from.</p>
+  <p class="tag">Feeds Week 2 (Structure + NCC) → Week 4 Sketch Plan → Week 5 Documentation Strategy oral (CA1). Every output is a starting number to pressure-test with a consultant — not an engineering deliverable.</p>
+</header>
+
+<!-- ============================ 1. DATA HALL ============================ -->
+<section class="tool" id="dc" style="padding-bottom:40px">
+  <h2><span class="dot" style="background:var(--design)"></span>Data centre sizing has moved — and grown</h2>
+  <p class="lede">The data hall calculator has been rebuilt as a full six-step studio tool: people + their digital footprint → sizing → hot/cold aisle layout → cooling + heat recovery → power → water → structure, DfMA + embodied carbon → a 30-year carbon ledger that tells you the year your building goes carbon positive. Includes the net-zero systems library with sizes and indicative costs.</p>
+  <p><a href="Athanor_DataCentre_NetZero.html" style="display:inline-block;background:#1d1d1f;color:#fff;text-decoration:none;font-size:14px;font-weight:700;padding:12px 22px;border-radius:24px">Open the Net-Zero Data Centre tool →</a></p>
+</section>
+
+
+
+<hr class="divider">
+
+<!-- ============================ 2b. STRUCTURE ============================ -->
+<section class="tool" id="structure">
+  <h2><span class="dot" style="background:var(--compliance)"></span>Structural grid planner <span style="font-size:11px;font-weight:700;background:#fdeee8;color:#c46a00;border-radius:12px;padding:3px 10px">RULE OF THUMB — engineer verifies</span></h2>
+  <p class="lede">Two sliders: how far apart the columns are, each way. The plan, section and depths follow. Presets are carpark multiples — the quiet discipline behind most commercial grids. Ratios from Damian Madigan’s <i>Structural and Material Rules of Thumb</i> (UniSA AAD) with commercial systems added (†). The ceiling-zone depth comes from whichever servicing system you pick in the <a href="#services" style="color:var(--compliance)">Ceiling Services</a> module below.</p>
+  <div class="grid">
+    <div class="inputs">
+      <h3>Column spacing</h3>
+      <div class="field"><label>Across the bay — X <span class="val" id="v_stxgx">8.4 m</span></label>
+        <input type="range" id="stx_gx" min="5" max="13" value="8.4" step="0.3">
+        <div class="presetrow"><button class="pchip" data-t="stx_gx" data-v="7.2">7.2 · 3 bays</button><button class="pchip" data-t="stx_gx" data-v="7.8">7.8 · 3 wide bays</button><button class="pchip on" data-t="stx_gx" data-v="8.4">8.4 · studio grid</button><button class="pchip" data-t="stx_gx" data-v="10.8">10.8 · 4 bays</button></div></div>
+      <div class="field"><label>Along the beam — Y <span class="val" id="v_stxgy">8.4 m</span></label>
+        <input type="range" id="stx_gy" min="5" max="18" value="8.4" step="0.3">
+        <div class="presetrow"><button class="pchip on" data-t="stx_gy" data-v="8.4">8.4 · ½ park module</button><button class="pchip" data-t="stx_gy" data-v="16.8">16.8 · clear-span module</button></div></div>
+      <div class="field"><label>Floor system</label><select id="stx_sys"></select><div class="unit" id="stx_note"></div></div>
+      <div id="stx_sel" style="background:#fff;border:1px solid var(--rule);border-radius:12px;padding:10px 12px;font-size:11.5px;line-height:1.5;margin-bottom:13px"></div>
+      <div class="field"><label>Overlay</label>
+        <div class="seg" id="stx_ov"><button data-k="park" class="on">Carparking</button><button data-k="racks">Server racks</button><button data-k="none">None</button></div></div>
+      <details class="why"><summary>Fine-tune (loading · storeys · cantilever)</summary><div class="body">
+        <div class="field"><label>Loading<span class="tip" data-tip="AS/NZS 1170.1 imposed loads (VERIFY): carpark 2.5 kPa · office 3 · assembly/pool deck 5 · plant 5–7.5 · data hall 12–20 (TIA-942 spec, designed under AS 1170). Heavier → deeper end of the span/depth ratio."></span></label>
+          <select id="stx_load"><option value="light">Light — roof / carpark</option><option value="med" selected>Medium — office / community</option><option value="heavy">Heavy — assembly / pool deck</option><option value="vheavy">Very heavy — plant / data hall</option></select></div>
+        <div class="field"><label>Storeys supported (column sizing)</label><input id="stx_st" type="number" value="3" min="1" max="10" step="1" style="width:100%"></div>
+        <div class="field"><label>Edge cantilever <span class="val" id="v_stxcant">0 m</span><span class="tip" data-tip="Rule of thumb: a cantilever behaves at ≤ 1/3 of its backspan and is comfortable at ~1/4. The backspan here is Grid X."></span></label>
+          <input type="range" id="stx_cant" min="0" max="5" value="0" step="0.1"></div>
+      </div></details>
+    </div>
+    <div>
+      <div class="out" id="stx_out"></div>
+      <div class="checks" id="stx_chk"></div>
+      <div class="svgwrap"><h4>Plan — one structural module<span class="tip" data-tip="Thick lines: primary beams spanning Y between columns. Thin lines: secondary beams at ≤3 m centres. Overlays sit BETWEEN the columns — bays to AS/NZS 2890.1, racks at 600 mm. Dashed edge = cantilever."></span></h4><svg id="stx_plan"></svg></div>
+      <div class="svgwrap"><h4>Section — one bay, column to column<span class="tip" data-tip="Slab drawn with its real depth, sitting on wide-but-shallow beams. Services (from the Ceiling Services module) NEST between the beams where they fit — that's the trick that keeps commercial floors thin. Ceiling: 50 mm suspended, or nothing when exposed."></span></h4><svg id="stx_sec"></svg></div>
+      <div class="svgwrap"><h4>Typical span ranges — where your grid sits</h4><svg id="stx_bars"></svg></div>
+      <p class="note">Column quick-size (Ching via Madigan, 3.6 m height): 100 SHS/150 UC ≤ 70 m² · 150 SHS ≤ 220 m² · 200 UC ≤ 280 m² · 250 UC ≤ 420 m² · 300 UC ≤ 560 m² · 350 UC ≤ 1,115 m² supported. Data-hall loading roughly halves each size’s capacity. Stock UB depths: 150/180/200/250/310/360/410/460/530/610.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ============================ 2c. CEILING SERVICES ============================ -->
+<section class="tool" id="services">
+  <h2><span class="dot" style="background:var(--planning)"></span>Ceiling services — component by component <span style="font-size:11px;font-weight:700;background:#fdeee8;color:#c46a00;border-radius:12px;padding:3px 10px">ALL SPACINGS ARE RULES OF THUMB</span></h2>
+  <p class="lede">Every occupied floor of a Class 5/6/9b building carries the same stack overhead. Pick the air system (it sets the depth), then cycle through the components one at a time — each card follows the format of <b>Resource 05</b>: what it is, where it sits in the depth, how big, how far apart, and what it must keep clear of. Numbers start the conversation; the consultant's coordinated model ends it.</p>
+  <div class="grid">
+    <div class="inputs">
+      <div id="svc_air">
+      <h3>Air system</h3>
+      <div class="seg" id="svc_seg" style="flex-direction:column">
+        <button data-k="vav" style="text-align:left">VAV ducted air — 450 mm</button>
+        <button data-k="fcu" style="text-align:left">Ducted fan-coil units — 380 mm</button>
+        <button data-k="cass" style="text-align:left">Ceiling cassettes (VRF) — 320 mm</button>
+        <button data-k="acb" class="on" style="text-align:left">Active chilled beams — 300 mm</button>
+        <button data-k="pcb" style="text-align:left">Passive chilled beams — 250 mm</button>
+        <button data-k="disp" style="text-align:left">Displacement / floor supply — 180 mm</button>
+        <button data-k="rad" style="text-align:left">Radiant panels / TABS — 150 mm</button>
+        <button data-k="exp" style="text-align:left">Exposed services (no ceiling)</button>
+      </div>
+      <div class="unit" id="svc_note" style="margin-top:10px"></div>
+      </div>
+      <div id="svc_airhint" style="display:none;background:#fdf1e3;border:1px solid #f0c890;border-radius:12px;padding:10px 12px;font-size:11.5px;line-height:1.5"></div>
+      <div class="field" style="margin-top:14px"><label>Ceiling finish</label>
+        <div class="seg" id="svc_ceil"><button data-k="grid" class="on">Suspended 50 mm</button><button data-k="set">Set plasterboard</button><button data-k="none">Exposed soffit</button></div></div>
+      <div id="svc_sel" style="background:#fff;border:1px solid var(--rule);border-radius:12px;padding:10px 12px;font-size:11.5px;line-height:1.5;margin-top:12px"></div>
+    </div>
+    <div>
+      <div class="out" id="svc_out"></div>
+      <div class="svgwrap">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <button class="cybtn" id="cy_prev">←</button>
+          <div id="cy_pills" style="display:flex;gap:5px;flex-wrap:wrap;flex:1"></div>
+          <button class="cybtn" id="cy_next">→</button>
+        </div>
+        <table class="mini comptable" id="cy_card"><tbody></tbody></table>
+        <div style="display:grid;grid-template-columns:1fr;gap:22px;margin-top:16px">
+          <div><h4 style="font-size:11.5px;font-weight:700;margin-bottom:8px;color:var(--sec)">THE CEILING IN SECTION — FOUR BANDS, AND WHO LIVES IN EACH</h4><svg id="svc_depth"></svg></div>
+          <div><h4 style="font-size:11.5px;font-weight:700;margin-bottom:8px;color:var(--sec)">TYPICAL SPACING — one 8.4 m bay</h4><svg id="svc_plan" style="max-width:620px;margin:0 auto"></svg></div>
+        </div>
+      </div>
+      <div class="checks" id="svc_chk"></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ============================ 3. STAIRS ============================ -->
+<section class="tool" id="stairs">
+  <h2><span class="dot" style="background:var(--compliance)"></span>Stair calculator</h2>
+  <p class="lede">Geometry per NCC 2022 DtS, drawn live — section and shaft plan update as you type.</p>
+  <div class="grid">
+    <div class="inputs">
+      <h3>Inputs</h3>
+      <div class="field"><label>Floor-to-floor height (mm)<span class="tip" data-tip="Measure structure-to-structure, not ceiling height. Data hall levels often run 5,000–6,000 mm; the pool hall may be taller still."></span></label><input id="st_ff" type="number" value="4200" min="2400" step="50"></div>
+      <div class="field"><label>Target riser (mm)<span class="tip" data-tip="NCC 2022 DtS: riser 115–190 mm. Public buildings sit comfortably at 150–165 mm. The calculator divides floor-to-floor by your target and rounds to a whole number of risers."></span></label><input id="st_r" type="number" value="165" min="100" max="220" step="1"></div>
+      <div class="field"><label>Going (mm)<span class="tip" data-tip="NCC 2022 DtS: going 240–355 mm. Public comfort: 280–320 mm. Checked with the quantity rule 550 ≤ 2R+G ≤ 700."></span></label><input id="st_g" type="number" value="290" min="200" max="400" step="5"></div>
+      <div class="field"><label>Clear stair width (mm)<span class="tip" data-tip="Fire-isolated exits need ≥1,000 mm clear between handrails. The Egress tool below tells you the aggregate width your occupant load demands — divide by the number of stairs."></span></label><input id="st_w" type="number" value="1200" min="800" step="50"></div>
+      <div class="field"><label>Layout</label>
+        <select id="st_lay"><option value="dog" selected>Dog-leg (2 flights, U-return)</option><option value="straight">Straight run</option></select></div>
+    </div>
+    <div>
+      <div class="out" id="st_out"></div>
+      <div class="checks" id="st_chk"></div>
+      <div class="svgwrap"><h4>Section — one flight<span class="tip" data-tip="Drawn at your actual riser (floor-to-floor ÷ whole number of risers) and going. Max 18 risers between landings (NCC); handrails both sides in public stairs; nosings P3/R10 slip-rated (P4/R11 in wet areas)."></span></h4><svg id="st_sec"></svg></div>
+      <div class="svgwrap"><h4>Shaft plan<span class="tip" data-tip="Dog-leg: two flights side by side (2 × width + 150 mm gap) × (flight length + two landings, each ≥ stair width and ≥ 750 mm deep, AS 1428.1). Add ~200 mm all round for fire-rated shaft walls."></span></h4><svg id="st_plan"></svg></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ============================ 4. EGRESS ============================ -->
+<section class="tool" id="egress">
+  <h2><span class="dot" style="background:var(--fire)"></span>Occupancy + egress width</h2>
+  <p class="lede">Populate your programme; occupant numbers come from NCC Table D2D18 (m² per person), and the required aggregate exit width follows the D2D7 method. The bar chart shows who actually drives your egress design.</p>
+  <div class="grid">
+    <div class="inputs" style="grid-column:1/-1">
+      <h3>Programme (edit areas — m²)</h3>
+      <table class="mini" id="eg_tbl">
+        <thead><tr><th>Space</th><th>m²/person <span class="tip" data-tip="NCC 2022 Volume One, Table D2D18. Notable: pool WATER surface counts at 1.5 m²/person separately from the deck; plant rooms at 30 m²/person reflect near-zero occupancy."></span></th><th>Area m²</th><th>People</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div style="grid-column:1/-1">
+      <div class="out" id="eg_out"></div>
+      <div class="checks" id="eg_chk"></div>
+      <div class="svgwrap"><h4>Who drives the egress design<span class="tip" data-tip="Population by space, from your areas ÷ Table D2D18 rates. The longest bars set exit widths, stair counts and sanitary numbers — typically the bathhouse, never the data centre."></span></h4><svg id="eg_bars"></svg></div>
+      <div class="svgwrap"><h4>Required aggregate exit width<span class="tip" data-tip="D2D7 method: 1 m for ≤100 people; +250 mm per 25 (or part) from 100–200; then +500 mm per 60 (stairs) or 75 (level travel) beyond 200. Divide the total across your exits; no exit less than 1 m (750 mm min doorway clear)."></span></h4><svg id="eg_width"></svg></div>
+      <p class="note">No point may be more than 20 m from an exit or point of choice, then 40 m max to one of two exits (D2D5); alternative exits 9–45 m apart (D2D6). Assembly rooms &gt;200 m² of Class 9b need doors swinging in the direction of egress.</p>
+
+      <div class="svgwrap" style="margin-top:22px">
+        <h4>Exit placement planner — drag exits onto walls or into the core<span class="tip" data-tip="Open-plan teaching approximation: distances are straight-line ('crow flight'). A real DtS check measures the actual travel path around walls, pools and fittings — treat green as 'probably fine', amber as 'check the real path', and add margin around pool edges and fixed seating."></span></h4>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end">
+          <div class="field" style="margin:0;width:110px"><label>Plate width m</label><input id="ex_w" type="number" value="48" min="10" max="120" step="2"></div>
+          <div class="field" style="margin:0;width:110px"><label>Plate depth m</label><input id="ex_d" type="number" value="30" min="8" max="90" step="2"></div>
+          <div class="field" style="margin:0;width:110px"><label>Exits</label><select id="ex_n"><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option></select></div>
+        </div>
+        <svg id="ex_svg" style="touch-action:none"></svg>
+        <div class="out" id="ex_out" style="margin-top:14px"></div>
+        <div class="checks" id="ex_chk"></div>
+        <p class="note"><b>Reading the plan:</b> <span style="color:#1f9d46;font-weight:700">green</span> = within 20 m of an exit — D2D5 satisfied directly. <span style="color:#c47a00;font-weight:700">amber</span> = beyond 20 m but with a genuine choice of two different directions, reaching an exit within 40 m — legal, but riding on the point-of-choice argument. <span style="color:#c22e26;font-weight:700">red</span> = non-compliant: add an exit, move one, or subdivide the compartment. The 9 m minimum separation exists so one fire can't block both exits; the 45 m maximum keeps them sharing the load. Exits don’t have to be in the walls: drag one into the middle and it becomes a <b>fire-isolated core</b> (purple) — a rated stair or passageway whose door IS the exit, exactly how centre-core buildings work. The price is the purple dashed <b>fire-isolated passage</b> it must own all the way to open space. Try the bathhouse at 60 × 40 — then remember pools, not walls, decide where people can actually walk.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ============================ 5. SANITARY ============================ -->
+<section class="tool" id="sanitary">
+  <h2><span class="dot" style="background:var(--water)"></span>Sanitary facilities</h2>
+  <p class="lede">Planning approximation from NCC Table F4D4 assembly rates, returned as a full fixture schedule with areas — so the numbers become rooms on your plan.</p>
+  <div class="grid">
+    <div class="inputs">
+      <h3>Inputs</h3>
+      <div class="field"><label>Design population<span class="tip" data-tip="Auto-fed from the Egress tool. F4D4 counts are calculated on the population of the storey/part each facility bank serves."></span></label><input id="sa_p" type="number" value="600" min="10" step="10"></div>
+      <div class="field"><label>% male<span class="tip" data-tip="F4D4 provides separate male/female rates. 50/50 is the default planning split; adjust for programme-specific patterns."></span></label><input id="sa_m" type="number" value="50" min="0" max="100" step="5"></div>
+      <div class="field"><label>Facility type</label>
+        <select id="sa_t"><option value="aquatic" selected>Aquatic / bathhouse (with change villages)</option><option value="assembly">Assembly / community</option><option value="office">Office / research</option></select></div>
+    </div>
+    <div>
+      <div class="out" id="sa_out"></div>
+      <div class="svgwrap"><h4>Fixture schedule<span class="tip" data-tip="Rates encoded — males: 1 pan/100, urinals 1/25 to 50 then 1/50; females: 1 pan/25 to 50 then 1/50; basins 1/30; aquatic showers 1/20 at peak (GSPO practice). Areas: pan/cubicle 3.5 m², urinal 1.5 m², basin 1 m², shower 2 m², accessible WC 5.5 m², AACF 9 m². Verify against the actual Table F4D4 for your final classification mix."></span></h4>
+        <table class="mini" id="sa_tbl"><thead><tr><th>Fixture</th><th>Male</th><th>Female</th><th>Rate basis</th><th>Area m²</th></tr></thead><tbody></tbody></table>
+      </div>
+      <div class="checks" id="sa_chk"></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ============================ 6. PARKING ============================ -->
+<section class="tool" id="parking">
+  <h2><span class="dot" style="background:var(--governance)"></span>Parking layout</h2>
+  <p class="lede">AS/NZS 2890.1 off-street parking geometry, drawn as a live module diagram for your chosen angle and user class.</p>
+  <div class="grid">
+    <div class="inputs">
+      <h3>Inputs</h3>
+      <div class="field"><label>Number of bays</label><input id="pk_n" type="number" value="60" min="1" step="1"></div>
+      <div class="field"><label>Layout angle<span class="tip" data-tip="AS/NZS 2890.1: 90° is most area-efficient overall; angled bays need less aisle but more bay depth and one-way circulation."></span></label>
+        <select id="pk_a"><option value="90" selected>90° (most efficient)</option><option value="60">60°</option><option value="45">45°</option><option value="0">Parallel</option></select></div>
+      <div class="field"><label>User class<span class="tip" data-tip="AS/NZS 2890.1 user classes: 1 = commuter/resident (2.4 m wide), 2 = short-stay public (2.5 m), 3 = high-turnover shopping/medical (2.6 m). All 5.4 m long."></span></label>
+        <select id="pk_c"><option value="1">Class 1 — commuter/resident (2.4 m)</option><option value="2" selected>Class 2 — short-stay public (2.5 m)</option><option value="3">Class 3 — high-turnover (2.6 m)</option></select></div>
+      <div class="field"><label>Building class served<span class="tip" data-tip="NCC D4D6: accessible parking rates by building class — Class 9b assembly ≈ 1 per 50 bays or part; commercial classes lower. Accessible bays per AS/NZS 2890.6: 2.4 m bay + 2.4 m shared zone, 2.5 m headroom."></span></label>
+        <select id="pk_b"><option value="9b" selected>Class 9b — public assembly</option><option value="5">Class 5/6/8 — office, retail, lab</option></select></div>
+    </div>
+    <div>
+      <div class="out" id="pk_out"></div>
+      <div class="checks" id="pk_chk"></div>
+      <div class="svgwrap"><h4>Parking module<span class="tip" data-tip="One double-loaded module drawn to scale: bay dimensions and aisle width per AS/NZS 2890.1 for your angle + class. The hatched bay pair is an AS/NZS 2890.6 accessible bay with its 2.4 m shared zone."></span></h4><svg id="pk_svg"></svg></div>
+      <p class="note">The masterplan context matters more than the maths: Southwark Grounds is a walkable precinct 2 km from the CBD with 1,300 dwellings on site — argue for the minimum the Planning &amp; Design Code allows and spend the saved area on the courtyard. EV-ready boards and generous bicycle parking are expected.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ============================ 7. HVAC ============================ -->
+<section class="tool" id="hvac">
+  <h2><span class="dot" style="background:var(--planning)"></span>HVAC plant sizer</h2>
+  <p class="lede">First-pass cooling loads by use, air quantities at a 10 K supply differential, outdoor air to AS 1668.2, and plant space tested against the BUIL 3004 5%-of-NFA rule.</p>
+  <div class="grid">
+    <div class="inputs" style="grid-column:1/-1">
+      <h3>Spaces (edit areas + occupants)</h3>
+      <table class="mini" id="hv_tbl">
+        <thead><tr><th>Space</th><th>W/m² <span class="tip" data-tip="Typical peak sensible cooling loads for Adelaide (climate zone 5), AIRAH DA09-style first-pass figures: office ~90, café ~160, commercial kitchen ~250, gallery ~100, meeting ~110, gym ~130, fab lab ~150, change rooms ventilation-led ~60. Data hall and pool hall are excluded — they have their own tools."></span></th><th>Area m²</th><th>People</th><th>Cooling kW</th><th>Supply air L/s <span class="tip" data-tip="Air quantity ≈ cooling kW × 83 L/s at a 10 K supply-air differential (Q = kW / (1.2 kg/m³ × 1.006 kJ/kgK × 10 K))."></span></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div style="grid-column:1/-1">
+      <div class="out" id="hv_out"></div>
+      <div class="checks" id="hv_chk"></div>
+      <div class="svgwrap"><h4>Cooling load by space<span class="tip" data-tip="Area × W/m² per row. The biggest bars deserve their own air-handling zones; small loads can share."></span></h4><svg id="hv_bars"></svg></div>
+      <div class="svgwrap"><h4>Plant area — dedicated estimate vs the 5% rule<span class="tip" data-tip="Dedicated estimate: 7 m² per 1,000 L/s of supply air (AHU + access), plus a fixed 125 m² pool-hall dehumidification room. The marker shows the flat BUIL 3004 rule (5% of net floor area) — draw whichever is larger."></span></h4><svg id="hv_plant"></svg></div>
+      <p class="note">Outdoor air: 10 L/s per person (AS 1668.2). Intakes ≥6 m from cooling-tower drift, kitchen/toilet exhaust and the generator flue — locate them on the massing now. Pool hall: 4–6 air changes/hour, chloramine-resistant components, supply air washing the glazing. Heat comes off the district loop (Section J8 reclaimed energy); summer is absorption chilling, not boilers.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ============================ 8. POOL PLANT ============================ -->
+<section class="tool" id="pool">
+  <h2><span class="dot" style="background:var(--water)"></span>Pool plant sizer</h2>
+  <p class="lede">Water volume ÷ turnover time = circulation flow, which sizes filters, pipes and the plant room. Small hot pools, not the lap pool, drive the flow numbers.</p>
+  <div class="grid">
+    <div class="inputs" style="grid-column:1/-1">
+      <h3>Pools (edit dimensions)</h3>
+      <table class="mini" id="pl_tbl">
+        <thead><tr><th>Pool</th><th>Water area m²</th><th>Avg depth m</th><th>Turnover h <span class="tip" data-tip="SA Standard for the Operation of Swimming Pools / GSPO practice: lap pools ~4–6 h, learn-to-swim ~1.5–2 h, leisure ~1–2 h, hydrotherapy ~0.5–1 h, spa ~20–30 min, plunge ~0.5 h. Faster turnover = bigger filters = bigger plant room."></span></th><th>Volume m³</th><th>Flow L/s</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div style="grid-column:1/-1">
+      <div class="out" id="pl_out"></div>
+      <div class="checks" id="pl_chk"></div>
+      <div class="svgwrap"><h4>Circulation flow by pool<span class="tip" data-tip="Flow = volume ÷ turnover. Note how the spa's 20–30 minute turnover makes its flow rival the lap pool's despite 6% of the area — this is what sizes the filtration bank."></span></h4><svg id="pl_bars"></svg></div>
+      <p class="note">Locate the plant room directly below or beside the pools. Chemical stores: two separated, externally-accessed, ventilated, bunded rooms (acid ≠ chlorine); emergency shower/eyewash adjacent. Pool water heats through a secondary heat exchanger off the district loop — fluids never mix. The 25 m lap pool's ~76 m perimeter triggers accessible entry + AACF (Resource 03).</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ============================ VERIFY REGISTER ============================ -->
+<section class="tool" id="verify">
+  <h2><span class="dot" style="background:var(--fire)"></span>What you must verify — and what is only a rule of thumb</h2>
+  <p class="lede">Two kinds of numbers live in this toolkit, and your A1 documentation strategy must treat them differently. <b>Code-derived values</b> come from the NCC or an Australian Standard: they are checkable facts — cite the clause, and verify it yourself at ncc.abcb.gov.au before it appears in a submission (clause numbers below are NCC 2022 as adopted in SA; renumbering errors are on you to catch). <b>Rules of thumb</b> have no legal status at all: they are industry planning conventions for getting the sizes roughly right before a consultant exists — name their source, and never present them as compliance.</p>
+
+  <div class="svgwrap"><h4>Code-derived — VERIFY THE CLAUSE before submission</h4>
+  <table class="mini">
+    <thead><tr><th style="width:30%">Value in this toolkit</th><th style="width:22%">Source to verify</th><th>What to check</th></tr></thead>
+    <tbody>
+      <tr><td>Occupancy rates (m²/person)</td><td>NCC Table D2D18</td><td>Exact rates for your final space mix — pool water vs deck, standing vs seated assembly.</td></tr>
+      <tr><td>Exit width method (1 m / +250 mm / +500 mm)</td><td>NCC D2D7</td><td>The full table incl. door leaf deductions and the stair vs level rates.</td></tr>
+      <tr><td>20 m / 40 m travel, point of choice</td><td>NCC D2D5</td><td>Measured along the real walking path, not crow-flight; Class-specific variations.</td></tr>
+      <tr><td>Exit separation 9–45 m; ≥2 exits</td><td>NCC D2D6 / D2D3</td><td>Measurement method between exit doorways; when more than 2 exits are required.</td></tr>
+      <tr><td>Doors swing in egress direction (>200 m² 9b)</td><td>NCC D3 (swing provisions)</td><td>Exact trigger (area / occupant number) and exemptions.</td></tr>
+      <tr><td>Stair geometry R 115–190, G 240–355, 2R+G 550–700, ≤18 risers</td><td>NCC D3 stair provisions + AS 1428.1</td><td>Public-stair and accessible-stair extras: handrails both sides, nosings, tactiles.</td></tr>
+      <tr><td>Fire-isolated exit ≥1 m; FI passageway discharge</td><td>NCC D2D4 / D2 discharge clauses</td><td>Shaft FRLs (Type A), door ratings, discharge to open space rules.</td></tr>
+      <tr><td>Sanitary fixture counts</td><td>NCC Table F4D4</td><td>The real table by class and sex — this toolkit's rates are a simplified reading of it.</td></tr>
+      <tr><td>Accessible WCs, ambulant cubicles, AACF trigger</td><td>NCC F4D5–F4D7, F4D12</td><td>AACF trigger conditions (aquatic 9b, pool perimeter) and required fit-out.</td></tr>
+      <tr><td>Pool access 40 m / 70 m perimeter rules</td><td>NCC D4 + Specification 16</td><td>Entry types permitted per perimeter band; aquatic wheelchair requirements.</td></tr>
+      <tr><td>Accessway geometry (1:14 ramps, 850 mm doors)</td><td>AS 1428.1</td><td>Every dimension — circulation spaces at doors are the classic plan-killer.</td></tr>
+      <tr><td>Parking bays 2.4–2.6 × 5.4, aisles, 1:4–1:8 ramps, headroom</td><td>AS/NZS 2890.1</td><td>Aisle width by angle + class; ramp transition geometry; sight triangles.</td></tr>
+      <tr><td>Accessible bays + shared zones, 2.5 m headroom</td><td>AS/NZS 2890.6 + NCC D4D6</td><td>Rate for your class mix and the bay/zone geometry.</td></tr>
+      <tr><td>Outdoor air 10 L/s/person</td><td>AS 1668.2</td><td>Rates vary by space type and occupancy density — 10 is the common default, not universal.</td></tr>
+      <tr><td>Pool heating energy source restrictions</td><td>NCC J8</td><td>The reclaimed-energy pathway wording — your central compliance argument.</td></tr>
+      <tr><td>Imposed floor loads (3 / 5 / 7.5 kPa …)</td><td>AS/NZS 1170.1</td><td>The actual imposed-load table for each use; data hall load is a client spec (TIA-942), designed under AS 1170.</td></tr>
+      <tr><td>Pool water quality + operation</td><td>SA Public Health (General) Regs 2013 + SA Standard</td><td>Turnovers, disinfection, chemical storage — legally enforced by council EHOs.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="svgwrap"><h4>Rules of thumb — NO code status; name the source, engineer verifies</h4>
+  <table class="mini">
+    <thead><tr><th style="width:30%">Value</th><th style="width:22%">Convention source</th><th>Reality check</th></tr></thead>
+    <tbody>
+      <tr><td>Span ÷ ratio = beam depth; column areas by size</td><td>Madigan / Ching (studio handout)</td><td>"Very loose" by its own author. Sets section allowances only — engineer sizes everything.</td></tr>
+      <tr><td>Plant space = 5% of NFA + dedicated rooms</td><td>BUIL 3004 checklist (UniSA 2016)</td><td>Humid + high-load programmes exceed it — this project's pool hall certainly does.</td></tr>
+      <tr><td>Cooling W/m² by use; 83 L/s per kW; 7 m²/1,000 L/s AHU</td><td>AIRAH DA09-style practice</td><td>First-pass only; a JV3 model replaces all of it.</td></tr>
+      <tr><td>Pool plant 60–80% of water area; balance 10–15%</td><td>Aquatic-centre planning practice</td><td>Actual plant sizes from turnover flows + filter selection.</td></tr>
+      <tr><td>DC: kW/rack, kW/m², white:grey 1:1, cooling 1.3×, gen 1.4×, 48 h fuel</td><td>NEXTDC specs / TIA-942 / Schneider (dossier)</td><td>Precedent data, not regulation — the client's tier target rewrites all of it.</td></tr>
+      <tr><td>Hot/cold aisle widths, ≤12 racks/row, 12 kPa floors</td><td>TIA-942 + industry practice</td><td>TIA-942 is a voluntary standard; the NCC/AS 1170 govern the actual building.</td></tr>
+      <tr><td>Embodied kg CO₂e/m², t/kW M&E, disassembly −15%</td><td>GBCA/NABERS benchmarks + published LCAs</td><td>Scenario figures — a real LCA tool (eTool, One Click) replaces them in A2/A3.</td></tr>
+      <tr><td>All system costs in the Net-Zero library</td><td>Published AU project data, 2026</td><td>Order-of-magnitude for awareness — a QS owns cost, always.</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note"><b>House rule for submissions:</b> every number in your documentation carries one of two tags — a clause (verified, quoted) or a named convention (attributed, flagged for consultant verification). A number with neither tag is a guess, and juries can smell those.</p>
+</section>
+
+<footer>
+  ARCH 5004 / ARCH 6004 studio teaching resource — Southwark Thermal Commons, prepared July 2026. All calculators give first-pass planning figures for design studio use only, triangulated from the studio technical dossier (NEXTDC/Equinix specifications, TIA-942, ASHRAE, AFCOM, Schneider Electric white papers), AS/NZS 2890.1 &amp; 2890.6, AS 1668.2, SA pool operation standards / GSPO, and NCC 2022 (as adopted in SA). They are not engineering deliverables — verify every number with the relevant consultant and current code text at ncc.abcb.gov.au.
+</footer>
+
+<script>
+/* ================= helpers ================= */
+const $=id=>document.getElementById(id);
+const f0=x=>Math.round(x).toLocaleString();
+const f1=x=>(Math.round(x*10)/10).toLocaleString();
+function stats(el,arr){el.innerHTML=arr.map(([v,l,tip])=>`<div class="stat"><div class="v">${v}</div><div class="l">${l}</div>${tip?`<span class="tip" data-tip="${tip}">i</span>`:""}</div>`).join("");}
+function checks(el,arr){el.innerHTML=arr.map(([s,t])=>`<div class="chk ${s}"><span class="b"></span><div>${t}</div></div>`).join("");}
+/* horizontal bar chart */
+function hbars(svg,rows,unit){
+  const W=800, rh=26, gap=8, lw=250, max=Math.max(...rows.map(r=>r[1]),0.001);
+  const H=rows.length*(rh+gap)+10;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.innerHTML=rows.map((r,i)=>{
+    const y=i*(rh+gap)+5, bw=Math.max(2,(W-lw-120)*r[1]/max);
+    return `<text x="${lw-10}" y="${y+rh/2+4}" text-anchor="end" font-size="11.5" fill="#1d1d1f" font-weight="600">${r[0]}</text>
+      <rect x="${lw}" y="${y}" width="${bw}" height="${rh}" rx="6" fill="${r[2]}"/>
+      <text x="${lw+bw+8}" y="${y+rh/2+4}" font-size="11.5" fill="#86868b" font-weight="600">${r[3]!==undefined?r[3]:f0(r[1])} ${unit}</text>`;
+  }).join("");
+}
+/* single stacked bar */
+function stacked(svg,segs,total,marker){
+  const W=800,H=marker?96:78,bh=34,y=26;
+  const sum=segs.reduce((a,s)=>a+s[1],0);
+  const T=Math.max(total||sum,sum,0.001);
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  let x=20,out="";
+  segs.forEach(s=>{
+    const w=(W-40)*s[1]/T;
+    out+=`<rect x="${x}" y="${y}" width="${Math.max(1,w)}" height="${bh}" fill="${s[2]}"/>`;
+    if(w>60)out+=`<text x="${x+w/2}" y="${y+bh/2+4}" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">${s[0]}</text>`;
+    x+=w;
+  });
+  out+=`<rect x="20" y="${y}" width="${W-40}" height="${bh}" fill="none" stroke="#d2d2d7"/>`;
+  // legend
+  let lx=20;
+  segs.forEach(s=>{
+    out+=`<circle cx="${lx+5}" cy="12" r="5" fill="${s[2]}"/><text x="${lx+15}" y="16" font-size="11" fill="#86868b">${s[0]} — ${s[3]}</text>`;
+    lx+=15+(s[0].length+s[3].length)*6.4+26;
+  });
+  if(marker){
+    const mx=20+(W-40)*marker[0]/T;
+    out+=`<line x1="${mx}" y1="${y-8}" x2="${mx}" y2="${y+bh+8}" stroke="#1d1d1f" stroke-width="2" stroke-dasharray="4 3"/>
+      <text x="${Math.min(mx+6,W-200)}" y="${y+bh+20}" font-size="11" font-weight="600" fill="#1d1d1f">${marker[1]}</text>`;
+  }
+  svg.innerHTML=out;
+}
+
+/* ================= 3. STAIRS ================= */
+function stCalc(){
+  const ff=+$("st_ff").value||3000, rT=+$("st_r").value||165, g=+$("st_g").value||290,
+        wmm=+$("st_w").value||1000, lay=$("st_lay").value;
+  const n=Math.max(2,Math.round(ff/rT));
+  const r=ff/n;
+  const q=2*r+g;
+  const flights=lay==="dog"?2:1;
+  const perFlight=Math.ceil(n/flights);
+  const flen=(perFlight-1)*g/1000;
+  const land=Math.max(wmm/1000,0.75);
+  checks($("st_chk"),[
+    [r>=115&&r<=190?"ok":"bad",`Actual riser <b>${f1(r)} mm</b> (${n} risers) — DtS range 115–190 mm.${r>190?" <b>Too steep — add a riser.</b>":r<115?" <b>Too shallow — remove a riser.</b>":""}${r>180&&r<=190?" For public stairs aim ≤180, ideally 150–165.":""}`],
+    [g>=240&&g<=355?"ok":"bad",`Going <b>${g} mm</b> — DtS range 240–355 mm. Public comfort: 280–320.`],
+    [q>=550&&q<=700?"ok":"bad",`2R + G = <b>${f1(q)} mm</b> — must sit between 550 and 700.${q<550?" Increase going or riser.":q>700?" Reduce going or riser.":""}`],
+    [perFlight<=18?"ok":"bad",`${perFlight} risers per flight — max 18 between landings.${perFlight>18?" Add a landing/flight.":""}`],
+    [wmm>=1000?"ok":"warn",`Width <b>${wmm} mm</b> — fire-isolated exits need ≥1,000 mm clear; check the Egress tool for the width your occupant load demands.`],
+  ]);
+  const shaftW=lay==="dog"?(2*wmm+150)/1000:wmm/1000;
+  const shaftL=flen+2*land;
+  stats($("st_out"),[
+    [n+" risers","@ "+f1(r)+" mm actual","Floor-to-floor ÷ target riser, rounded to a whole number; actual riser = floor-to-floor ÷ count. All risers must be equal (NCC)."],
+    [flights+" × "+perFlight,"flights × risers","Max 18 risers per flight (NCC); landings ≥ "+f1(land)+" m deep (≥ stair width, ≥750 mm — AS 1428.1)."],
+    [f1(flen)+" m","flight plan length","(risers per flight − 1) × going."],
+    [f1(shaftW)+" × "+f1(shaftL)+" m","indicative shaft","Dog-leg: 2 × width + 150 mm gap, by flight + 2 landings. Add ~0.2 m fire-rated walls all round."],
+    [f1(shaftW*shaftL)+" m²","shaft footprint","Per stair, repeated on every level — multiply by your stair count from the Egress tool."],
+  ]);
+  /* section */
+  const sec=$("st_sec");
+  const secW=760, secH=300, pad=44;
+  const sx=(secW-2*pad)/((perFlight-1)*g||1), sy=(secH-2*pad)/(perFlight*r||1), sc=Math.min(sx,sy);
+  let px=pad, py=secH-pad, path=`M ${px} ${py}`;
+  for(let i=0;i<perFlight;i++){
+    py-=r*sc; path+=` L ${px} ${py}`;
+    if(i<perFlight-1){px+=g*sc; path+=` L ${px} ${py}`;}
+  }
+  sec.setAttribute("viewBox",`0 0 ${secW} ${secH}`);
+  sec.innerHTML=`
+    <line x1="${pad-14}" y1="${secH-pad}" x2="${secW-pad+30}" y2="${secH-pad}" stroke="#d2d2d7" stroke-width="6"/>
+    <path d="${path}" fill="none" stroke="#1d1d1f" stroke-width="2.5"/>
+    <line x1="${pad}" y1="${secH-pad}" x2="${pad}" y2="${secH-pad-r*sc}" stroke="#0071e3" stroke-width="2"/>
+    <text x="${pad-6}" y="${secH-pad-r*sc/2+4}" text-anchor="end" font-size="11" font-weight="700" fill="#0071e3">R ${f1(r)}</text>
+    <line x1="${pad}" y1="${secH-pad-r*sc}" x2="${pad+g*sc}" y2="${secH-pad-r*sc}" stroke="#ff9500" stroke-width="2"/>
+    <text x="${pad+g*sc/2}" y="${secH-pad-r*sc-8}" text-anchor="middle" font-size="11" font-weight="700" fill="#ff9500">G ${g}</text>
+    <text x="${secW-pad}" y="${pad-16}" text-anchor="end" font-size="11.5" font-weight="600" fill="#86868b">${perFlight} risers · climbs ${f0(perFlight*r)} mm · runs ${f1(flen)} m · 2R+G = ${f1(q)}</text>`;
+  /* plan */
+  const pl=$("st_plan");
+  const pW=760,pH=240,pp=40;
+  const scp=Math.min((pW-2*pp)/shaftL,(pH-2*pp)/shaftW);
+  const sw=shaftL*scp, sh=shaftW*scp, ox=pp, oy=(pH-sh)/2;
+  const landW=land*scp, fw=(wmm/1000)*scp, gap=0.15*scp;
+  let plan=`<rect x="${ox}" y="${oy}" width="${sw}" height="${sh}" fill="#fff" stroke="#1d1d1f" stroke-width="2"/>`;
+  if(lay==="dog"){
+    plan+=`<rect x="${ox+landW}" y="${oy}" width="${sw-2*landW}" height="${fw}" fill="#e8f1fd" stroke="#0071e3"/>
+      <rect x="${ox+landW}" y="${oy+fw+gap}" width="${sw-2*landW}" height="${fw}" fill="#fdeee8" stroke="#ff9500"/>
+      <text x="${ox+sw/2}" y="${oy+fw/2+4}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0071e3">FLIGHT UP →</text>
+      <text x="${ox+sw/2}" y="${oy+fw+gap+fw/2+4}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#c46a00">← FLIGHT</text>
+      <text x="${ox+landW/2}" y="${oy+sh/2+4}" text-anchor="middle" font-size="9.5" fill="#86868b" transform="rotate(-90 ${ox+landW/2} ${oy+sh/2})">LANDING</text>
+      <text x="${ox+sw-landW/2}" y="${oy+sh/2+4}" text-anchor="middle" font-size="9.5" fill="#86868b" transform="rotate(-90 ${ox+sw-landW/2} ${oy+sh/2})">LANDING</text>`;
+  } else {
+    plan+=`<rect x="${ox+landW}" y="${oy+(sh-fw)/2}" width="${sw-2*landW}" height="${fw}" fill="#e8f1fd" stroke="#0071e3"/>
+      <text x="${ox+sw/2}" y="${oy+sh/2+4}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0071e3">FLIGHT UP →</text>`;
+  }
+  plan+=`<text x="${ox+sw/2}" y="${oy+sh+24}" text-anchor="middle" font-size="11" font-weight="600" fill="#86868b">${f1(shaftW)} m × ${f1(shaftL)} m shaft · ${f1(shaftW*shaftL)} m² (+ fire-rated walls)</text>`;
+  pl.setAttribute("viewBox",`0 0 ${pW} ${pH+10}`);
+  pl.innerHTML=plan;
+}
+["st_ff","st_r","st_g","st_w","st_lay"].forEach(id=>$(id).addEventListener("input",stCalc));
+
+/* ================= 4. EGRESS ================= */
+const EG=[
+ ["Pool water surface (lap + therapy)",1.5,450,"#30b0c7"],
+ ["Pool deck / concourse",2.5,700,"#30b0c7"],
+ ["Café / dining",1,150,"#ff9500"],
+ ["Exhibition / gallery",4,300,"#5856d6"],
+ ["Community / meeting rooms",1.5,250,"#5856d6"],
+ ["Gym / fitness",3,0,"#34c759"],
+ ["Office / research / digital twin",10,900,"#0071e3"],
+ ["Fabrication lab / workshop",5,300,"#0071e3"],
+ ["Server hall + plant",30,1800,"#af52de"],
+];
+const egBody=document.querySelector("#eg_tbl tbody");
+EG.forEach((r,i)=>{
+  const tr=document.createElement("tr");
+  tr.innerHTML=`<td>${r[0]}</td><td>${r[1]}</td><td><input id="eg_a${i}" type="number" value="${r[2]}" min="0" step="10"></td><td id="eg_p${i}">—</td>`;
+  egBody.appendChild(tr);
+});
+function egWidth(p,stair){
+  if(p<=100)return 1;
+  if(p<=200)return 1+0.25*Math.ceil((p-100)/25);
+  return 2+0.5*Math.ceil((p-200)/(stair?60:75));
+}
+function egCalc(){
+  let P=0; const bars=[];
+  EG.forEach((r,i)=>{
+    const a=+$("eg_a"+i).value||0;
+    const p=Math.ceil(a/r[1]);
+    $("eg_p"+i).textContent=p?f0(p):"—";
+    if(p>0)bars.push([r[0],p,r[3]]);
+    P+=p;
+  });
+  const wS=egWidth(P,true), wL=egWidth(P,false);
+  const doors=Math.ceil(wL/0.85);
+  stats($("eg_out"),[
+    [f0(P),"total design population","Sum of area ÷ Table D2D18 rate per space."],
+    [f1(wS)+" m","aggregate stair exit width","D2D7 method with the 60-persons-per-500 mm stair rate beyond 200 people."],
+    [f1(wL)+" m","aggregate level exit width","D2D7 with the 75-persons-per-500 mm level rate — ≈ "+doors+" × 850 mm clear door leaves."],
+    ["≥ 2 exits","per storey","D2D3; alternative exits 9–45 m apart (D2D6); 20 m / 40 m travel rule (D2D5)."],
+  ]);
+  checks($("eg_chk"),[
+    [P>500?"warn":"ok",`Population <b>${f0(P)}</b>. ${P>500?"Assembly-scale egress: expect ≥3 exits from the bathhouse level and doors swinging outward throughout.":"Manageable with two well-placed exits per storey — verify travel distances on plan."}`],
+    ["info",`Each fire-isolated stair must individually carry its share: aggregate ${f1(wS)} m ÷ number of stairs — check that against your Stair tool width.`],
+    ["info",`Population <b>${f0(P)}</b> feeds the Sanitary tool automatically.`],
+  ]);
+  hbars($("eg_bars"),bars,"people");
+  const wsvg=$("eg_width");
+  const W=800,H=110;
+  wsvg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const max=Math.max(wS,wL);
+  const rows=[["Stairs",wS,"#ff3b30"],["Level paths",wL,"#ff9500"]];
+  wsvg.innerHTML=rows.map((r,i)=>{
+    const y=i*48+8, bw=(W-260)*r[1]/max;
+    let seg="";
+    for(let m=1;m<r[1];m++)seg+=`<line x1="${140+bw*m/r[1]}" y1="${y}" x2="${140+bw*m/r[1]}" y2="${y+30}" stroke="#fff" stroke-width="2"/>`;
+    return `<text x="130" y="${y+20}" text-anchor="end" font-size="11.5" font-weight="600">${r[0]}</text>
+      <rect x="140" y="${y}" width="${bw}" height="30" rx="6" fill="${r[2]}"/>${seg}
+      <text x="${148+bw}" y="${y+20}" font-size="11.5" font-weight="700" fill="#1d1d1f">${f1(r[1])} m aggregate</text>`;
+  }).join("")+`<text x="140" y="${H-4}" font-size="10" fill="#86868b">white ticks = metres · divide across your exits, none narrower than 1 m</text>`;
+  $("sa_p").value=P; saCalc();
+}
+EG.forEach((r,i)=>$("eg_a"+i).addEventListener("input",egCalc));
+
+/* ================= 5. SANITARY ================= */
+function saCalc(){
+  const P=+$("sa_p").value||0, pmr=(+$("sa_m").value||50)/100, t=$("sa_t").value;
+  const M=Math.round(P*pmr), F=P-M;
+  let mp,mu,fp;
+  if(t==="office"){mp=Math.ceil(M/50);mu=Math.ceil(M/50);fp=Math.ceil(F/25);}
+  else{
+    mp=Math.max(1,Math.ceil(M/100));
+    mu=M<=50?Math.ceil(M/25):2+Math.ceil((M-50)/50);
+    fp=F<=50?Math.ceil(F/25):2+Math.ceil((F-50)/50);
+  }
+  const basM=Math.ceil(M/30),basF=Math.ceil(F/30);
+  const shw=t==="aquatic"?Math.ceil(P/20/2):0;
+  const banks=Math.max(1,Math.ceil(P/400));
+  const rows=[
+    ["Closet pans",mp,fp,"M 1/100 · F 1/25→1/50 (F4D4 assembly)",(mp+fp)*3.5],
+    ["Urinals",mu,"—","1/25 to 50, then 1/50",mu*1.5],
+    ["Basins",basM,basF,"1 per 30",(basM+basF)*1],
+    ...(shw?[["Showers",shw,shw,"1/20 at peak (GSPO aquatic practice)",shw*2*2]]:[]),
+    ["Accessible unisex WC",banks,"(shared)","1 per bank of toilets (F4D5)",banks*5.5],
+    ["Ambulant cubicles",banks,banks,"1 per separate-sex block (F4D6)","incl."],
+    ...(t==="aquatic"?[["Adult change facility (AACF)",1,"(shared)","Class 9b aquatic, pool perimeter >70 m",9]]:[]),
+  ];
+  const area=rows.reduce((a,r)=>a+(typeof r[4]==="number"?r[4]:0),0);
+  document.querySelector("#sa_tbl tbody").innerHTML=
+    rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${typeof r[4]==="number"?f1(r[4]):r[4]}</td></tr>`).join("")+
+    `<tr class="hl"><td>Total</td><td colspan="3"></td><td>≈ ${f0(area)} m²</td></tr>`;
+  stats($("sa_out"),[
+    [f0(M)+" / "+f0(F),"males / females","Population × your split. F4D4 counts males and females separately."],
+    ["≈ "+f0(area)+" m²","total sanitary area","Fixture counts × planning areas (pan 3.5, urinal 1.5, basin 1, shower 2, accessible 5.5, AACF 9 m²)."],
+  ]);
+  checks($("sa_chk"),[
+    ["info",`Planning approximation of NCC Table F4D4 — verify the table for your final classification mix and the change-village model if using family/all-gender change.`],
+    [t==="aquatic"?"warn":"info",t==="aquatic"?`Pool perimeter &gt; 70 m ⇒ <b>AACF required</b> (hoist + adult change table) — in the schedule above. See Resource 03.`:`Aquatic mode adds showers + AACF — switch facility type if your programme includes the bathhouse.`],
+  ]);
+}
+["sa_p","sa_m","sa_t"].forEach(id=>$(id).addEventListener("input",saCalc));
+
+/* ================= 6. PARKING ================= */
+function pkCalc(){
+  const n=+$("pk_n").value||0, a=$("pk_a").value, cls=+$("pk_c").value, b=$("pk_b").value;
+  const bw={1:2.4,2:2.5,3:2.6}[cls];
+  const aisleW={90:5.8+0.4*(cls-1),60:4.9,45:3.8,0:3.6}[a];
+  const gross={90:26,60:30,45:32,0:35}[a]+0.6*(cls-1);
+  const acc=b==="9b"?Math.max(1,Math.ceil(n/50)):Math.max(1,Math.ceil(n/100));
+  const area=n*gross+acc*(2.4*5.4);
+  stats($("pk_out"),[
+    [f0(n)+" bays",bw+" × 5.4 m @ "+(a==="0"?"parallel":a+"°"),"AS/NZS 2890.1 user class "+cls+" bay envelope (parallel bays: 2.3 × 6.3 m)."],
+    [f1(aisleW)+" m","aisle width","AS/NZS 2890.1 aisle for this angle + class; angled layouts are one-way."],
+    [acc,"accessible bays","NCC D4D6 rate for "+(b==="9b"?"Class 9b (≈1 per 50 or part)":"commercial classes")+"; AS/NZS 2890.6 geometry: 2.4 m bay + 2.4 m shared zone."],
+    ["≈ "+f0(area)+" m²","gross area — "+f1(gross)+" m²/car","Bay + share of aisle and local circulation (excl. ramps + cores). 90° ≈ 26 m²/car is the standard planning figure."],
+  ]);
+  checks($("pk_chk"),[
+    ["ok",`Headroom 2.2 m general, <b>2.5 m over accessible bays</b> and their route — sets carpark floor-to-floor at ≈ 2.8–3.1 m.`],
+    ["info",`Ramps: 1:8 comfortable, 1:5 typical max, 1:4 only short straight runs with 1:8 transitions (AS 2890.1). One 3 m level change ≈ 15–24 m of ramp run plus transitions.`],
+    ["warn",`Check the Planning &amp; Design Code rate for the Southwark policy area — precinct walkability + 1,300 on-site dwellings argue for minimum car parking, maximum bicycle provision.`],
+  ]);
+  /* module diagram */
+  const svg=$("pk_svg");
+  const W=800,H=360,sc=34;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const bays=6, deg=+a;
+  let out="";
+  if(deg===0){
+    const bl=6.3*sc/1.6,bwp=2.3*sc/1.6,ax=3.6*sc/1.6;
+    let y=60;
+    for(let s=0;s<2;s++){
+      for(let i=0;i<3;i++)out+=`<rect x="${80+i*(bl+6)}" y="${y}" width="${bl}" height="${bwp}" fill="${s===0&&i===0?"#dbeffd":"#f5f5f7"}" stroke="#1d1d1f"/>`;
+      if(s===0){out+=`<rect x="${80}" y="${y+bwp}" width="${3*(bl+6)}" height="${ax}" fill="rgba(88,86,214,.15)"/><text x="${80+1.5*(bl+6)}" y="${y+bwp+ax/2+4}" text-anchor="middle" font-size="11" font-weight="700" fill="#5856d6">AISLE 3.6 m (one-way)</text>`;y+=bwp+ax;}
+    }
+    out+=`<text x="80" y="46" font-size="11" font-weight="600" fill="#86868b">Parallel bays 2.3 × 6.3 m</text>`;
+  } else {
+    const rad=deg*Math.PI/180, depth=(5.4*Math.sin(rad)+bw*Math.cos(rad))*sc, pitch=bw/Math.sin(rad)*sc, ax=aisleW*sc;
+    const totalH=2*depth+ax, oy=(H-46-totalH)/2+18;
+    const skew=90-deg;
+    for(let s=0;s<2;s++){
+      const y=s===0?oy:oy+depth+ax;
+      for(let i=0;i<bays;i++){
+        const x=90+i*pitch;
+        const acc0=(s===0&&i===0);
+        out+=`<g transform="translate(${x},${y}) skewX(${s===0?-skew:skew})"><rect x="0" y="0" width="${bw*sc}" height="${depth}" fill="${acc0?"#dbeffd":"#f5f5f7"}" stroke="#1d1d1f"/></g>`;
+        if(acc0)out+=`<g transform="translate(${x+pitch},${y}) skewX(${-skew})"><rect x="0" y="0" width="${bw*sc}" height="${depth}" fill="rgba(0,113,227,.12)" stroke="#0071e3" stroke-dasharray="4 3"/><text x="${bw*sc/2}" y="${depth/2}" text-anchor="middle" font-size="8.5" fill="#0071e3" font-weight="700">SHARED</text></g>`;
+      }
+      out+=`<text x="${90+bays*pitch+14}" y="${y+depth/2}" font-size="10" fill="#86868b">${s===0?"bay depth "+f1(depth/sc)+" m":""}</text>`;
+    }
+    out+=`<rect x="70" y="${oy+depth}" width="${bays*pitch+60}" height="${ax}" fill="rgba(88,86,214,.15)"/>
+      <text x="${90+bays*pitch/2}" y="${oy+depth+ax/2+4}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#5856d6">AISLE ${f1(aisleW)} m ${deg!==90?"(one-way)":""}</text>
+      <text x="90" y="${oy-10}" font-size="11" font-weight="600" fill="#86868b">${deg}° bays · ${bw} × 5.4 m · module depth ${f1((2*depth+ax)/sc)} m · blue pair = accessible bay + shared zone (AS/NZS 2890.6)</text>`;
+  }
+  svg.innerHTML=out;
+}
+["pk_n","pk_a","pk_c","pk_b"].forEach(id=>$(id).addEventListener("input",pkCalc));
+
+/* ================= 7. HVAC ================= */
+const HV=[
+ ["Office / research / digital twin",90,900,90,"#0071e3"],
+ ["Café / dining",160,150,150,"#ff9500"],
+ ["Commercial kitchen",250,60,10,"#ff3b30"],
+ ["Exhibition / gallery",100,300,75,"#5856d6"],
+ ["Community / meeting rooms",110,250,165,"#af52de"],
+ ["Gym / group fitness",130,0,0,"#34c759"],
+ ["Fabrication lab",150,300,60,"#30b0c7"],
+ ["Change rooms (ventilation-led)",60,400,100,"#86868b"],
+];
+const hvBody=document.querySelector("#hv_tbl tbody");
+HV.forEach((r,i)=>{
+  const tr=document.createElement("tr");
+  tr.innerHTML=`<td>${r[0]}</td><td>${r[1]}</td>
+    <td><input id="hv_a${i}" type="number" value="${r[2]}" min="0" step="10"></td>
+    <td><input id="hv_p${i}" type="number" value="${r[3]}" min="0" step="5"></td>
+    <td id="hv_k${i}">—</td><td id="hv_s${i}">—</td>`;
+  hvBody.appendChild(tr);
+});
+function hvCalc(){
+  let kW=0,air=0,ppl=0,na=0; const bars=[];
+  HV.forEach((r,i)=>{
+    const a=+$("hv_a"+i).value||0,p=+$("hv_p"+i).value||0;
+    const k=a*r[1]/1000, s=k*83;
+    $("hv_k"+i).textContent=k?f1(k):"—";
+    $("hv_s"+i).textContent=s?f0(s):"—";
+    if(k>0)bars.push([r[0],k,r[4],f1(k)]);
+    kW+=k;air+=s;ppl+=p;na+=a;
+  });
+  const oa=ppl*10, ahu=air/1000*7, poolAHU=125, plant5=na*0.05;
+  stats($("hv_out"),[
+    [f1(kW)+" kW","comfort cooling total","Σ area × W/m² (excl. data hall — 1.3× IT in its own tool — and pool hall)."],
+    [f0(air)+" L/s","supply air","Cooling × 83 L/s per kW at 10 K ΔT."],
+    [f0(oa)+" L/s","outdoor air","AS 1668.2: 10 L/s per person × "+f0(ppl)+" people."],
+    ["≈ "+f0(ahu)+" m²","AHU plant space","7 m² per 1,000 L/s incl. access — plus dedicated 125 m² pool dehumidification room."],
+    [f0(plant5)+" m²","BUIL 3004 5% rule","5% of "+f0(na)+" m² NFA — the flat studio allowance, for comparison."],
+  ]);
+  checks($("hv_chk"),[
+    [ahu+poolAHU>plant5?"warn":"ok",`Dedicated estimate (${f0(ahu+poolAHU)} m²) ${ahu+poolAHU>plant5?"exceeds":"sits inside"} the flat 5% rule (${f0(plant5)} m²) — draw the larger number until an engineer refines it.`],
+    ["info",`Outdoor air intakes ≥6 m from cooling-tower drift, kitchen/toilet exhaust and the generator flue — locate on the massing now.`],
+  ]);
+  hbars($("hv_bars"),bars,"kW");
+  stacked($("hv_plant"),[["AHU rooms",ahu,"#ff9500",f0(ahu)+" m²"],["Pool dehumid.",poolAHU,"#30b0c7",poolAHU+" m²"]],Math.max(plant5*1.15,ahu+poolAHU),[plant5,"5% rule: "+f0(plant5)+" m²"]);
+}
+HV.forEach((r,i)=>{["hv_a"+i,"hv_p"+i].forEach(id=>$(id).addEventListener("input",hvCalc));});
+
+/* ================= 8. POOL ================= */
+const PL=[
+ ["25 m lap pool (6 lanes)",325,2.0,5,"#0071e3"],
+ ["Learn-to-swim / program",120,0.9,1.75,"#30b0c7"],
+ ["Warm leisure pool",100,1.0,1.5,"#34c759"],
+ ["Hydrotherapy",50,1.2,0.75,"#af52de"],
+ ["Spa / hot pools",20,0.9,0.4,"#ff9500"],
+ ["Cold plunge",10,1.2,0.5,"#5856d6"],
+];
+const plBody=document.querySelector("#pl_tbl tbody");
+PL.forEach((r,i)=>{
+  const tr=document.createElement("tr");
+  tr.innerHTML=`<td>${r[0]}</td>
+    <td><input id="pl_a${i}" type="number" value="${r[1]}" min="0" step="5"></td>
+    <td><input id="pl_d${i}" type="number" value="${r[2]}" min="0" step="0.1"></td>
+    <td><input id="pl_t${i}" type="number" value="${r[3]}" min="0.1" step="0.25"></td>
+    <td id="pl_v${i}">—</td><td id="pl_f${i}">—</td>`;
+  plBody.appendChild(tr);
+});
+function plCalc(){
+  let A=0,V=0,F=0; const bars=[];
+  PL.forEach((r,i)=>{
+    const a=+$("pl_a"+i).value||0,d=+$("pl_d"+i).value||0,t=+$("pl_t"+i).value||1;
+    const v=a*d, f=v*1000/(t*3600);
+    $("pl_v"+i).textContent=v?f0(v):"—";
+    $("pl_f"+i).textContent=f?f1(f):"—";
+    if(f>0)bars.push([r[0],f,r[4],f1(f)]);
+    A+=a;V+=v;F+=f;
+  });
+  stats($("pl_out"),[
+    [f0(A)+" m²","total water area","Occupancy: "+f0(Math.ceil(A/1.5))+" people attributable at D2D18's 1.5 m²/person of water."],
+    [f0(V)+" m³","total volume · "+f1(F)+" L/s combined flow","Σ area × depth; flow = volume ÷ turnover per pool."],
+    [f0(A*0.6)+"–"+f0(A*0.8)+" m²","pool plant room","60–80% of water area for a multi-pool facility (aquatic-centre planning practice)."],
+    [f0(V*0.10)+"–"+f0(V*0.15)+" m³","balance tanks","10–15% of circulated volume; confined-space access provisions apply."],
+    ["≈ "+f0(V*4186*30/3.6e6)+" kWh","heat-up energy per 30 K","m³ × 4.186 kJ/kg·K × ΔT — the district loop's job; continuous losses (evaporation) size the heat exchangers."],
+  ]);
+  checks($("pl_chk"),[
+    ["warn",`25 m lap pool perimeter ≈ 76 m (&gt;70 m) — accessible entry must be ramp / zero-depth / platform lift (not sling-only) <b>and</b> an AACF is required (Resource 03).`],
+    ["info",`Chemical stores: 2 × 10–15 m², separated (acid ≠ chlorine), externally accessed, ventilated, bunded — SA Health Standard + AS 3780.`],
+  ]);
+  hbars($("pl_bars"),bars,"L/s");
+}
+PL.forEach((r,i)=>{["pl_a"+i,"pl_d"+i,"pl_t"+i].forEach(id=>$(id).addEventListener("input",plCalc));});
+
+/* ================= EXIT PLACEMENT PLANNER ================= */
+const EX={W:48,D:30,n:2,pts:[]};
+function exDefaults(){
+  EX.pts = EX.n===2 ? [[EX.W/2,0],[EX.W/2,EX.D]]
+        : EX.n===3 ? [[EX.W/2,0],[EX.W,EX.D/2],[EX.W/2,EX.D]]
+        : [[EX.W/2,0],[EX.W,EX.D/2],[EX.W/2,EX.D],[0,EX.D/2]];
+}
+function exIsEdge(e){return e[0]<=0||e[0]>=EX.W||e[1]<=0||e[1]>=EX.D;}
+function exNearestEdgePt(e){
+  const opts=[[e[1],[e[0],0]],[EX.D-e[1],[e[0],EX.D]],[e[0],[0,e[1]]],[EX.W-e[0],[EX.W,e[1]]]];
+  opts.sort((a,b)=>a[0]-b[0]);return opts[0];
+}
+function exDraw(){
+  const svg=$("ex_svg");
+  const pad=30, maxW=800, maxH=430;
+  const s=Math.min(maxW/EX.W,maxH/EX.D);
+  const w=EX.W*s,h=EX.D*s;
+  svg.setAttribute("viewBox",`0 0 ${w+2*pad} ${h+2*pad+18}`);
+  const exits=EX.pts;
+  const cell=Math.max(1.2,Math.min(EX.W,EX.D)/26);
+  let cells="",green=0,amber=0,red=0,worst={d:0};
+  for(let gx=cell/2;gx<EX.W;gx+=cell)for(let gy=cell/2;gy<EX.D;gy+=cell){
+    const ds=exits.map(e=>Math.hypot(gx-e[0],gy-e[1])).sort((a,b)=>a-b);
+    const d1=ds[0];
+    let col;
+    if(d1<=20){col="rgba(52,199,89,.42)";green++;}
+    else{
+      let choice=false;
+      for(let i=0;i<exits.length&&!choice;i++)for(let j=i+1;j<exits.length&&!choice;j++){
+        const a1=Math.atan2(exits[i][1]-gy,exits[i][0]-gx), a2=Math.atan2(exits[j][1]-gy,exits[j][0]-gx);
+        let da=Math.abs(a1-a2); if(da>Math.PI)da=2*Math.PI-da;
+        const dmin=Math.min(Math.hypot(gx-exits[i][0],gy-exits[i][1]),Math.hypot(gx-exits[j][0],gy-exits[j][1]));
+        if(da>Math.PI/4 && dmin<=40)choice=true;
+      }
+      if(choice){col="rgba(255,149,0,.40)";amber++;}
+      else{col="rgba(255,59,48,.5)";red++;}
+    }
+    if(d1>worst.d)worst={d:d1,x:gx,y:gy};
+    cells+=`<rect x="${pad+(gx-cell/2)*s}" y="${pad+(gy-cell/2)*s}" width="${cell*s+0.5}" height="${cell*s+0.5}" fill="${col}"/>`;
+  }
+  let sep="",sepChecks=[];
+  for(let i=0;i<exits.length;i++)for(let j=i+1;j<exits.length;j++){
+    const d=Math.hypot(exits[i][0]-exits[j][0],exits[i][1]-exits[j][1]);
+    const ok=d>=9&&d<=45;
+    sepChecks.push([i+1,j+1,d,ok]);
+    sep+=`<line x1="${pad+exits[i][0]*s}" y1="${pad+exits[i][1]*s}" x2="${pad+exits[j][0]*s}" y2="${pad+exits[j][1]*s}" stroke="${ok?"#86868b":"#ff3b30"}" stroke-width="1.2" stroke-dasharray="5 4"/>
+      <text x="${pad+(exits[i][0]+exits[j][0])/2*s}" y="${pad+(exits[i][1]+exits[j][1])/2*s-5}" text-anchor="middle" font-size="10" font-weight="700" fill="${ok?"#57575b":"#ff3b30"}">${f1(d)} m</text>`;
+  }
+  let exm="",internalChecks=[];
+  exits.forEach((e,i)=>{
+    exm+=`<circle cx="${pad+e[0]*s}" cy="${pad+e[1]*s}" r="${20*s}" fill="none" stroke="#1f9d46" stroke-width="1" stroke-dasharray="3 4" opacity=".7"/>`;
+  });
+  exits.forEach((e,i)=>{
+    const edge=exIsEdge(e);
+    if(!edge){
+      const [dd,ep]=exNearestEdgePt(e);
+      exm+=`<line x1="${pad+e[0]*s}" y1="${pad+e[1]*s}" x2="${pad+ep[0]*s}" y2="${pad+ep[1]*s}" stroke="#af52de" stroke-width="3" stroke-dasharray="7 4" opacity=".8"/>
+        <text x="${pad+(e[0]+ep[0])/2*s+8}" y="${pad+(e[1]+ep[1])/2*s+4}" font-size="9.5" font-weight="700" fill="#af52de">FI passage ${f1(dd)} m</text>
+        <rect x="${pad+e[0]*s-16}" y="${pad+e[1]*s-16}" width="32" height="32" rx="4" fill="none" stroke="#af52de" stroke-width="2"/>`;
+      internalChecks.push([i+1,dd]);
+    }
+    exm+=`<g class="exhandle" data-i="${i}" style="cursor:grab">
+      <rect x="${pad+e[0]*s-11}" y="${pad+e[1]*s-11}" width="22" height="22" rx="5" fill="${edge?"#1d1d1f":"#af52de"}" stroke="#fff" stroke-width="2"/>
+      <text x="${pad+e[0]*s}" y="${pad+e[1]*s+4}" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">E${i+1}</text></g>`;
+  });
+  const wm=`<circle cx="${pad+worst.x*s}" cy="${pad+worst.y*s}" r="5" fill="#1d1d1f"/><text x="${pad+worst.x*s+9}" y="${pad+worst.y*s+4}" font-size="10" font-weight="700" fill="#1d1d1f">worst point ${f1(worst.d)} m</text>`;
+  svg.innerHTML=cells+
+    `<rect x="${pad}" y="${pad}" width="${w}" height="${h}" fill="none" stroke="#1d1d1f" stroke-width="2"/>`+
+    sep+exm+wm+
+    `<text x="${pad+w/2}" y="${pad+h+16}" text-anchor="middle" font-size="11" font-weight="600" fill="#86868b">${EX.W} × ${EX.D} m floor plate · ${f0(EX.W*EX.D)} m² · drag exits anywhere — black = door in a wall, purple = fire-isolated core</text>`;
+  const tot=green+amber+red;
+  stats($("ex_out"),[
+    [f1(green/tot*100)+"%","within 20 m of an exit","Direct D2D5 compliance — no argument needed."],
+    [f1(amber/tot*100)+"%","on the 20+40 rule","Legal via point-of-choice, but verify the real walking path around pools and fittings."],
+    [red? f1(red/tot*100)+"%":"0%","non-compliant","Beyond both limbs of D2D5 — move an exit, add one, or subdivide."],
+    [f1(worst.d)+" m","worst point","Longest straight-line distance to the nearest exit door."],
+  ]);
+  const chks=sepChecks.map(c=>[c[3]?"ok":"bad",`E${c[0]} ↔ E${c[1]}: <b>${f1(c[2])} m</b> apart — ${c[3]?"inside the 9–45 m band (D2D6).":c[2]<9?"<b>under 9 m</b>: one fire could block both. Separate them.":"<b>over 45 m</b>: too far apart to share the load — add an exit between them."}`]);
+  internalChecks.forEach(c=>{
+    chks.push(["warn",`E${c[0]} is an <b>internal exit</b> — legal, but it isn't a door: it's a <b>fire-isolated stair or passageway</b> (FRL per Type A construction, self-closing −/60/30 doors, no combustible services in the shaft) that must <b>discharge independently to open space</b>. The purple dashed line shows the ~${f1(c[1])} m fire-isolated passage it owes the plan — count that corridor's area, and its walls, in your scheme.`]);
+  });
+  chks.push([red?"bad":amber/tot>0.5?"warn":"ok", red?`Red zones remain — this plate cannot be a single compartment with these exits.`:amber/tot>0.5?`Compliant, but most of the plate rides on the point-of-choice argument — a third exit would make the plan robust.`:`Fully covered${amber?" (with a healthy green core)":""} — now check the widths from the tool above against these exits.`]);
+  chks.push(["info",`This plate is ${f0(EX.W*EX.D)} m² — ${EX.W*EX.D>200?"over 200 m² of Class 9b, so <b>every one of these doors swings outward</b>, in the direction of egress.":"under 200 m²; door swing rules relax, but outward is still good practice for assembly uses."}`]);
+  checks($("ex_chk"),chks);
+}
+function exCalc(){
+  EX.W=Math.max(10,+$("ex_w").value||48);
+  EX.D=Math.max(8,+$("ex_d").value||30);
+  const n=+$("ex_n").value;
+  if(n!==EX.n||EX.pts.length!==n){EX.n=n;exDefaults();}
+  exDraw();
+}
+["ex_w","ex_d"].forEach(id=>$(id).addEventListener("input",()=>{exDefaults();exCalc();}));
+$("ex_n").addEventListener("input",exCalc);
+(function(){
+  const svg=$("ex_svg");
+  let drag=null;
+  function pt(evt){
+    const p=svg.createSVGPoint();p.x=evt.clientX;p.y=evt.clientY;
+    const m=svg.getScreenCTM();if(!m)return null;
+    const q=p.matrixTransform(m.inverse());
+    const pad=30,maxW=800,maxH=430,s=Math.min(maxW/EX.W,maxH/EX.D);
+    return[(q.x-pad)/s,(q.y-pad)/s];
+  }
+  svg.addEventListener("pointerdown",e=>{
+    const g=e.target.closest(".exhandle");
+    if(!g)return;
+    drag=+g.dataset.i;svg.setPointerCapture(e.pointerId);e.preventDefault();
+  });
+  svg.addEventListener("pointermove",e=>{
+    if(drag===null)return;
+    const p=pt(e);if(!p)return;
+    let x=Math.max(0,Math.min(EX.W,p[0])), y=Math.max(0,Math.min(EX.D,p[1]));
+    const snap=1.5;
+    if(x<snap)x=0; if(EX.W-x<snap)x=EX.W;
+    if(y<snap)y=0; if(EX.D-y<snap)y=EX.D;
+    EX.pts[drag]=[x,y];
+    exDraw();
+  });
+  svg.addEventListener("pointerup",()=>{drag=null;});
+})();
+
+/* ================= CEILING SERVICES ================= */
+const SVC_SYS={
+ vav:{d:450,n:"VAV ducted air",note:"Supply + return ducts (400–600 Ø mains) crossing under structure — the deep incumbent. Best turndown for big variable spaces; worst for depth and fan energy."},
+ fcu:{d:380,n:"Ducted fan-coils",note:"Small local units + short duct runs off a riser. Common in hotels/fit-outs; maintenance lives above the ceiling."},
+ cass:{d:320,n:"Ceiling cassettes (VRF)",note:"600/950 sq units, 250–350 deep + condensate fall. Cheap and fast; acoustics and draught need care in 9b rooms."},
+ acb:{d:300,n:"Active chilled beams",note:"Fresh air induces room air over a chilled coil — small ducts only, low fan energy, silent. Loves the district loop: chilled water from absorption chillers (brief §5f)."},
+ pcb:{d:250,n:"Passive chilled beams",note:"No air connection — pure convection off a coil. Needs a separate ventilation path and dew-point control: NOT for the humid pool hall."},
+ disp:{d:180,n:"Displacement / floor supply",note:"Air arrives low and slow from a raised floor or wall plena; the ceiling only carries return + base layers."},
+ rad:{d:150,n:"Radiant panels / TABS",note:"Heating/cooling in the slab or panels — the structure IS the emitter. Ventilation still needed somewhere."},
+ exp:{d:420,n:"Exposed services",note:"Nothing hidden: ducts, trays, pipes on show, no ceiling. Zone = the biggest duct. On-brief — but coordination is drawn, not hoped for."}
+};
+const SVC_BASE=120;
+const SVC={sys:"acb",ceil:"grid"};
+function svcDepth(){return SVC_SYS[SVC.sys].d+SVC_BASE;}
+function svcCeil(){return SVC.ceil==="none"?0:SVC.ceil==="set"?80:50;}
+
+/* ---- component library — Resource 05 checklist format. band: [from,to] mm below the structural soffit ---- */
+function svcComps(){
+  const sysD=SVC_SYS[SVC.sys].d;
+  const hv={
+    vav:{size:"Main ducts Ø400–600 (insulated +50); branch Ø200–300; swirl diffusers 600 sq",spc:"Diffusers ~1 per 20–36 m² (≈ every 3–4.2 m); mains in corridor lanes, branches cross the bays"},
+    fcu:{size:"Units ~1,200 × 600 × 300 deep + flexible duct + attenuators",spc:"~1 unit per 40–60 m² zone; ≥600 mm access on the valve/filter side"},
+    cass:{size:"950 sq (or 600 sq) × 250–350 deep + condensate pump",spc:"~1 per 25–36 m² (every 5–6 m); centre-of-tile; ≥2 m from walls for even throw"},
+    acb:{size:"Beams ~600 w × 1,800–3,000 long × 200 deep",spc:"Rows at ~2.4–3.0 m centres; ≥600 mm clear on the coil/valve side"},
+    pcb:{size:"~600 w × 150–200 deep passive coils",spc:"Rows at ~1.8–2.7 m centres; needs ~150 mm free above for convection"},
+    disp:{size:"Ceiling side: return grilles + transfer only",spc:"Returns ~1 per 50–80 m²; supply is at floor level (plenum/wall units)"},
+    rad:{size:"Panels 600–1,200 wide, 30–100 thick (or coils cast in slab)",spc:"Panel coverage ~30–60% of ceiling; zones follow facade orientation"},
+    exp:{size:"Everything visible: spiral duct Ø400–600, trays, pipework",spc:"Straight disciplined lanes; every bend is architecture now"}
+  }[SVC.sys];
+  return [
+   {n:"1 · Power cable tray",c:"#af52de",who:"Electrical engineer",vf:"AS/NZS 3000",band:[0,150],
+    size:"Ladder/perforated tray 300–600 wide × 50–150 deep",
+    spc:"Main runs along corridors/grid lines; ≥300 mm working room beside; ≥50 mm above for install fingers",
+    clr:"≥300 mm from parallel data runs (or 50 mm with metal divider); ~0.5 m from hot ducts/flues; never below water pipes",
+    pos:"Top of the zone, tight to the structural soffit — first in, everything else ducks under it"},
+   {n:"2 · Comms + data basket",c:"#5856d6",who:"ICT consultant",vf:"AS/NZS 3080-series / ISO 11801",band:[30,150],
+    size:"Wire basket 150–450 wide × 100 deep",
+    spc:"Parallel to power at ≥300 mm; horizontal runs ≤90 m to the comms room (this rule SIZES riser spacing); WAPs every 15–20 m",
+    clr:"Cross power at 90°; bend radius ≥4 × cable Ø — no sharp corners",
+    pos:"Beside/just below the power tray, sharing the containment layer"},
+   {n:"3 · "+SVC_SYS[SVC.sys].n,c:"#ff9500",who:"Mechanical engineer",vf:"AS 1668.2 + AIRAH DA guides",band:[150,150+sysD],
+    size:hv.size,
+    spc:hv.spc,
+    clr:"≥1.0 m from smoke detectors; return ≥3 m from supply; keep clear of the sprinkler spray envelope",
+    pos:"The middle of the zone — the layer that sets the total depth ("+sysD+" mm for this system)"},
+   {n:"4 · Condensate + pipework",c:"#30b0c7",who:"Hydraulic engineer",vf:"AS/NZS 3500",band:[150+Math.max(0,sysD-80),150+sysD],
+    size:"Ø25–40 condensate; heating/chilled mains Ø50–150 + 50 mm lagging each side",
+    spc:"Falls continuously ≥1:100 to a riser or tundish — the ONLY layer that cannot be level; 450 sq access panel at every valve/trap",
+    clr:"NEVER above switchboards (offset or drip tray); lagging clearance 50 mm all round",
+    pos:"Weaves through the air layer's underside — gravity gives it no choice"},
+   {n:"5 · Sprinklers",c:"#ff3b30",who:"Fire services (hydraulic) eng.",vf:"AS 2118.1",band:[150+sysD-60,150+sysD+40],
+    size:"Range pipes Ø25–65; heads + escutcheons at the ceiling plane",
+    spc:"Heads ≤ ~4.0–4.6 m apart (light hazard), min ~2.4 m; from walls between 0.1 m and half the spacing",
+    clr:"≥500 mm clear space below every deflector; EXTRA heads beneath any duct/obstruction wider than ~1.0 m; ~0.3 m from luminaires",
+    pos:"Pipes ride just above the ceiling plane; heads drop through it"},
+   {n:"6 · Fire detection + EWIS",c:"#c22e26",who:"Fire engineer + electrical",vf:"AS 1670.1 / AS 2293",band:[150+sysD,150+sysD+SVC_BASE-60],
+    size:"Point detectors Ø100; speakers Ø150–200; exit signs 350 × 150",
+    spc:"Detectors ~1 per 80–100 m², grid ≤ ~10 m; speakers every 8–12 m; exit signs at every exit + direction change (viewing ≤24 m)",
+    clr:"≥1.0 m from supply diffusers (airflow washes smoke past); ≥0.5 m from walls, beams + luminaires",
+    pos:"At the ceiling plane — the last layer fixed, the first the certifier looks at"},
+   {n:"7 · Lighting + emergency",c:"#0071e3",who:"Electrical + lighting designer",vf:"AS/NZS 1680 / AS 2293",band:[150+sysD+20,150+sysD+SVC_BASE],
+    size:"Recessed troffers 50–120 deep (1,200 × 300 typ); downlights 90–150 deep; emergency fittings + battery packs",
+    spc:"~2.4–3.6 m grid (≈1–1.25 × mounting height); emergency every 8–12 m + at exits",
+    clr:"≥0.5 m from detectors; out of the sprinkler spray shadow; one agreed grid with cassettes/beams — settled week one",
+    pos:"In (or just above) the ceiling plane; the layer everyone sees"},
+   {n:"8 · Security, CCTV + WAPs",c:"#86868b",who:"Security + ICT consultants",vf:"Consultant specs",band:[150+sysD+40,150+sysD+SVC_BASE],
+    size:"Dome cameras Ø120–160; WAPs 200 sq; PIRs Ø80",
+    spc:"Cameras at every entry, lift lobby + node (~15–25 m corridor coverage); WAPs every 15–20 m",
+    clr:"Not pointed into luminaires (glare) or at glazing (backlight); WAPs clear of large metal ducts",
+    pos:"Ceiling plane, positioned by sight-lines and signal — not by the grid"},
+   {n:"9 · BMS sensors",c:"#34c759",who:"Controls specialist",vf:"Controls spec / digital twin",band:[150+sysD+40,150+sysD+SVC_BASE],
+    size:"Temp/CO₂/PIR sensors Ø80–100",
+    spc:"≥1 per control zone; CO₂ on the return-air path",
+    clr:"≥1.5 m from diffusers + doors (false readings); away from heat sources",
+    pos:"Ceiling plane — small, cheap, and the digital twin is blind without them"},
+  ];
+}
+let CY=0;
+function svcCalc(){
+  const s=SVC_SYS[SVC.sys];
+  $("svc_note").textContent=s.note;
+  const total=svcDepth()+svcCeil();
+  stats($("svc_out"),[
+    [s.d+" mm","air system zone","Planning allowance for "+s.n+" incl. crossings and hangers."],
+    [SVC_BASE+" mm","wet + light layer","Sprinklers + lighting + detection sharing the bottom of the zone."],
+    [svcCeil()+" mm","ceiling"+(SVC.ceil==="none"?" — exposed":""),SVC.ceil==="none"?"No ceiling: the services are the finish.":"Suspended grid ≈50 mm; set plasterboard ≈80."],
+    [total+" mm","total ceiling zone","Feeds the grid planner's floor-zone stack above."],
+  ]);
+  checks($("svc_chk"),[
+    SVC.sys==="pcb"?["warn","Passive chilled beams need dew-point control — banned by physics from the pool hall. Name the separate ventilation path."]:
+    SVC.sys==="acb"?["ok","Active chilled beams + absorption-chiller chilled water = the servicing strategy that matches this project's thermal story."]:
+    SVC.sys==="vav"?["info","VAV's 450 mm is why towers lose a floor every ~8 storeys against chilled-beam buildings. Depth is rentable area."]:
+    SVC.sys==="exp"?["ok","Exposed services delete the ceiling AND make the building legible — every tray radius is architecture now."]:
+    ["info","Low-energy strategies shift work to the slab/floor — TABS wants exposed soffits (coordinate with the structure module)."],
+    ["info","All sizes + spacings are planning conventions in the format of Resource 05 — the standard named on each card, and the consultant's coordinated model, always govern."],
+  ]);
+  $("svc_sel").innerHTML=`<b>Selected:</b> ${s.n} · ${SVC.ceil==="none"?"exposed soffit":SVC.ceil==="set"?"set plasterboard":"suspended grid"}<br><b>Ceiling zone:</b> ${total} mm — feeding the grid planner above.`;
+  cyRender();
+  if(typeof stxCalc==="function")stxCalc();
+}
+function cyRender(){
+  const comps=svcComps();
+  if(CY>=comps.length)CY=0;
+  const c=comps[CY];
+  /* pills */
+  $("cy_pills").innerHTML=comps.map((x,i)=>`<button class="cypill ${i===CY?"on":""}" data-i="${i}" title="${x.n.slice(4)}">${i+1}</button>`).join("");
+  [...$("cy_pills").children].forEach(b=>b.addEventListener("click",()=>{CY=+b.dataset.i;cyRender();}));
+  /* the air-system selector only appears when the air-system component is active */
+  const isAir=(CY===2);
+  $("svc_air").style.display=isAir?"":"none";
+  const hint=$("svc_airhint");
+  hint.style.display=isAir?"none":"";
+  hint.innerHTML=`<b>Air system:</b> ${SVC_SYS[SVC.sys].n} (${SVC_SYS[SVC.sys].d} mm) — it sets Band 2's depth. <a href="#services" style="color:#c46a00;font-weight:700" id="svc_gotoair">Cycle to component 3 to change it →</a>`;
+  const ga=$("svc_gotoair");
+  if(ga)ga.addEventListener("click",e=>{e.preventDefault();CY=2;cyRender();});
+  /* card — Resource 05 format */
+  document.querySelector("#cy_card tbody").innerHTML=`
+    <tr class="head"><td colspan="2"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fff;opacity:.85;margin-right:8px"></span>${c.n} &nbsp;·&nbsp; ${c.who}</td></tr>
+    <tr><td>Position in the zone</td><td>${c.pos}</td></tr>
+    <tr><td>Typical size</td><td>${c.size}</td></tr>
+    <tr><td>Typical spacing <span style="color:#c46a00;font-weight:800">(RULE OF THUMB)</span></td><td>${c.spc}</td></tr>
+    <tr><td>Keep clear of <span style="color:#c46a00;font-weight:800">(RULE OF THUMB)</span></td><td>${c.clr}</td></tr>
+    <tr><td>Verify against</td><td><b>${c.vf}</b> — and the consultant's coordinated services model, which always governs.</td></tr>`;
+  cyDepth(c);cyPlan(c);
+}
+/* ---- depth section: the four bands, and which component lives in each ---- */
+const SVC_SHORT=["Power tray","Data","Air system","Condensate","Sprinklers","Detection","Lighting","Security","BMS"];
+function cyDepth(c){
+  const svg=$("svc_depth");
+  const zone=svcDepth(), ceilH=svcCeil(), sysD=SVC_SYS[SVC.sys].d;
+  const comps=svcComps();
+  const bands=[
+    {name:"BAND 1 · CONTAINMENT",mm:150,fill:"#f3ecfa",edge:"#af52de",desc:"trays tight to structure",comps:[0,1]},
+    {name:"BAND 2 · AIR SYSTEM",mm:sysD,fill:"#fdf1e3",edge:"#ff9500",desc:SVC_SYS[SVC.sys].n+" — sets the depth",comps:[2,3]},
+    {name:"BAND 3 · WET + LIGHT",mm:SVC_BASE,fill:"#fdeaea",edge:"#ff3b30",desc:"everything at the ceiling plane",comps:[4,5,6,7,8]},
+    {name:"BAND 4 · CEILING",mm:ceilH,fill:"#e8e8ea",edge:"#1d1d1f",desc:ceilH?"finish + suspension":"exposed — no ceiling",comps:[]},
+  ];
+  /* full-width, generous layout: tall bands, big chips laid out BELOW each band title */
+  const W=760,x0=104,bw=W-x0-20;
+  const chipH=26,chipGap=8,titleTop=46;
+  const chipW=i=>{const label=(i+1)+" "+SVC_SHORT[i];return 24+label.length*6.7;};
+  function rowsFor(idxs){if(!idxs.length)return [];const avail=bw-16,rows=[[]];let cx=0;idxs.forEach(i=>{const w=chipW(i);if(cx>0&&cx+w>avail){rows.push([]);cx=0;}rows[rows.length-1].push(i);cx+=w+8;});return rows;}
+  const bandRows=bands.map(b=>rowsFor(b.comps));
+  const hs=bands.map((b,bi)=>{
+    if(!b.comps.length)return b.mm?58:48;                 // ceiling band (finish or exposed)
+    const chipNeed=titleTop+bandRows[bi].length*(chipH+chipGap)+12;
+    return Math.max(chipNeed,74,Math.min(150,b.mm*0.28)); // proportional but never cramped, always ≥74
+  });
+  const H=40+hs.reduce((a,x)=>a+x,0)+54;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  let out=`<rect x="${x0-12}" y="12" width="${bw+24}" height="24" rx="4" fill="#aeaeb2"/><text x="${x0+bw/2}" y="28" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">STRUCTURE ABOVE (grid planner)</text>`;
+  let y=40;
+  bands.forEach((b,bi)=>{
+    const bh=hs[bi];
+    const active=b.comps.includes(CY);
+    out+=`<rect x="${x0}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="${b.fill}" stroke="${active?b.edge:"#d2d2d7"}" stroke-width="${active?2.5:1}" ${active?'':'opacity=".72"'}/>`;
+    out+=`<text x="${x0+12}" y="${y+20}" font-size="12" font-weight="800" fill="${b.edge}">${b.name}</text>
+      <text x="${x0+12}" y="${y+35}" font-size="10" fill="#86868b">${b.desc}</text>`;
+    /* component chips — laid out in rows BELOW the title, never overlapping it */
+    let cyRow=y+titleTop;
+    bandRows[bi].forEach(row=>{
+      let cx=x0+12;
+      row.forEach(i=>{
+        const cc=comps[i], sel=(i===CY), label=(i+1)+" "+SVC_SHORT[i], wch=chipW(i);
+        out+=`<g class="chip" data-i="${i}" style="cursor:pointer"><rect x="${cx}" y="${cyRow}" width="${wch}" height="${chipH}" rx="13" fill="${sel?cc.c:"#fff"}" stroke="${cc.c}" stroke-width="1.6"/><text x="${cx+wch/2}" y="${cyRow+17}" text-anchor="middle" font-size="11" font-weight="800" fill="${sel?"#fff":cc.c}">${label}</text></g>`;
+        cx+=wch+8;
+      });
+      cyRow+=chipH+chipGap;
+    });
+    /* mm dimension on the left */
+    out+=`<line x1="${x0-22}" y1="${y}" x2="${x0-22}" y2="${y+bh}" stroke="${active?b.edge:"#aeaeb2"}" stroke-width="${active?2.8:1.4}"/>
+      <line x1="${x0-27}" y1="${y}" x2="${x0-17}" y2="${y}" stroke="#aeaeb2" stroke-width="1"/>
+      <text x="${x0-31}" y="${y+bh/2+4}" text-anchor="end" font-size="11" font-weight="${active?"800":"600"}" fill="${active?b.edge:"#86868b"}">${b.mm} mm</text>`;
+    y+=bh;
+  });
+  out+=`<line x1="${x0-27}" y1="${y}" x2="${x0-17}" y2="${y}" stroke="#aeaeb2" stroke-width="1"/>
+    <line x1="${x0-12}" y1="${y+5}" x2="${x0+bw+12}" y2="${y+5}" stroke="#1d1d1f" stroke-width="1" stroke-dasharray="6 4"/>
+    <text x="${x0+bw/2}" y="${y+24}" text-anchor="middle" font-size="10.5" fill="#86868b">room below · total zone ${zone+ceilH} mm — feeds the grid planner</text>
+    <text x="${x0+bw/2}" y="${y+40}" text-anchor="middle" font-size="9.5" fill="#aeaeb2">band heights indicative — the mm figures are the numbers</text>`;
+  svg.innerHTML=out;
+  svg.querySelectorAll("g.chip").forEach(g=>g.addEventListener("click",()=>{CY=+g.dataset.i;cyRender();}));
+}
+/* ---- spacing plan: this component only, at typical spacing ---- */
+function cyPlan(c){
+  const svg=$("svc_plan"),Wm=8.4,sc=58,pad=32;
+  const W=Wm*sc+2*pad,H=Wm*sc+2*pad+26;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const X=m=>pad+m*sc;
+  let out=`<rect x="${pad}" y="${pad}" width="${Wm*sc}" height="${Wm*sc}" fill="#fff" stroke="#1d1d1f" stroke-width="1.6"/>`;
+  for(let m=0.6;m<Wm;m+=0.6)out+=`<line x1="${X(m)}" y1="${pad}" x2="${X(m)}" y2="${pad+Wm*sc}" stroke="#f2f2f4" stroke-width=".8"/><line x1="${pad}" y1="${X(m)}" x2="${pad+Wm*sc}" y2="${X(m)}" stroke="#f2f2f4" stroke-width=".8"/>`;
+  const dim=(x1,y1,x2,y2,label)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#1d1d1f" stroke-width="1.2"/><text x="${(x1+x2)/2}" y="${(y1+y2)/2-6}" text-anchor="middle" font-size="10.5" font-weight="800" fill="#1d1d1f">${label}</text>`;
+  const k=CY;
+  if(k===0||k===1){ /* tray + data lanes */
+    out+=`<rect x="${X(0.9)}" y="${pad}" width="${0.5*sc}" height="${Wm*sc}" fill="rgba(175,82,222,.30)" stroke="#af52de"/><text x="${X(1.15)}" y="${X(4.2)}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#8f35c9" transform="rotate(-90 ${X(1.15)} ${X(4.2)})">POWER TRAY</text>`;
+    out+=`<rect x="${X(1.75)}" y="${pad}" width="${0.35*sc}" height="${Wm*sc}" fill="rgba(88,86,214,.28)" stroke="#5856d6"/><text x="${X(1.92)}" y="${X(4.2)}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4644b8" transform="rotate(-90 ${X(1.92)} ${X(4.2)})">DATA BASKET</text>`;
+    out+=dim(X(1.4),X(7.6),X(1.75),X(7.6),"≥300");
+    out+=`<line x1="${X(5)}" y1="${X(2)}" x2="${X(7.5)}" y2="${X(2)}" stroke="${k===1?"#5856d6":"#af52de"}" stroke-width="2" stroke-dasharray="4 3"/><text x="${X(6.25)}" y="${X(2)-9}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${k===1?"#4644b8":"#8f35c9"}">branches cross at 90°</text>`;
+  } else if(k===2){ /* air system at its spacing */
+    const s=SVC.sys;
+    if(s==="acb"||s==="pcb"){[1.4,4.2,7.0].forEach(x=>{out+=`<rect x="${X(x)-0.3*sc}" y="${X(0.9)}" width="${0.6*sc}" height="${6.6*sc}" rx="5" fill="rgba(255,149,0,.25)" stroke="#c46a00" stroke-width="2"/>`;});out+=dim(X(1.4),X(7.9),X(4.2),X(7.9),"~2.8 m");}
+    else if(s==="cass"){[[2.4,2.4],[6.0,6.0],[6.0,2.4],[2.4,6.0]].forEach(([x,y])=>{out+=`<rect x="${X(x)-0.475*sc}" y="${X(y)-0.475*sc}" width="${0.95*sc}" height="${0.95*sc}" fill="rgba(255,149,0,.2)" stroke="#c46a00" stroke-width="2"/>`;});out+=dim(X(2.4),X(7.9),X(6),X(7.9),"~3.6 m");}
+    else if(s==="rad"){[[0.9,0.9],[4.5,0.9],[0.9,4.5],[4.5,4.5]].forEach(([x,y])=>{out+=`<rect x="${X(x)}" y="${X(y)}" width="${3*sc}" height="${3*sc}" fill="rgba(255,149,0,.15)" stroke="#c46a00" stroke-dasharray="6 4"/>`;});}
+    else{[[2.1,2.1],[6.3,2.1],[2.1,6.3],[6.3,6.3]].forEach(([x,y])=>{out+=`<rect x="${X(x)-0.3*sc}" y="${X(y)-0.3*sc}" width="${0.6*sc}" height="${0.6*sc}" fill="rgba(255,149,0,.2)" stroke="#c46a00" stroke-width="2"/><circle cx="${X(x)}" cy="${X(y)}" r="${0.13*sc}" fill="none" stroke="#c46a00" stroke-width="1.4"/>`;});out+=dim(X(2.1),X(7.9),X(6.3),X(7.9),"~4.2 m");out+=`<rect x="${X(3.9)}" y="${pad}" width="${0.6*sc}" height="${Wm*sc}" fill="rgba(255,149,0,.12)"/>`;}
+  } else if(k===3){ /* condensate */
+    out+=`<circle cx="${X(2.4)}" cy="${X(2.4)}" r="8" fill="rgba(48,176,199,.3)" stroke="#1f93a6" stroke-width="2"/><path d="M ${X(2.4)} ${X(2.4)} L ${X(2.4)} ${X(0.7)} L ${X(7.8)} ${X(0.7)}" fill="none" stroke="#30b0c7" stroke-width="2.4" stroke-dasharray="7 4"/><circle cx="${X(7.8)}" cy="${X(0.7)}" r="6" fill="#30b0c7"/><text x="${X(7.8)}" y="${X(0.7)-13}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f93a6">riser</text>
+      <text x="${X(5)}" y="${X(0.7)+18}" text-anchor="middle" font-size="10.5" font-weight="800" fill="#1f93a6">fall ≥1:100 →</text>
+      <rect x="${X(4.5)-11}" y="${X(4.5)-11}" width="22" height="22" fill="none" stroke="#1f93a6" stroke-width="1.5" stroke-dasharray="3 2"/><text x="${X(4.5)}" y="${X(4.5)+30}" text-anchor="middle" font-size="10" fill="#1f93a6">450 sq access panel at valves</text>`;
+  } else if(k===4){ /* sprinklers */
+    const hs=[[2.1,2.1],[6.3,2.1],[2.1,6.3],[6.3,6.3]];
+    out+=`<line x1="${X(1)}" y1="${X(2.1)}" x2="${X(7.4)}" y2="${X(2.1)}" stroke="#ff3b30" stroke-width="1.3" stroke-dasharray="5 4" opacity=".6"/><line x1="${X(1)}" y1="${X(6.3)}" x2="${X(7.4)}" y2="${X(6.3)}" stroke="#ff3b30" stroke-width="1.3" stroke-dasharray="5 4" opacity=".6"/>`;
+    hs.forEach(([x,y])=>{out+=`<circle cx="${X(x)}" cy="${X(y)}" r="6" fill="#ff3b30"/><circle cx="${X(x)}" cy="${X(y)}" r="${2.3*sc}" fill="rgba(255,59,48,.05)" stroke="#ff3b30" stroke-width=".8" stroke-dasharray="3 4"/>`;});
+    out+=dim(X(2.1),X(7.9),X(6.3),X(7.9),"≤ ~4.6 m")+dim(X(0.5),X(2.1),X(0.5),X(6.3),"≤ ~4.6 m");
+    out+=`<text x="${X(4.2)}" y="${X(4.4)}" text-anchor="middle" font-size="10" fill="#c22e26">circles = coverage · extra heads under ducts >1 m</text>`;
+  } else if(k===5){ /* detection */
+    out+=`<circle cx="${X(4.2)}" cy="${X(4.2)}" r="11" fill="none" stroke="#c22e26" stroke-width="2.2"/><text x="${X(4.2)}" y="${X(4.2)+4}" text-anchor="middle" font-size="10.5" font-weight="800" fill="#c22e26">S</text>
+      <circle cx="${X(4.2)}" cy="${X(4.2)}" r="${4.2*sc}" fill="rgba(194,46,38,.04)" stroke="#c22e26" stroke-width=".8" stroke-dasharray="4 4"/>
+      <rect x="${X(1.6)-0.25*sc}" y="${X(1.6)-0.25*sc}" width="${0.5*sc}" height="${0.5*sc}" fill="none" stroke="#c46a00" stroke-width="1.6"/>
+      ${dim(X(1.6),X(1.1),X(4.2),X(1.1),"≥1 m from diffuser (more is better)")}
+      <rect x="${X(0.4)}" y="${X(7.4)}" width="${0.9*sc}" height="16" fill="#34c759"/><text x="${X(0.85)}" y="${X(7.4)+12}" text-anchor="middle" font-size="9" font-weight="800" fill="#fff">EXIT</text>
+      <text x="${X(4.2)}" y="${X(7.95)}" text-anchor="middle" font-size="10" fill="#c22e26">1 detector per ~80–100 m² · grid ≤ ~10 m</text>`;
+  } else if(k===6){ /* lighting */
+    [2.1,4.2,6.3].forEach(y=>{out+=`<rect x="${X(1.2)}" y="${X(y)-6}" width="${2.4*sc}" height="12" fill="#0071e3"/><rect x="${X(4.8)}" y="${X(y)-6}" width="${2.4*sc}" height="12" fill="#0071e3"/>`;});
+    out+=dim(X(0.6),X(2.1),X(0.6),X(4.2),"~2.1–3.6 m");
+    out+=`<circle cx="${X(7.7)}" cy="${X(7.7)}" r="6" fill="#0071e3"/><text x="${X(7.7)-13}" y="${X(7.7)+4}" text-anchor="end" font-size="10" font-weight="700" fill="#0071e3">EM every 8–12 m</text>`;
+  } else if(k===7){ /* security */
+    out+=`<path d="M ${X(8.0)} ${X(0.4)} L ${X(6.2)} ${X(1.3)} L ${X(8.0)} ${X(2.0)} Z" fill="rgba(134,134,139,.35)" stroke="#57575b" stroke-width="1.4"/><text x="${X(6.0)}" y="${X(0.85)}" text-anchor="end" font-size="10" font-weight="700" fill="#57575b">CCTV — entries + nodes</text>
+      <rect x="${X(3.9)-0.25*sc}" y="${X(4.2)-0.25*sc}" width="${0.5*sc}" height="${0.5*sc}" rx="4" fill="none" stroke="#57575b" stroke-width="1.8"/><text x="${X(3.9)}" y="${X(4.2)+30}" text-anchor="middle" font-size="10" font-weight="700" fill="#57575b">WAP — every ~15–20 m</text>
+      <circle cx="${X(3.9)}" cy="${X(4.2)}" r="${3.5*sc}" fill="none" stroke="#86868b" stroke-width=".8" stroke-dasharray="4 4"/>`;
+  } else { /* bms */
+    out+=`<circle cx="${X(5.6)}" cy="${X(6.4)}" r="9" fill="none" stroke="#22a04c" stroke-width="2.2"/><text x="${X(5.6)}" y="${X(6.4)+4}" text-anchor="middle" font-size="10" font-weight="800" fill="#22a04c">T</text>
+      <rect x="${X(2.4)-0.25*sc}" y="${X(2.4)-0.25*sc}" width="${0.5*sc}" height="${0.5*sc}" fill="none" stroke="#c46a00" stroke-width="1.6"/>
+      ${dim(X(2.75),X(2.4),X(5.6),X(6.0),"≥1.5 m from diffusers")}
+      <text x="${X(4.2)}" y="${X(7.95)}" text-anchor="middle" font-size="10" fill="#22a04c">1+ per control zone · CO₂ on the return path · label everything for the digital twin</text>`;
+  }
+  out+=`<text x="${pad}" y="${H-7}" font-size="10" fill="#86868b">8.4 × 8.4 m bay · spacings are RULES OF THUMB — verify ${c.vf}</text>`;
+  svg.innerHTML=out;
+}
+$("cy_prev").addEventListener("click",()=>{CY=(CY+8)%9;cyRender();});
+$("cy_next").addEventListener("click",()=>{CY=(CY+1)%9;cyRender();});
+seg2("svc_seg",k=>{SVC.sys=k;svcCalc();});
+seg2("svc_ceil",k=>{SVC.ceil=k;svcCalc();});
+
+/* ================= STRUCTURAL GRID PLANNER ================= */
+const STX=[
+ ["Solid timber beam",15,25,2,7,"timber","Sawn or dressed; the domestic scale. Madigan.",1],
+ ["LVL",18,24,4,14,"timber","Laminated veneer lumber — engineered, straight, reliable. Madigan.",1],
+ ["Glulam",18,24,10,18,"timber","Glue-laminated; 18 m transport max. Exposed civic timber. Madigan.",1],
+ ["Timber I-joist",20,25,6,10,"timber","LVL flanges + composite web; floors. Madigan.",1],
+ ["Parallel chord truss (timber)",15,20,6,12,"timber","Services run through the web. Madigan.",1],
+ ["CLT floor panel †",25,32,4,8,"timber","Cross-laminated slab; mass-timber floors for the civic wings.",1],
+ ["Steel UB (I-beam)",16,20,6,12,"steel","Hot-rolled; the commercial workhorse. Madigan.",1],
+ ["Composite UB + metal deck †",18,22,6,15,"steel","UB acting with concrete-on-deck slab — the default Australian office floor.",1],
+ ["Cellular / castellated beam †",20,28,10,20,"steel","Web openings pass services THROUGH the beam — the ultimate nesting move.",1],
+ ["Steel roof truss †",10,15,15,60,"steel","Long-span roofs: data hall / pool hall in one leap.",0],
+ ["Portal frame (haunched) †",50,60,20,40,"steel","Sheds: rafter ≈ span/55; greenhouse + fabrication logic.",0],
+ ["RC flat slab / plate †",26,32,5,9,"concrete","Column-supported, no beams — the thinnest conventional stack.",1],
+ ["Post-tensioned flat slab †",36,45,7,12,"concrete","Tendons stretch the slab — the 8.4–10.8 m carpark/podium standard.",1],
+ ["Precast hollowcore plank",25,40,5,15,"concrete","Voided planks craned in, 60–75 mm topping — DfMA-natural. Madigan.",1],
+ ["Waffle slab",16,32,8,18,"concrete","Two-way ribbed; heavy loads, long spans. Madigan.",1],
+ ["RC band beam + slab †",12,24,6,18,"concrete","Wide shallow beams cast with the slab — the nesting champion. Madigan (beam) adapted.",1],
+];
+const STX_FLAT=["RC flat slab / plate †","Post-tensioned flat slab †","Precast hollowcore plank","Waffle slab","CLT floor panel †"];
+const STX_LOAD={light:{t:0.85,m:0.8,d:"light"},med:{t:0.5,m:1.0,d:"median"},heavy:{t:0.15,m:1.4,d:"deep end"},vheavy:{t:0,m:2.5,d:"deep end + margin"}};
+const STX_COL=[[70,"100 SHS / 150 UC"],[220,"150 SHS / CHS"],[280,"200 UC"],[420,"250 UC"],[560,"300 UC"],[1115,"350 UC"]];
+const STX_UB=[150,180,200,250,310,360,410,460,530,610];
+const SST={gx:8.4,gy:8.4,cant:0,ov:"park"};
+
+const stxSel=$("stx_sys");
+STX.forEach((s,i)=>{if(!s[7])return;const o=document.createElement("option");o.value=i;o.textContent=s[0];if(s[0].startsWith("RC band"))o.selected=true;stxSel.appendChild(o);});
+
+function stxCalc(){
+  const s=STX[+stxSel.value];
+  const gx=SST.gx, gy=SST.gy, cant=SST.cant;
+  const load=$("stx_load").value, L=STX_LOAD[load];
+  $("stx_note").textContent=s[6];
+  const flat=STX_FLAT.includes(s[0]);
+  const band=s[0].startsWith("RC band");
+  const cellular=s[0].indexOf("Cellular")>=0;
+  const ratioSec=s[1]+(s[2]-s[1])*L.t;
+  const dSec=flat?Math.max(gx,gy)*1000/ratioSec:gx*1000/ratioSec;
+  const dPri=flat?0:gy*1000/(s[1]*0.85);
+  const govern=Math.max(dSec,dPri);
+  const slab=flat?0:(s[0].indexOf("Composite")>=0?130:s[5]==="timber"?80:120);
+  /* services from the Ceiling Services module */
+  const svcD=(typeof svcDepth==="function")?svcDepth():420;
+  const effSvc=cellular?svcD*0.4:svcD;
+  const ceil=(typeof svcCeil==="function")?svcCeil():50;
+  const nested=!flat&&effSvc<=govern;
+  const stack=Math.round(slab+(nested?govern:(flat?dSec:govern)+ (nested?0:Math.max(0,effSvc-(flat?0:0))) )+ceil);
+  const stack2=Math.round(slab+Math.max(flat?dSec:govern, (flat?dSec:0)+0) + (nested?0:effSvc) + ceil - (flat?dSec:0)*(flat?0:0));
+  const zone=Math.round(slab+(flat?dSec+effSvc:(nested?govern:govern+effSvc))+ceil);
+  const st=+$("stx_st").value||1;
+  const eff=gx*gy*st*L.m;
+  const col=STX_COL.find(c=>eff<=c[0]);
+  const bays=Math.max(2,Math.floor(gx/2.4));
+  const stock=(!flat&&s[5]==="steel")?STX_UB.find(u=>u>=govern):null;
+  stats($("stx_out"),[
+    [flat?f0(dSec)+" mm slab":f0(dSec)+" / "+f0(dPri)+" mm",flat?"no beams — slab does everything":"secondary / primary beams","Span ÷ "+f1(ratioSec)+" ("+L.d+")"+(flat?".":"; primary = Grid Y ÷ "+f1(s[1]*0.85)+"."+(stock?" Next stock: "+stock+" UB.":""))],
+    ["≈ "+f0(zone)+" mm","floor zone",nested?"Services ("+effSvc+" mm) NEST between the "+f0(govern)+" mm beams — the zone is just slab + beam + ceiling. This is why beams want to be wide, not deep.":(flat?"Slab + services below ("+effSvc+" mm) + ceiling — flat soffits give services a clean run.":"Services ("+f0(effSvc)+" mm) DON'T fit between the "+f0(govern)+" mm beams — they hang below. Deepen the beams, go cellular, or pick a shallower air system in Ceiling Services.")],
+    [col?col[1]:"Engineer / core","column @ "+f1(gx)+"×"+f1(gy)+"×"+st,"Effective "+f0(eff)+" m² (load ×"+L.m+"). Ching via Madigan @3.6 m."],
+    [bays+" × "+f1(gx/Math.max(2,bays))+" m","bays between columns","Bays run gridline to gridline with columns at the shared corners — "+f1(gx)+" m ÷ "+bays+" = "+f1(gx/Math.max(2,bays))+" m bays ("+(gx/Math.max(2,bays)>=2.4?"≥ 2.4 m ✓":"UNDER 2.4 m — drop a bay")+"). Same bay carries "+Math.floor(gx/0.6)+" racks or 3 lap lanes."],
+  ]);
+  const chks=[];
+  const inX=gx>=s[3]&&gx<=s[4], inY=flat?true:(gy>=s[3]&&gy<=s[4]*1.25);
+  chks.push([inX&&inY?"ok":"bad",`Grid ${f1(gx)} × ${f1(gy)} m — ${inX&&inY?"workable":"OUTSIDE the typical range"} for ${s[0].replace(" †","")} (typ. ${s[3]}–${s[4]} m).`]);
+  chks.push([nested||flat?"ok":"warn",nested?`Nesting achieved: the ${(typeof SVC!=="undefined")?SVC_SYS[SVC.sys].n:"air system"} zone sits inside the beam depth. Free depth — spend it on ceiling height.`:flat?`Flat soffit: services run in an uninterrupted ${f0(effSvc)} mm layer — shallow air systems (chilled beams, cassettes) pay off directly here.`:`The services zone exceeds the beam depth by ${f0(effSvc-govern)} mm. Options: cellular beams (through the web), a shallower system in Ceiling Services, or accept the depth.`]);
+  if(SST.ov==="park"){
+    const pf=parkFit(gy,2);
+    if(pf.h[0]>0)chks.push(["warn",`Even with the module shifted, a column line lands <b>in the aisle</b> (grid Y ${f1(gy)} vs the 5.4 / 6.0 / 5.4 module) — cars can't drive through columns. Use 8.4 / 16.8, or the classic uneven grid: 5.4 – 6.0 – 5.4.`]);
+    else if(pf.o>0||pf.h[1]>0)chks.push(["ok",`Parking module shifted ${f1(pf.o)} m so column lines land on the bay/aisle boundary${pf.h[1]?" (some columns sit at the rear of bays — accepted practice: rear third, never the door-swing zone)":""}. AS/NZS 2890.1 — VERIFY.`]);
+    else chks.push(["ok",`Column lines land on the bay/aisle boundary — structure and parking module agree. Columns at bay corners, never in the door-swing third (AS/NZS 2890.1 — VERIFY).`]);
+  }
+  if(cant>0){
+    const lim=gx/3, sweet=gx/4;
+    chks.push([cant<=sweet?"ok":cant<=lim?"warn":"bad",`Cantilever <b>${f1(cant)} m</b> on a ${f1(gx)} m backspan — ${cant<=sweet?`comfortable (≤ ¼ backspan).`:cant<=lim?`working hard: past ¼ (${f1(sweet)} m), nearing the <b>⅓ limit (${f1(lim)} m)</b>. Expect a deeper edge beam.`:`<b>exceeds ⅓ of the backspan (${f1(lim)} m)</b> — ballast/tie-down territory. Pull it back or add a column.`}`]);
+  }
+  if(load==="vheavy")chks.push(["warn",`Very heavy (plant / data hall 12–20 kPa): rules of thumb degrade fastest here — AS/NZS 1170 engineer design, full stop.`]);
+  if(s[5]==="timber")chks.push(["info",`Timber in a Type A building: FRLs via charring + sprinklers (Resource 01) — civic wings yes, data hall no.`]);
+  chks.push(["info",`Madigan calls his ratios “very loose” — reserve the depth, then write “structural engineer to verify”, because they will.`]);
+  checks($("stx_chk"),chks);
+  $("stx_sel").innerHTML=`<b>Structure:</b> ${s[0].replace(" †","")} @ ${f1(gx)} × ${f1(gy)} m<br><b>Ceiling services:</b> ${(typeof SVC!=="undefined")?SVC_SYS[SVC.sys].n:"—"} — ${f0(effSvc)} mm zone${nested?" (nested ✓)":""} · <a href="#services" style="color:var(--compliance)">change ↓</a>`;
+  stxPlan(s,flat,gx,gy,cant);
+  stxSec(s,flat,band,dSec,dPri,slab,effSvc,ceil,zone,nested,cellular,govern);
+  stxBars(s,gx,gy);
+}
+
+/* parking module: find the offset (0 or 3.0 m) that best aligns columns with bay/aisle lines */
+function parkFit(gy,ny){
+  function hits(off){let a=0,b=0;for(let j=0;j<=ny;j++){const yy=(((j*gy-off)%16.8)+16.8)%16.8;
+    if(yy>5.7&&yy<11.1)a++; else if(!(yy<0.3||yy>16.5||Math.abs(yy-5.4)<0.3||Math.abs(yy-11.4)<0.3))b++;}return[a,b];}
+  const cands=[0,3.0].map(o=>({o,h:hits(o)}));
+  cands.sort((p,q)=>(p.h[0]*10+p.h[1])-(q.h[0]*10+q.h[1]));
+  return cands[0]; /* {o: offset, h:[inAisle, midBay]} */
+}
+/* ---------- plan: overlays BETWEEN columns ---------- */
+function stxPlan(s,flat,gx,gy,cant){
+  const svg=$("stx_plan");
+  const nx=2,ny=2;
+  const Wm=nx*gx+cant, Hm=ny*gy;
+  const pad=34, maxW=780, maxH=430;
+  const sc=Math.min(maxW/Wm,maxH/Hm);
+  const W=Wm*sc+2*pad, H=Hm*sc+2*pad+18;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  let out="";
+  const X=m=>pad+m*sc, Y=m=>pad+m*sc;
+  const CZ=0.3; /* column clear zone each side of a gridline */
+  if(SST.ov==="park"){
+    for(let i=0;i<nx;i++){
+      /* convention: bays run gridline to gridline; columns sit at shared bay corners */
+      const n=Math.max(2,Math.floor(gx/2.4));
+      const bwm=gx/n; /* actual bay width, e.g. 8.4/3 = 2.8 m generous */
+      const cellX0=i*gx, inset=0;
+      const module=16.8;
+      const pf=parkFit(gy,ny);
+      let ym=-pf.o;
+      while(ym<Hm){
+        if(ym+module<=0){ym+=module;continue;}
+        for(const [by0,bl0] of [[ym,5.4],[ym+11.4,5.4]]){
+          const by=Math.max(by0,0), bend=Math.min(by0+bl0,Hm), bl=bend-by;
+          if(bl<1.2)continue;
+          for(let b=0;b<n;b++){
+            const bx=cellX0+b*bwm;
+            out+=`<rect x="${X(bx)+1.5}" y="${Y(by)+1}" width="${bwm*sc-3}" height="${bl*sc-2}" fill="rgba(88,86,214,.10)" stroke="#5856d6" stroke-width=".7"/>`;
+          }
+          if(i===0&&by<6)out+=`<text x="${X(cellX0+bwm/2)}" y="${Y(by+2.7)+4}" text-anchor="middle" font-size="9" font-weight="700" fill="#5856d6" opacity=".8">${f1(bwm)} m</text>`;
+        }
+        const ay=ym+8.4;
+        if(ay>0.5&&ay<Hm-0.5)out+=`<text x="${X(i*gx+gx/2)}" y="${Y(ay)+4}" text-anchor="middle" font-size="10" font-weight="700" fill="#5856d6" opacity=".75">AISLE 6.0 m</text>`;
+        ym+=module;
+      }
+    }
+  } else if(SST.ov==="racks"){
+    const rw=0.6*sc, rd=1.2*sc, ca=1.2*sc, ha=1.0*sc;
+    for(let i=0;i<nx;i++){
+      const x0=X(i*gx+CZ), x1=X((i+1)*gx-CZ);
+      let yy=Y(0)+0.9*sc, hot=false;
+      while(yy+rd<=Y(Hm)){
+        for(let bx=x0;bx+rw<=x1;bx+=rw)out+=`<rect x="${bx}" y="${yy}" width="${rw-1}" height="${rd}" fill="rgba(29,29,31,.75)"/>`;
+        yy+=rd+(hot?ha:ca); hot=!hot;
+      }
+    }
+  }
+  const nsec=Math.ceil(gy/3);
+  if(!flat)for(let j=0;j<ny;j++)for(let k=1;k<nsec;k++){
+    const yy=Y(j*gy+k*gy/nsec);
+    out+=`<line x1="${X(0)}" y1="${yy}" x2="${X(nx*gx+cant)}" y2="${yy}" stroke="#86868b" stroke-width="1.3"/>`;
+  }
+  for(let i=0;i<=nx;i++)
+    out+=`<line x1="${X(i*gx)}" y1="${Y(0)}" x2="${X(i*gx)}" y2="${Y(Hm)}" stroke="#0071e3" stroke-width="${flat?1:4.5}" ${flat?'stroke-dasharray="2 4"':''}/>`;
+  out+=`<rect x="${X(0)}" y="${Y(0)}" width="${(nx*gx)*sc}" height="${Hm*sc}" fill="none" stroke="#1d1d1f" stroke-width="2"/>`;
+  if(cant>0)out+=`<rect x="${X(nx*gx)}" y="${Y(0)}" width="${cant*sc}" height="${Hm*sc}" fill="rgba(255,149,0,.14)" stroke="#ff9500" stroke-width="1.6" stroke-dasharray="6 4"/><text x="${X(nx*gx+cant/2)}" y="${Y(Hm/2)}" text-anchor="middle" font-size="10" font-weight="800" fill="#c46a00" transform="rotate(-90 ${X(nx*gx+cant/2)} ${Y(Hm/2)})">CANTILEVER ${f1(cant)} m</text>`;
+  for(let i=0;i<=nx;i++)for(let j=0;j<=ny;j++)
+    out+=`<rect x="${X(i*gx)-7}" y="${Y(j*gy)-7}" width="14" height="14" fill="#1d1d1f"/>`;
+  out+=`<line x1="${X(0)}" y1="${Y(Hm)+14}" x2="${X(gx)}" y2="${Y(Hm)+14}" stroke="#0071e3" stroke-width="1.4"/>
+    <text x="${X(gx/2)}" y="${Y(Hm)+28}" text-anchor="middle" font-size="11" font-weight="800" fill="#0071e3">X ${f1(gx)} m</text>
+    <line x1="${X(nx*gx+cant)+12}" y1="${Y(0)}" x2="${X(nx*gx+cant)+12}" y2="${Y(gy)}" stroke="#af52de" stroke-width="1.4"/>
+    <text x="${X(nx*gx+cant)+24}" y="${Y(gy/2)}" font-size="11" font-weight="800" fill="#af52de" transform="rotate(90 ${X(nx*gx+cant)+24} ${Y(gy/2)})">Y ${f1(gy)} m</text>`;
+  svg.innerHTML=out;
+}
+
+/* ---------- section: slab-on-beams, nested services, thin ceiling ---------- */
+function stxSec(s,flat,band,dSec,dPri,slab,svcD,ceil,zone,nested,cellular,govern){
+  const svg=$("stx_sec"),W=840;
+  const sc=Math.min(0.34,190/zone);
+  const x0=90,bw=620;
+  const slabH=Math.max((flat?dSec:slab)*sc,10);
+  const beamH=flat?0:govern*sc;
+  const svcH=svcD*sc;
+  const ceilH=ceil?Math.max(ceil*sc,4):0;
+  const H=40+slabH+Math.max(beamH,(nested?beamH:beamH+svcH))+(flat?svcH:0)+ceilH+70;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  let y=34,out="";
+  /* columns full height */
+  const colH=slabH+(flat?svcH:Math.max(beamH,nested?beamH:beamH+svcH))+ceilH+34;
+  out+=`<rect x="${x0-26}" y="${y}" width="26" height="${colH}" fill="#d2d2d7"/><rect x="${x0+bw}" y="${y}" width="26" height="${colH}" fill="#d2d2d7"/>`;
+  /* slab with depth */
+  out+=`<rect x="${x0-26}" y="${y}" width="${bw+52}" height="${slabH}" fill="#aeaeb2"/>
+    <text x="${x0+bw+34}" y="${y+slabH/2+4}" font-size="10" fill="#86868b">${flat?s[0].replace(" †","")+" "+f0(dSec)+" mm":"slab "+slab+" mm"}</text>`;
+  y+=slabH;
+  if(!flat){
+    /* wide, not-too-deep beams hung from the slab: primary at columns, secondaries within bay */
+    const priW=Math.min(150,Math.max(90,dPri*sc*1.6));
+    const secW=Math.min(110,Math.max(64,dSec*sc*(band?2.6:1.5)));
+    out+=`<rect x="${x0-26}" y="${y}" width="${priW}" height="${dPri*sc}" fill="#af52de" rx="3"/>
+      <rect x="${x0+bw+26-priW}" y="${y}" width="${priW}" height="${dPri*sc}" fill="#af52de" rx="3"/>
+      <text x="${x0-26+priW/2}" y="${y+dPri*sc+13}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#af52de">PRIMARY ${f0(dPri)}</text>`;
+    [0.33,0.66].forEach((f,i)=>{
+      const bx=x0+bw*f-secW/2;
+      out+=`<rect x="${bx}" y="${y}" width="${secW}" height="${dSec*sc}" fill="${s[5]==="timber"?"#c98a3d":s[5]==="steel"?"#0071e3":"#86868b"}" rx="3"/>`;
+      if(cellular)out+=`<circle cx="${bx+secW/2}" cy="${y+dSec*sc/2}" r="${Math.min(dSec*sc*.3,10)}" fill="#fff"/>`;
+      if(i===0)out+=`<text x="${bx+secW/2}" y="${y+dSec*sc+13}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0071e3">SECONDARY ${f0(dSec)}</text>`;
+    });
+    /* services nested between beams (or hanging below) */
+    const sy=nested?y:y; const nestH=nested?svcH:svcH;
+    const zones=[[x0+bw*0.12,x0+bw*0.33-70],[x0+bw*0.33+70,x0+bw*0.66-70],[x0+bw*0.66+70,x0+bw*0.9]];
+    const topY=nested?y+8:y+govern*sc+6;
+    zones.forEach(([a,b],i)=>{
+      if(b-a<40)return;
+      out+=`<rect x="${a}" y="${topY}" width="${b-a}" height="${Math.max(nestH-12,14)}" fill="rgba(255,149,0,.2)"/>`;
+      out+=`<circle cx="${(a+b)/2}" cy="${topY+nestH*.4}" r="${Math.min(nestH*.28,16)}" fill="none" stroke="#c46a00" stroke-width="2"/>`;
+      if(i===1)out+=`<line x1="${a+8}" y1="${topY+nestH*.78}" x2="${b-8}" y2="${topY+nestH*.78}" stroke="#ff3b30" stroke-width="2"/>`;
+    });
+    out+=`<text x="${x0+bw+34}" y="${topY+nestH/2}" font-size="10" fill="#c46a00">services ${f0(svcD)} mm — ${nested?"NESTED between beams":"below beams (don't fit)"}${cellular?" / through web":""}</text>`;
+    y+= (nested?govern*sc : govern*sc+svcH);
+  } else {
+    out+=`<rect x="${x0}" y="${y+4}" width="${bw}" height="${Math.max(svcH-8,14)}" fill="rgba(255,149,0,.2)"/><circle cx="${x0+bw*.3}" cy="${y+svcH/2}" r="${Math.min(svcH*.3,16)}" fill="none" stroke="#c46a00" stroke-width="2"/><line x1="${x0+30}" y1="${y+svcH*.75}" x2="${x0+bw-30}" y2="${y+svcH*.75}" stroke="#ff3b30" stroke-width="2"/>
+      <text x="${x0+bw+34}" y="${y+svcH/2+4}" font-size="10" fill="#c46a00">services ${f0(svcD)} mm — clean run under the flat soffit</text>`;
+    y+=svcH;
+  }
+  if(ceilH){out+=`<rect x="${x0-26}" y="${y+2}" width="${bw+52}" height="${ceilH}" fill="#1d1d1f"/><text x="${x0+bw+34}" y="${y+ceilH+2}" font-size="10" fill="#86868b">ceiling ${ceil} mm</text>`;y+=ceilH+2;}
+  else{out+=`<text x="${x0+bw+34}" y="${y+10}" font-size="10" fill="#34c759">exposed — no ceiling</text>`;}
+  out+=`<line x1="${x0-26}" y1="${y+22}" x2="${x0+bw+26}" y2="${y+22}" stroke="#1d1d1f" stroke-width="1" stroke-dasharray="6 4"/>
+    <text x="${x0+bw/2}" y="${y+40}" text-anchor="middle" font-size="10.5" fill="#86868b">clear height below · 2.7 m office · 4–5 m data hall · 5 m+ pool hall</text>
+    <line x1="${x0+bw+150}" y1="34" x2="${x0+bw+150}" y2="${y}" stroke="#34c759" stroke-width="2"/>
+    <text x="${x0+bw+156}" y="${(34+y)/2}" font-size="11" font-weight="800" fill="#34c759" transform="rotate(90 ${x0+bw+156} ${(34+y)/2})">floor zone ≈ ${f0(zone)} mm</text>`;
+  svg.innerHTML=out;
+}
+
+/* ---------- span bars ---------- */
+function stxBars(sel,gx,gy){
+  const bars=$("stx_bars"),BW=820,rh=20,gp=6;
+  bars.setAttribute("viewBox",`0 0 ${BW} ${STX.length*(rh+gp)+34}`);
+  const mx=62;
+  let out="";
+  STX.forEach((r,i)=>{
+    const yb=i*(rh+gp)+4;
+    const x1=210+(BW-320)*r[3]/mx, x2=210+(BW-320)*r[4]/mx;
+    const isSel=(r[0]===sel[0]);
+    out+=`<text x="200" y="${yb+rh/2+4}" text-anchor="end" font-size="10.5" font-weight="${isSel?"800":"600"}" fill="${isSel?"#0071e3":"#1d1d1f"}">${r[0]}</text>
+      <rect x="${x1}" y="${yb}" width="${Math.max(3,x2-x1)}" height="${rh}" rx="5" fill="${isSel?"#0071e3":{timber:"#c98a3d",steel:"#86868b",concrete:"#aeaeb2"}[r[5]]}" opacity="${isSel?1:.55}"/>
+      <text x="${x2+7}" y="${yb+rh/2+4}" font-size="9.5" fill="#86868b">${r[3]}–${r[4]} m</text>`;
+  });
+  [[gx,"#0071e3","X"],[gy,"#af52de","Y"]].forEach(([v,c,l])=>{
+    const sx=210+(BW-320)*Math.min(v,mx)/mx;
+    out+=`<line x1="${sx}" y1="0" x2="${sx}" y2="${STX.length*(rh+gp)+8}" stroke="${c}" stroke-width="2" stroke-dasharray="5 4"/><text x="${sx+5}" y="${STX.length*(rh+gp)+22}" font-size="10.5" font-weight="800" fill="${c}">${l} ${f1(v)}</text>`;
+  });
+  bars.innerHTML=out;
+}
+
+/* wiring */
+[["stx_gx","gx"," m"],["stx_gy","gy"," m"],["stx_cant","cant"," m"]].forEach(([id,key,suf])=>{
+  $(id).addEventListener("input",()=>{SST[key]=+$(id).value;$("v_"+id.replace("_","")).textContent=f1(SST[key])+suf;
+    document.querySelectorAll(`.pchip[data-t="${id}"]`).forEach(b=>b.classList.toggle("on",+b.dataset.v===SST[key]));
+    stxCalc();});
+});
+document.querySelectorAll(".pchip").forEach(b=>b.addEventListener("click",()=>{
+  const id=b.dataset.t;$(id).value=b.dataset.v;$(id).dispatchEvent(new Event("input"));
+}));
+seg2("stx_ov",k=>{SST.ov=k;stxCalc();});
+function seg2(id,cb){const s=$(id);[...s.children].forEach(b=>b.addEventListener("click",()=>{[...s.children].forEach(x=>x.classList.remove("on"));b.classList.add("on");cb(b.dataset.k);}));}
+["stx_sys","stx_load","stx_st"].forEach(id=>$(id).addEventListener("input",stxCalc));
+
+/* init */
+stCalc();egCalc();pkCalc();hvCalc();plCalc();exDefaults();exCalc();svcCalc();
+</script>
+<style>
+abbr.ab{text-decoration:underline dotted #9a9aa0;text-underline-offset:2px;text-decoration-thickness:1px;cursor:help;font-style:normal}
+</style>
+<script>
+/* ACRO_GLOSSARY — auto-tooltips for every acronym. Hover any dotted term. */
+(function(){
+const G={
+"NCC":"National Construction Code — Australia's technical building code; Volume One is the Building Code of Australia for Class 2–9 buildings",
+"BCA":"Building Code of Australia — NCC Volumes One and Two",
+"DtS":"Deemed-to-Satisfy — the NCC's prescriptive compliance pathway; the alternative is a Performance Solution",
+"FRL":"Fire Resistance Level — structural adequacy / integrity / insulation, in minutes (e.g. 120/120/120)",
+"AS/NZS":"Joint Australian / New Zealand Standard",
+"JV3":"NCC verification method: whole-building energy modelling against a reference building",
+"AACF":"Accessible Adult Change Facility — hoist + adult change table, required in large aquatic venues",
+"TGSI":"Tactile Ground Surface Indicators — warning studs/bars at stairs, ramps and crossings",
+"GSPO":"Guidelines for Safe Pool Operations — Royal Life Saving Australia's national aquatic practice guidance",
+"EHO":"Environmental Health Officer — council officer who licenses and inspects public pools",
+"MFS":"South Australian Metropolitan Fire Service",
+"EWIS":"Emergency Warning and Intercom System — the evacuation speakers and wardens' phones",
+"FIP":"Fire Indicator Panel — where the brigade reads the alarm state",
+"MECP":"Master Emergency Control Panel",
+"VESDA":"Very Early Smoke Detection Apparatus — aspirating smoke detection, standard in data halls",
+"BMS":"Building Management System — the software brain running HVAC, metering and alarms",
+"MDF":"Main Distribution Frame — where communications cabling enters and is distributed",
+"RCP":"Reflected Ceiling Plan — the drawing convention: the ceiling as seen in a mirror on the floor",
+"HVAC":"Heating, Ventilation and Air Conditioning",
+"AHU":"Air Handling Unit — the big box of fans, coils and filters that conditions supply air",
+"VAV":"Variable Air Volume — ducted air conditioning that throttles airflow per zone",
+"VRF":"Variable Refrigerant Flow — multi-head refrigerant systems (ceiling cassettes)",
+"FCU":"Fan Coil Unit — a small local fan + coil serving one zone",
+"TABS":"Thermally Activated Building Systems — heating/cooling pipes cast into the structure itself",
+"ACH":"Air Changes per Hour — how many times the room's air volume is replaced hourly",
+"COP":"Coefficient of Performance — heat moved ÷ electricity used; a heat pump at COP 4 moves 4 kWh of heat per 1 kWh in",
+"DLC":"Direct Liquid Cooling — cold plates on the chips; heat leaves in water, not air",
+"CRAC":"Computer Room Air Conditioner — refrigerant-based data hall cooling unit",
+"CRAH":"Computer Room Air Handler — chilled-water data hall cooling unit",
+"CDU":"Coolant Distribution Unit — pumps and heat exchangers feeding liquid-cooled racks",
+"UPS":"Uninterruptible Power Supply — batteries (or flywheels) that carry the load until generators start",
+"DRUPS":"Diesel Rotary UPS — a flywheel + diesel engine in one machine",
+"BESS":"Battery Energy Storage System — grid-scale battery containers",
+"PPA":"Power Purchase Agreement — a long-term contract to buy renewable electricity from an off-site wind/solar farm; the standard route to claiming 100% renewable operation",
+"PUE":"Power Usage Effectiveness — total facility power ÷ IT power; 1.0 is perfect, ~1.3 is good, air-cooled legacy runs 1.5+",
+"WUE":"Water Usage Effectiveness — litres of water per kWh of IT energy",
+"BTES":"Borehole Thermal Energy Storage — summer heat banked in the ground via borehole arrays, recovered in winter",
+"ATES":"Aquifer Thermal Energy Storage — seasonal heat storage in groundwater",
+"HVO":"Hydrotreated Vegetable Oil — renewable drop-in diesel, ~90% lifecycle carbon cut",
+"PEM":"Proton Exchange Membrane — the fuel-cell type used for hydrogen standby power",
+"EV":"Electric Vehicle",
+"HX":"Heat exchanger — transfers heat between two fluids that never mix",
+"TIA":"Telecommunications Industry Association — TIA-942 is the (voluntary) data centre facility standard",
+"ASHRAE":"American Society of Heating, Refrigerating and Air-Conditioning Engineers — sets server thermal envelopes (TC 9.9)",
+"AFCOM":"Data centre industry association — publishes the State of the Data Center reports",
+"IEA":"International Energy Agency",
+"NGA":"National Greenhouse Accounts — Australia's official emission factors",
+"OCA":"Open Connect Appliance — Netflix's caching server placed inside local networks",
+"HDFS":"Hadoop Distributed File System — its default of 3 copies per file is the storage-redundancy convention",
+"ISP":"Internet Service Provider",
+"IT load":"Information Technology load — the electricity the servers themselves draw, excluding cooling and overheads",
+"UB":"Universal Beam — the standard hot-rolled steel I-beam",
+"UC":"Universal Column — the squat I-section used for columns",
+"PFC":"Parallel Flange Channel — C-shaped steel section",
+"RHS":"Rectangular Hollow Section",
+"SHS":"Square Hollow Section",
+"CHS":"Circular Hollow Section",
+"CLT":"Cross-Laminated Timber — massive plywood-like slabs and walls",
+"LVL":"Laminated Veneer Lumber — engineered timber beam",
+"PSL":"Parallel Strand Lumber — engineered timber",
+"RC":"Reinforced Concrete",
+"PT":"Post-Tensioned — concrete with stressed tendons, allowing thinner longer slabs",
+"DfMA":"Design for Manufacture and Assembly — factory-made components, bolted together on site, un-boltable later",
+"LCA":"Life Cycle Assessment — the accounting of a building's environmental impacts from cradle to grave",
+"GFA":"Gross Floor Area",
+"NFA":"Net Floor Area",
+"O&M":"Operations and Maintenance (manuals)",
+"POE":"Post-Occupancy Evaluation",
+"PCG":"Project Control Group — the client-side governance table above the whole project",
+"D&C":"Design and Construct — contract where the builder owns design completion (AS 4902); consultants are usually novated",
+"QS":"Quantity Surveyor — the cost consultant",
+"PM":"Project Manager",
+"SCAP":"State Commission Assessment Panel — SA's planning authority for major applications",
+"ODASA":"Office for Design and Architecture South Australia — state design review",
+"ESCOSA":"Essential Services Commission of South Australia — licenses energy utilities, including heat networks",
+"OTR":"Office of the Technical Regulator (SA) — technical safety of energy infrastructure",
+"PDI":"Planning, Development and Infrastructure Act 2016 (SA)",
+"WHS":"Work Health and Safety",
+"DDA":"Disability Discrimination Act 1992",
+"GBCA":"Green Building Council of Australia — runs Green Star",
+"NABERS":"National Australian Built Environment Rating System — operational (and now embodied) performance ratings",
+"LETI":"London Energy Transformation Initiative — publishes widely-used embodied carbon targets",
+"RIBA":"Royal Institute of British Architects — its 2030 Climate Challenge sets carbon targets",
+"EPiC":"Environmental Performance in Construction — University of Melbourne's Australian material carbon database",
+"MBR":"Membrane Bioreactor — compact biological water treatment",
+"UF":"Ultrafiltration — membrane water filtering",
+"RO":"Reverse Osmosis",
+"MVA":"Megavolt-ampere — transformer capacity rating",
+"kWp":"Kilowatts-peak — a solar array's rated output in full sun",
+"kPa":"Kilopascal — pressure/load; floor loads: office ≈ 3 kPa, data hall 12–20 kPa",
+"N+1":"Redundancy: the number of units needed, plus one spare",
+"2N":"Redundancy: full duplication — two complete independent systems",
+"FI passage":"Fire-isolated passageway — a fire-rated corridor that is legally part of the exit",
+"kWh":"Kilowatt-hour — the unit of energy: 1 kW running for 1 hour (a dishwasher cycle ≈ 1 kWh)",
+"MWh":"Megawatt-hour — 1,000 kWh (an Australian home uses ~5–6 MWh a year)",
+"GWh":"Gigawatt-hour — 1,000 MWh (this precinct's heat demand ≈ 9 GWh/yr)",
+"PB":"Petabyte — 1,000 terabytes",
+"TB":"Terabyte — 1,000 gigabytes"
+};
+const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+const esc=s=>s.replace(/[.*+?^${}()|[\]\\/]/g,"\\$&");
+const rx=new RegExp("(?<![A-Za-z0-9])("+keys.map(esc).join("|")+")(?![A-Za-z0-9])","g");
+const SKIP=new Set(["SCRIPT","STYLE","ABBR","TEXTAREA","OPTION","TITLE"]);
+let busy=false;
+function annotate(root){
+  busy=true;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){
+    const p=n.parentElement;
+    if(!p||SKIP.has(p.tagName)||p.closest("svg,abbr,.tip"))return NodeFilter.FILTER_REJECT;
+    rx.lastIndex=0;
+    return rx.test(n.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
+  }});
+  const nodes=[];
+  while(walker.nextNode())nodes.push(walker.currentNode);
+  nodes.forEach(n=>{
+    const frag=document.createDocumentFragment();
+    let last=0; rx.lastIndex=0; let m; const txt=n.nodeValue;
+    while((m=rx.exec(txt))){
+      if(m.index>last)frag.appendChild(document.createTextNode(txt.slice(last,m.index)));
+      const a=document.createElement("abbr");
+      a.className="ab"; a.title=G[m[1]]; a.textContent=m[1];
+      frag.appendChild(a);
+      last=m.index+m[1].length;
+    }
+    if(last<txt.length)frag.appendChild(document.createTextNode(txt.slice(last)));
+    n.parentNode.replaceChild(frag,n);
+  });
+  busy=false;
+}
+function run(){annotate(document.body);}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run);else run();
+let t=null;
+new MutationObserver(muts=>{
+  if(busy)return;
+  clearTimeout(t);
+  t=setTimeout(run,300);
+}).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Athanor Toolkit — ARCH 5004 + 6004</title>
+<style>
+  :root{
+    --ink:#1d1d1f; --sec:#86868b; --panel:#f5f5f7; --rule:#d2d2d7; --muted:#aeaeb2;
+    --contract:#af52de; --compliance:#0071e3; --planning:#ff9500; --design:#34c759; --governance:#5856d6; --water:#30b0c7;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased}
+  header{background:#000;color:#fff;padding:96px 40px 84px}
+  .wrap{max-width:1180px;margin:0 auto}
+  header .eyebrow{display:inline-block;background:#fff;color:#000;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:22px;letter-spacing:.04em}
+  header h1{font-size:clamp(44px,7vw,84px);font-weight:700;line-height:1.02;letter-spacing:-.02em}
+  header p.sub{color:#a1a1a6;font-size:17px;line-height:1.55;margin-top:24px;max-width:64ch}
+  header p.tag{color:#6e6e73;font-size:12px;margin-top:30px}
+  main{padding:64px 40px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+  a.card{display:flex;flex-direction:column;gap:10px;background:var(--panel);border-radius:18px;padding:28px 26px;text-decoration:none;color:var(--ink);border:1px solid transparent;transition:transform .15s,border-color .15s,box-shadow .15s}
+  a.card:hover{transform:translateY(-3px);border-color:var(--rule);box-shadow:0 10px 30px rgba(0,0,0,.06)}
+  a.card .top{display:flex;align-items:center;gap:10px}
+  a.card .dot{width:12px;height:12px;border-radius:50%;flex:none}
+  a.card .n{font-size:11px;font-weight:700;color:var(--sec);letter-spacing:.04em}
+  a.card h2{font-size:20px;font-weight:700;letter-spacing:-.01em}
+  a.card p{font-size:13px;line-height:1.55;color:var(--sec)}
+  a.card .go{margin-top:auto;font-size:13px;font-weight:700;color:var(--ink)}
+  footer{background:var(--panel);color:var(--sec);font-size:11px;line-height:1.6;padding:34px 40px;margin-top:20px}
+  footer a{color:var(--sec)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <span class="eyebrow">ARCH 5004 + 6004 · MASTER OF ARCHITECTURE STUDIO</span>
+    <h1>The Athanor<br>Toolkit</h1>
+    <p class="sub">Six interactive teaching tools for the Southwark Thermal Commons — a net-zero data centre, bathhouse and greenhouse for Thebarton, South Australia. Size the building, test it against the code, and see the carbon consequences of every choice. Every number explains itself and names its source.</p>
+    <p class="tag">Southwark Thermal Commons · Southwark Grounds, Thebarton SA · covering studio year 2026 · works offline, one file each</p>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+    <div class="cards">
+      <a class="card" href="Athanor_Project_Web.html">
+        <div class="top"><span class="dot" style="background:var(--contract)"></span><span class="n">THE WEB</span></div>
+        <h2>Project Web</h2>
+        <p>The force-directed map of contractual, compliance, planning, design and governance obligations — the people, the contract types, and who leads what.</p>
+        <span class="go">Open →</span>
+      </a>
+      <a class="card" href="Athanor_Design_Calculators.html">
+        <div class="top"><span class="dot" style="background:var(--compliance)"></span><span class="n">SIZING</span></div>
+        <h2>Design Calculators</h2>
+        <p>Live NCC / AS sizing: stairs, egress + a draggable exit planner, sanitary, parking, HVAC and pool plant, a structural grid planner and ceiling-services stack.</p>
+        <span class="go">Open →</span>
+      </a>
+      <a class="card" href="Athanor_DataCentre_NetZero.html">
+        <div class="top"><span class="dot" style="background:var(--design)"></span><span class="n">CARBON-POSITIVE</span></div>
+        <h2>Net-Zero Data Centre</h2>
+        <p>A six-step wizard from digital footprint to a 30-year carbon ledger — sizing, hot/cold aisles, cooling + heat cascade, power, water and embodied carbon.</p>
+        <span class="go">Open →</span>
+      </a>
+      <a class="card" href="Athanor_Embodied_Carbon.html">
+        <div class="top"><span class="dot" style="background:var(--design)"></span><span class="n">UPFRONT CARBON</span></div>
+        <h2>Embodied Carbon</h2>
+        <p>Pick an archetype, size it, swap a structural choice, and watch the upfront carbon move — every factor from the NABERS Embodied Carbon calculator 2026.1.</p>
+        <span class="go">Open →</span>
+      </a>
+      <a class="card" href="Data_Footprint_Calculator.html">
+        <div class="top"><span class="dot" style="background:var(--planning)"></span><span class="n">DATA</span></div>
+        <h2>Data Footprint</h2>
+        <p>What would it take to run a suburb's own storage and streaming locally? Population → racks, energy, water and carbon, charted.</p>
+        <span class="go">Open →</span>
+      </a>
+      <a class="card" href="Athanor_Glossary.html">
+        <div class="top"><span class="dot" style="background:var(--governance)"></span><span class="n">REFERENCE</span></div>
+        <h2>Glossary &amp; Sources</h2>
+        <p>Every code, standard, regulation, reference and acronym the tools cite — searchable, categorised, and traceable back to the NCC clause or Australian Standard.</p>
+        <span class="go">Open →</span>
+      </a>
+    </div>
+  </div>
+</main>
+<footer>
+  <div class="wrap">
+    ARCH 5004 / ARCH 6004 studio teaching resource — Southwark Thermal Commons, prepared July 2026. Indicative first-pass guidance for design studio use only; not engineering or compliance deliverables. NCC references are NCC 2022 (as adopted in SA) — verify every clause at <a href="https://ncc.abcb.gov.au">ncc.abcb.gov.au</a>. See the <a href="Athanor_Glossary.html">Glossary &amp; Sources</a> for full citations.
+  </div>
+</footer>
+</body>
+</html>

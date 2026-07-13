@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Data Centre for Southwark — ARCH5004/6004 Studio Calculator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#F5F5F7; --card:#FFFFFF; --card-soft:#FBFBFD;
+    --ink:#1D1D1F; --ink-soft:#6E6E73; --line:#E5E5E7;
+    --green:#2FA84F; --green-soft:#E7F5EA;
+    --blue:#0071E3; --blue-soft:#E8F1FD;
+    --teal:#00A3B4; --teal-soft:#E3F6F8;
+    --amber:#C9902E; --amber-soft:#FBF1E1;
+    --purple:#7856D5; --purple-soft:#F1ECFB;
+    --pink:#D6336C; --pink-soft:#FBE9F0;
+    --radius:20px; --radius-sm:12px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.45;
+  }
+  .wrap{max-width:1100px;margin:0 auto;padding:0 28px;}
+
+  nav.topnav{position:sticky; top:0; z-index:50;background:rgba(245,245,247,0.86);backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--line);}
+  nav.topnav .navrow{max-width:1100px;margin:0 auto;padding:0 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;height:52px; font-size:13px;}
+  nav.topnav .navlinks{display:flex;gap:16px;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;min-width:0;-webkit-overflow-scrolling:touch;}
+  nav.topnav a{color:var(--ink-soft);text-decoration:none;font-weight:500;}
+  nav.topnav a:hover{color:var(--ink);}
+  nav.topnav .brand{font-weight:700;color:var(--ink);font-size:13px;white-space:nowrap;flex:none;}
+
+  header.hero{padding:64px 0 40px;}
+  header.hero .eyebrow{display:inline-block;background:var(--green);color:#fff;font-size:12px;font-weight:700;padding:4px 11px;border-radius:20px;letter-spacing:0.02em;margin-bottom:18px;}
+  header.hero h1{font-size:clamp(32px,7vw,48px);line-height:1.08;font-weight:700;letter-spacing:-0.02em;margin:0 0 18px;color:var(--ink);}
+  header.hero p.lede{font-size:20px;color:var(--ink-soft);max-width:740px;margin:0 0 8px;font-weight:400;}
+  header.hero p.lede2{font-size:15px;color:var(--ink-soft);max-width:740px;margin:14px 0 0;}
+
+  section{padding:36px 0;}
+  section.divider{border-top:1px solid var(--line);}
+  h2.sectiontitle{font-size:30px;font-weight:700;letter-spacing:-0.01em;margin:0 0 8px;}
+  p.sectionlede{font-size:16px;color:var(--ink-soft);max-width:740px;margin:0 0 28px;}
+  span.eyebrow-sm{display:inline-block;text-transform:uppercase;letter-spacing:0.06em;font-size:12px;font-weight:700;color:var(--green);margin-bottom:10px;}
+
+  .card{background:var(--card);border-radius:var(--radius);padding:28px;border:1px solid var(--line);}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+  @media (max-width:900px){.grid4{grid-template-columns:repeat(2,1fr);} .grid3{grid-template-columns:1fr;} .grid2{grid-template-columns:1fr;}}
+  @media (max-width:560px){.grid4{grid-template-columns:1fr;}}
+
+  .stat-card{background:var(--card-soft);border:1px solid var(--line);border-radius:var(--radius-sm);padding:22px;}
+  .stat-card .icon{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:16px;}
+  .stat-card .value{font-size:30px;font-weight:700;letter-spacing:-0.01em;margin:0 0 2px;}
+  .stat-card .unit{font-size:13px;color:var(--ink-soft);font-weight:500;margin-bottom:10px;}
+  .stat-card .desc{font-size:12.5px;color:var(--ink-soft);}
+  .stat-card .label{font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:2px;}
+
+  .icon.energy{background:var(--blue-soft);color:var(--blue);}
+  .icon.water{background:var(--teal-soft);color:var(--teal);}
+  .icon.carbon{background:var(--green-soft);color:var(--green);}
+  .icon.waste{background:var(--amber-soft);color:var(--amber);}
+  .icon.racks{background:var(--purple-soft);color:var(--purple);}
+  .icon.land{background:var(--blue-soft);color:var(--blue);}
+  .icon.stream{background:var(--pink-soft);color:var(--pink);}
+
+  .control{margin-bottom:26px;}
+  .control:last-child{margin-bottom:0;}
+  .control .crow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+  .control label{font-size:14px;font-weight:600;color:var(--ink);}
+  .control .readout{font-size:14px;font-weight:700;color:var(--green);background:var(--green-soft);padding:2px 10px;border-radius:12px;}
+  .control .readout.pink{color:var(--pink);background:var(--pink-soft);}
+  .control .helptext{font-size:12.5px;color:var(--ink-soft);margin-top:6px;}
+  .control .marks{display:flex;justify-content:space-between;font-size:11px;color:#A1A1A6;margin-top:4px;}
+
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:var(--line);outline:none;accent-color:var(--green);}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid var(--green);box-shadow:0 1px 4px rgba(0,0,0,0.2);cursor:pointer;}
+  input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid var(--green);cursor:pointer;}
+  input[type=range].pink{accent-color:var(--pink);}
+  input[type=range].pink::-webkit-slider-thumb{border-color:var(--pink);}
+
+  .presetrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+  .presetchip{font-size:12px;font-weight:600;padding:5px 12px;border-radius:14px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);cursor:pointer;font-family:inherit;}
+  .presetchip:hover{border-color:var(--green);color:var(--green);}
+  .presetchip.on{background:var(--green);color:#fff;border-color:var(--green);}
+
+  .toggle-group{display:flex;background:var(--line);border-radius:12px;padding:3px;gap:3px;max-width:360px;}
+  .toggle-group button{flex:1;padding:9px 12px;border:none;border-radius:9px;background:transparent;font-size:13.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;font-family:inherit;}
+  .toggle-group button.active{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,0.12);}
+
+  .chart-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px;}
+  .chart-card h3{font-size:16px;font-weight:700;margin:0 0 4px;}
+  .chart-card .sub{font-size:12.5px;color:var(--ink-soft);margin:0 0 16px;}
+  .chart-wrap{position:relative;height:260px;}
+
+  .habit-card{display:flex;gap:14px;align-items:flex-start;background:var(--card-soft);border:1px solid var(--line);border-radius:var(--radius-sm);padding:18px;}
+  .habit-card .hicon{font-size:22px;line-height:1;}
+  .habit-card .htitle{font-size:14px;font-weight:700;margin-bottom:3px;}
+  .habit-card .hval{font-size:13px;color:var(--ink-soft);}
+
+  footer{padding:50px 0 70px;border-top:1px solid var(--line);margin-top:20px;}
+  footer h4{font-size:14px;font-weight:700;margin:0 0 10px;}
+  footer ol{padding-left:18px;margin:0;}
+  footer li{font-size:12px;color:var(--ink-soft);margin-bottom:7px;}
+  footer .footnote-cols{columns:2;column-gap:40px;}
+  @media (max-width:700px){footer .footnote-cols{columns:1;}}
+  footer .tag{display:inline-block;margin-top:26px;font-size:12px;color:#A1A1A6;}
+
+  .pill-note{background:var(--green-soft);border-radius:var(--radius-sm);padding:16px 20px;font-size:13.5px;color:#1D1D1F;margin-bottom:0;}
+  .pill-note b{color:var(--green);}
+  .pill-note.info{background:var(--blue-soft);} .pill-note.info b{color:var(--blue);}
+  .pill-note.pink{background:var(--pink-soft);} .pill-note.pink b{color:var(--pink);}
+
+  .bigcallout-row{display:flex;gap:36px;flex-wrap:wrap;margin:22px 0 30px;}
+  .bigcallout{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;}
+  .bigcallout .n{font-size:52px;font-weight:700;letter-spacing:-0.02em;color:var(--ink);}
+  .bigcallout .n.pink{color:var(--pink);}
+  .bigcallout .t{font-size:14px;color:var(--ink-soft);max-width:280px;}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="navrow">
+    <div class="brand">A Data Centre for Southwark</div>
+    <div class="navlinks">
+      <a href="Athanor_Design_Calculators.html" style="color:var(--blue);font-weight:700;">← Design toolkit</a>
+      <a href="Athanor_Embodied_Carbon.html" style="color:var(--green);font-weight:700;">Embodied Carbon ↗</a>
+      <a href="Athanor_Glossary.html" style="color:var(--purple);font-weight:700;">Glossary ↗</a>
+      <a href="#population">Population</a>
+      <a href="#storage">Storage</a>
+      <a href="#streaming">Streaming</a>
+      <a href="#tech">Technology</a>
+      <a href="#results">The facility</a>
+      <a href="#scaling">Federation</a>
+      <a href="#sources">Sources</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <header class="hero">
+    <span class="eyebrow">ARCH5004 / ARCH6004 studio tool</span>
+    <h1>What would it take to run Southwark's own data — storage, streaming and all — locally?</h1>
+    <p class="lede">We build water towers and substations sized for a suburb. This tool asks the same question of data: instead of one distant hyperscale campus, what if storage <i>and</i> everyday streaming were federated — local infrastructure, sized to the community it serves?</p>
+    <p class="lede2">Southwark is the new inner-Adelaide suburb rising on the 8.4-hectare former West End Brewery site, 2km from the CBD — up to 1,300 homes, targeting a 6-Star Green Star Communities rating. It's used here purely as a real, human-scale population to size a facility against — not a real proposal. Netflix already runs a version of this: physical caching boxes ("Open Connect Appliances") embedded inside ISPs worldwide, which is the real-world model behind the streaming numbers below.</p>
+  </header>
+
+  <section id="population">
+    <span class="eyebrow-sm">Step 1</span>
+    <h2 class="sectiontitle">Choose the population this facility serves</h2>
+    <p class="sectionlede">Like a water pump station or a substation, a local data facility is sized to a catchment. Start at Southwark's scale, then try zooming out to a whole council area.</p>
+
+    <div class="card">
+      <div class="control" style="margin-bottom:16px;">
+        <div class="crow"><label>People served</label><span class="readout" id="v-population">3,120</span></div>
+        <input type="range" id="population" min="500" max="100000" value="3120" step="10">
+        <div class="helptext">Southwark's ~1,300 planned dwellings × Greater Adelaide's average household size (2.4 people) ≈ 3,120 residents.</div>
+      </div>
+      <div class="presetrow">
+        <button class="presetchip on" data-target="population" data-value="3120">Southwark (≈3,120)</button>
+        <button class="presetchip" data-target="population" data-value="25026">Adelaide CBD (≈25,000)</button>
+        <button class="presetchip" data-target="population" data-value="64500">West Torrens council area (≈64,500)</button>
+        <button class="presetchip" data-target="population" data-value="100000">Dial max: 100,000</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="storage" class="divider">
+    <span class="eyebrow-sm">Step 2 — Workload 1</span>
+    <h2 class="sectiontitle">Storage: how much data does each resident keep?</h2>
+    <p class="sectionlede">And how many copies does it need — reliable storage never keeps just one.</p>
+    <div class="card grid2" style="align-items:start;">
+      <div class="control" style="margin-bottom:0;">
+        <div class="crow"><label>Data stored per person (GB)</label><span class="readout" id="v-datapp">500</span></div>
+        <input type="range" id="datapp" min="10" max="2000" value="500" step="10">
+        <div class="helptext">500GB is the average personal cloud footprint — photos, documents and music combined.</div>
+      </div>
+      <div class="control" style="margin-bottom:0;">
+        <div class="crow"><label>Copies kept for reliability</label><span class="readout" id="v-redundancy">3×</span></div>
+        <input type="range" id="redundancy" min="1" max="4" value="3" step="1">
+        <div class="helptext">3× replication is standard practice (e.g. Hadoop HDFS default) — one hardware failure should never mean lost data.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="streaming" class="divider">
+    <span class="eyebrow-sm">Step 3 — Workload 2</span>
+    <h2 class="sectiontitle">Streaming: everyone's Netflix, watched locally</h2>
+    <p class="sectionlede">This is exactly what Netflix's real "Open Connect" programme already does — small caching appliances embedded at local ISPs instead of every stream crossing the country. Here, we size the same idea for Southwark itself.</p>
+    <div class="card grid2" style="align-items:start;">
+      <div>
+        <div class="control">
+          <div class="crow"><label>Streaming hours / person / week</label><span class="readout pink" id="v-streamhrs">13.6</span></div>
+          <input type="range" class="pink" id="streamhrs" min="0" max="30" value="13.6" step="0.1">
+          <div class="helptext">13.6 hours/week is the Australian average across streaming services (Netflix viewing survey).</div>
+        </div>
+        <div class="control">
+          <div class="crow"><label>Peak concurrent viewers</label><span class="readout pink" id="v-concurrency">15%</span></div>
+          <input type="range" class="pink" id="concurrency" min="5" max="40" value="15" step="1">
+          <div class="helptext">Share of the population assumed to be streaming at once during peak evening hours.</div>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:14px;font-weight:600;display:block;margin-bottom:8px;">Streaming quality</label>
+        <div class="toggle-group" id="quality-toggle">
+          <button data-quality="sd">SD · 0.7GB/hr</button>
+          <button class="active" data-quality="hd">HD · 3GB/hr</button>
+          <button data-quality="uhd">4K · 7GB/hr</button>
+        </div>
+        <div class="helptext" style="margin-top:12px;">Netflix's own published data-usage figures. Higher quality means fewer viewers per caching appliance.</div>
+        <div class="pill-note pink" style="margin-top:16px;"><b>Real-world precedent:</b> a single Netflix storage appliance holds up to 360TB and serves up to 100Gbps — enough throughput for tens of thousands of simultaneous HD streams from one box.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tech" class="divider">
+    <span class="eyebrow-sm">Step 4</span>
+    <h2 class="sectiontitle">Set the technology</h2>
+    <p class="sectionlede">The same dials from the sizing dossier — storage density, power, cooling, grid — now sized to Southwark's own catchment. Streaming appliances use real, fixed Netflix Open Connect specs (650W, 100Gbps, 20 per rack) rather than a dial, since those are published hardware figures.</p>
+
+    <div class="grid2" style="align-items:start;">
+      <div class="card">
+        <div class="control">
+          <div class="crow"><label>Storage density (PB per rack)</label><span class="readout" id="v-density">5.0</span></div>
+          <input type="range" id="density" min="1" max="18" value="5" step="0.5">
+          <div class="marks"><span>1 (conservative)</span><span>5 (typical)</span><span>18 (max dense)</span></div>
+        </div>
+        <div class="control">
+          <div class="crow"><label>Power per storage rack (kW)</label><span class="readout" id="v-rackkw">7.6</span></div>
+          <input type="range" id="rackkw" min="3" max="20" value="7.6" step="0.1">
+          <div class="marks"><span>3</span><span>7.6 (2025 avg)</span><span>20</span></div>
+        </div>
+        <div class="control">
+          <div class="crow"><label>PUE (facility overhead)</label><span class="readout" id="v-pue">1.56</span></div>
+          <input type="range" id="pue" min="1.04" max="1.6" value="1.56" step="0.01">
+          <div class="marks"><span>1.04 (best)</span><span>1.56 (industry avg)</span></div>
+        </div>
+        <div class="control">
+          <div class="crow"><label>Server refresh cycle (years)</label><span class="readout" id="v-refresh">4</span></div>
+          <input type="range" id="refresh" min="2" max="5" value="4" step="1">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="control">
+          <div class="crow"><label>Water use effectiveness (L/kWh)</label><span class="readout" id="v-wue">0.50</span></div>
+          <input type="range" id="wue" min="0.01" max="2.5" value="0.5" step="0.01">
+          <div class="marks"><span>0.012 (AU)</span><span>2.24 (hot desert)</span></div>
+          <div class="presetrow">
+            <button class="presetchip" data-target="wue" data-value="0.012">Australia</button>
+            <button class="presetchip" data-target="wue" data-value="0.9">AirTrunk portfolio</button>
+            <button class="presetchip" data-target="wue" data-value="2.24">Hot desert</button>
+          </div>
+        </div>
+        <div class="control">
+          <div class="crow"><label>Grid carbon intensity (kg CO₂e/kWh)</label><span class="readout" id="v-grid">0.22</span></div>
+          <input type="range" id="grid" min="0.15" max="0.85" value="0.22" step="0.01">
+          <div class="marks"><span>0.22 (SA)</span><span>0.62 (AU avg)</span><span>0.81 (coal-heavy)</span></div>
+          <div class="helptext">South Australia's own grid — the default here — is one of the cleanest in the country, and the same grid IREN is banking on for its Bundey campus.</div>
+          <div class="presetrow">
+            <button class="presetchip on" data-target="grid" data-value="0.22">South Australia</button>
+            <button class="presetchip" data-target="grid" data-value="0.62">National average</button>
+            <button class="presetchip" data-target="grid" data-value="0.81">Coal-heavy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="results" class="divider">
+    <span class="eyebrow-sm">Step 5</span>
+    <h2 class="sectiontitle">The facility Southwark would need</h2>
+    <p class="sectionlede">Sized like a piece of local infrastructure — not a share of someone else's data centre. Two workloads, added together.</p>
+
+    <div class="bigcallout-row">
+      <div class="bigcallout"><div class="n" id="r-racks">–</div><div class="t">storage racks for every resident's files, with redundancy.</div></div>
+      <div class="bigcallout"><div class="n pink" id="r-appliances">–</div><div class="t" id="r-appliances-t">Netflix-style caching appliances for peak streaming demand.</div></div>
+    </div>
+
+    <div class="grid4">
+      <div class="stat-card" title="Floor space = combined rack-equivalents × 2.0 m²/rack — the real NEXTDC A1 Adelaide ratio (2,922 m² ÷ 1,470 racks = 1.99 m²/rack). Technical space only; excludes grey space, office and circulation.">
+        <div class="icon land">📐</div>
+        <div class="label">Floor space needed</div>
+        <div class="value" id="r-floor">–</div>
+        <div class="unit">m²</div>
+        <div class="desc" id="r-floor-eq">–</div>
+      </div>
+      <div class="stat-card" title="Facility energy = (storage racks × kW/rack + appliances × 0.65 kW) × 8,760 h × PUE. Rack power default 7.6 kW = AFCOM 2025 industry average; PUE default 1.56 = industry average (Google 2025 Environmental Report).">
+        <div class="icon energy">⚡</div>
+        <div class="label">Energy, whole facility / year</div>
+        <div class="value" id="r-energy">–</div>
+        <div class="unit">MWh</div>
+        <div class="desc" id="r-energy-eq">–</div>
+      </div>
+      <div class="stat-card" title="Water = facility energy (kWh) × WUE (L/kWh). WUE range 0.012–2.24 from Microsoft regional sustainability factsheets in the dossier; closed-loop liquid cooling approaches zero.">
+        <div class="icon water">💧</div>
+        <div class="label">Water, whole facility / year</div>
+        <div class="value" id="r-water">–</div>
+        <div class="unit">kilolitres</div>
+        <div class="desc" id="r-water-eq">–</div>
+      </div>
+      <div class="stat-card" title="Carbon = facility energy × grid intensity. SA 0.22 / national 0.62 / coal-heavy 0.81 kg CO₂e per kWh — Australian National Greenhouse Accounts Factors 2025. Car equivalence at 0.17 kg/km; tree absorption at ~20 kg/tree/year.">
+        <div class="icon carbon">🌱</div>
+        <div class="label">Carbon, whole facility / year</div>
+        <div class="value" id="r-carbon">–</div>
+        <div class="unit">t CO₂e</div>
+        <div class="desc" id="r-carbon-eq">–</div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:16px;">
+      <div class="pill-note"><b>On the Southwark site itself:</b> <span id="site-summary">–</span></div>
+      <div class="pill-note info"><b>Per resident, per year:</b> <span id="pp-summary">–</span></div>
+    </div>
+
+    <div class="chart-card" style="margin-top:16px;">
+      <h3>Workload mix — where the energy actually goes</h3>
+      <p class="sub">Storage vs streaming, at today's dial settings.</p>
+      <div class="chart-wrap" style="height:220px;"><canvas id="mixChart"></canvas></div>
+    </div>
+  </section>
+
+  <section id="scaling" class="divider">
+    <span class="eyebrow-sm">Step 6</span>
+    <h2 class="sectiontitle">Federation, or one big campus?</h2>
+    <p class="sectionlede">The same combined math, run from Southwark's scale up to all of Greater Adelaide. This is the real trade-off behind "federated" infrastructure: many small local nodes, or one centralised one.</p>
+
+    <div class="grid2">
+      <div class="chart-card">
+        <h3>Total infrastructure as population served grows</h3>
+        <p class="sub">Log scale on both axes — storage racks + streaming rack-equivalents, combined.</p>
+        <div class="chart-wrap"><canvas id="scalingChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Annual carbon by grid scenario</h3>
+        <p class="sub">Same facility, three different grids — SA's clean grid is a real, current advantage, not a hypothetical.</p>
+        <div class="chart-wrap"><canvas id="scenarioChart"></canvas></div>
+      </div>
+    </div>
+    <p class="pill-note" style="margin-top:16px;" id="federation-summary">–</p>
+  </section>
+
+  <section id="everyday" class="divider">
+    <span class="eyebrow-sm">Step 7</span>
+    <h2 class="sectiontitle">Why this stays small — and what would make it bigger</h2>
+    <p class="sectionlede">Notice how modest these numbers are next to the hyperscale campuses in the dossier. Storage and streaming caching are both surprisingly light. AI and general computation are what actually drive gigawatt-scale demand.</p>
+
+    <div class="grid2" style="align-items:start;">
+      <div class="chart-card">
+        <h3>An average person's cloud storage</h3>
+        <p class="sub">Breakdown of a typical 500GB personal footprint.</p>
+        <div class="chart-wrap" style="height:240px;"><canvas id="storageChart"></canvas></div>
+      </div>
+      <div>
+        <div class="grid2" style="gap:14px;">
+          <div class="habit-card"><div class="hicon">✉️</div><div><div class="htitle">One email</div><div class="hval">≈ 4 g CO₂e (0.03–26g with attachments)</div></div></div>
+          <div class="habit-card"><div class="hicon">📹</div><div><div class="htitle">1 hour video call</div><div class="hval">≈ 17–57 g CO₂e (camera off cuts this ~96%)</div></div></div>
+          <div class="habit-card"><div class="hicon">📦</div><div><div class="htitle">One Open Connect box</div><div class="hval">2U appliance, up to 360TB, ≈650W — smaller than a bar fridge</div></div></div>
+          <div class="habit-card"><div class="hicon">🤖</div><div><div class="htitle">This is why AI is different</div><div class="hval">A single AI rack can draw 60–140kW — 8–18× this tool's default storage rack</div></div></div>
+        </div>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin-top:14px;">These are per-activity figures from published life-cycle studies (see Sources) — context for scale, not a verdict on anyone's viewing habits.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer id="sources">
+    <h4>How the numbers work</h4>
+    <p style="font-size:12.5px;color:var(--ink-soft);max-width:820px;">
+      <b>Storage:</b> total data = population × GB/person × redundancy factor; racks = total data (PB) ÷ storage density per rack.
+      <b>Streaming:</b> peak concurrent viewers = population × peak % ; peak throughput = concurrent viewers × bitrate for the selected quality; appliances = peak throughput ÷ 100Gbps per Open Connect-style appliance (20 appliances ≈ 1 rack).
+      <b>Combined:</b> facility energy = (storage IT load + streaming IT load) × PUE. Water = facility energy × WUE. Carbon = facility energy × grid intensity. Floor space = combined rack-equivalents × ~2m² (the NEXTDC A1 Adelaide technical-space-per-rack ratio). This still excludes general compute/AI workloads — see Step 7.
+    </p>
+    <h4 style="margin-top:24px;">Sources</h4>
+    <div class="footnote-cols">
+      <ol>
+        <li>Southwark Grounds — 8.4-hectare former West End Brewery site, up to 1,300 dwellings, 6-Star Green Star Communities target — Renewal SA, renewalsa.sa.gov.au/projects/southwark-grounds.</li>
+        <li>Average household size, Greater Adelaide (2.43) — ABS 2021 Census, via profile.id.com.au.</li>
+        <li>City of Adelaide / West Torrens / Greater Adelaide population — ABS 2021 Census and 2023 Estimated Resident Population, profile.id.com.au.</li>
+        <li>Storage density (up to 18PB/rack) — Supermicro cloud-density storage product briefs, 2025.</li>
+        <li>Rack density (7.6kW avg 2025) — AFCOM State of the Data Center Report 2025.</li>
+        <li>3× replication as standard practice — Apache Hadoop HDFS default replication factor documentation.</li>
+        <li>PUE industry average (1.56) and best-in-class — Google 2025 Environmental Report; dossier Chart 1.</li>
+        <li>WUE range (0.012–2.24 L/kWh) — Microsoft regional sustainability factsheets, dossier Chart 2.</li>
+      </ol>
+      <ol start="9">
+        <li>Grid carbon intensity — Australian National Greenhouse Accounts Factors 2025 (SA 0.22, national avg 0.62 kg CO₂e/kWh).</li>
+        <li>Netflix Open Connect Appliance specs (up to 360TB, ~650W peak, 100Gbps per box) — openconnect.netflix.com/en/appliances; Netflix Tech Blog, "Serving 100Gbps from an Open Connect Appliance."</li>
+        <li>Netflix data usage by quality (SD 0.7GB/hr, HD 3GB/hr, 4K 7GB/hr) — Netflix Help Center; streaming data usage roundups (2026).</li>
+        <li>Australian streaming hours (13.6 hrs/week average) — Netflix viewing survey, via Forbes Australia / McCrindle digital entertainment research.</li>
+        <li>Technical space per rack (~2m²) — derived from NEXTDC A1 Adelaide (2,922m² / 1,470 racks).</li>
+        <li>Personal cloud storage breakdown (500GB; photos 46%, documents 26%, music 6%) — pCloud, "Stacks of Storage" survey.</li>
+        <li>Email and video call footprints — Mike Berners-Lee, "How Bad Are Bananas?"; MIT Energy Initiative video-call study.</li>
+        <li>NEXTDC A1 Adelaide, AirTrunk, IREN Bundey figures — see the earlier dossier documents for full citations.</li>
+      </ol>
+    </div>
+    <p class="tag">Built for the ARCH5004/6004 data centre → community centre studio · figures current as of July 2026 · Southwark is used here as a real population reference for a teaching exercise, not an actual infrastructure proposal.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  const state = {
+    population: 3120, datapp: 500, redundancy: 3,
+    density: 5, rackkw: 7.6, pue: 1.56, refresh: 4,
+    wue: 0.5, grid: 0.22,
+    streamhrs: 13.6, concurrency: 15, quality: 'hd'
+  };
+
+  const QUALITY_GB_PER_HOUR = { sd: 0.7, hd: 3, uhd: 7 };
+  const RACK_FLOOR_M2 = 2.0;
+  const SOUTHWARK_SITE_M2 = 84000;
+  const HOUSEHOLD_KWH_YR = 6500;
+  const PERSON_WATER_L_DAY = 200;
+  const CAR_KG_PER_KM = 0.17;
+  const TREE_KG_PER_YR = 20;
+  const NEXTDC_A1_RACKS = 1470;
+  const GREATER_ADELAIDE_POP = 1387290;
+  const OCA_THROUGHPUT_MBPS = 100000;   // 100 Gbps per appliance
+  const OCA_POWER_KW = 0.65;            // 650W peak, storage appliance
+  const OCA_PER_RACK = 20;              // 2U appliances per 42U rack (approx usable)
+
+  function fmt(n, d=0){ if(!isFinite(n)) return '–'; return n.toLocaleString(undefined, {maximumFractionDigits:d, minimumFractionDigits:d}); }
+
+  function bindSlider(id, key, decimals, suffix){
+    const el = $(id);
+    el.addEventListener('input', () => {
+      state[key] = parseFloat(el.value);
+      $('v-' + key).textContent = (decimals !== undefined ? state[key].toFixed(decimals) : state[key]) + (suffix||'');
+      if(key === 'population'){
+        document.querySelectorAll('.presetrow .presetchip').forEach(b=>{ if(b.dataset.target==='population') b.classList.remove('on'); });
+      }
+      recompute();
+    });
+  }
+  bindSlider('population','population',0);
+  bindSlider('datapp','datapp',0);
+  bindSlider('redundancy','redundancy',0,'×');
+  bindSlider('density','density',1);
+  bindSlider('rackkw','rackkw',1);
+  bindSlider('pue','pue',2);
+  bindSlider('refresh','refresh',0);
+  bindSlider('wue','wue',2);
+  bindSlider('grid','grid',2);
+  bindSlider('streamhrs','streamhrs',1);
+  bindSlider('concurrency','concurrency',0,'%');
+
+  document.querySelectorAll('.presetchip').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const target = btn.dataset.target;
+      const value = parseFloat(btn.dataset.value);
+      state[target] = value;
+      $(target).value = value;
+      const decimalsMap = {grid:2, wue:2, population:0};
+      $('v-' + target).textContent = target === 'population' ? value.toLocaleString() : value.toFixed(decimalsMap[target] ?? 2);
+      document.querySelectorAll('.presetchip').forEach(b=>{ if(b.dataset.target===target) b.classList.remove('on'); });
+      btn.classList.add('on');
+      recompute();
+    });
+  });
+
+  document.querySelectorAll('#quality-toggle button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('#quality-toggle button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      state.quality = btn.dataset.quality;
+      recompute();
+    });
+  });
+
+  let scalingChart, scenarioChart, storageChart, mixChart;
+
+  function initCharts(){
+    /* respect prefers-reduced-motion: disable Chart.js entry/update animations */
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){ Chart.defaults.animation = false; }
+    const ctx1 = $('scalingChart').getContext('2d');
+    scalingChart = new Chart(ctx1, {
+      type: 'line',
+      data: { datasets: [{ data: [], borderColor:'#7856D5', backgroundColor:'rgba(120,86,213,0.10)', fill:true, tension:0, pointRadius:0, borderWidth:2.5 }] },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmt(c.parsed.y,1) + ' rack-equivalents'}} },
+        scales:{
+          y:{ type:'logarithmic', grid:{color:'#EDEDEF'}, title:{display:true,text:'rack-equivalents (log)'} },
+          x:{ type:'logarithmic', grid:{display:false}, title:{display:true,text:'people served (log)'} }
+        }
+      }
+    });
+
+    const ctx2 = $('scenarioChart').getContext('2d');
+    scenarioChart = new Chart(ctx2, {
+      type: 'bar',
+      data: { labels: [['South Australia','(0.22)'], ['National average','(0.62)'], ['Coal-heavy','(0.81)']], datasets: [{ data:[0,0,0], backgroundColor:['#2FA84F','#0071E3','#C9902E'], borderRadius:8, maxBarThickness:90 }] },
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmt(c.parsed.y,2) + ' t CO2e/yr'}} },
+        scales:{ y:{ beginAtZero:true, grid:{color:'#EDEDEF'}, ticks:{callback:v=>v+' t'} }, x:{ grid:{display:false} } } }
+    });
+
+    const ctx3 = $('storageChart').getContext('2d');
+    storageChart = new Chart(ctx3, {
+      type: 'doughnut',
+      data: { labels: ['Photos & images (46%)','Documents (26%)','Music (6%)','Video & other (22%)'], datasets:[{ data:[46,26,6,22], backgroundColor:['#0071E3','#2FA84F','#C9902E','#D2D2D7'], borderWidth:3, borderColor:'#fff' }] },
+      options: { responsive:true, maintainAspectRatio:false, cutout:'62%', plugins:{ legend:{ position:'bottom', labels:{boxWidth:10, font:{size:11}, padding:14} } } }
+    });
+
+    const ctx4 = $('mixChart').getContext('2d');
+    mixChart = new Chart(ctx4, {
+      type: 'bar',
+      data: { labels: ['Annual energy (kWh)'], datasets: [
+        { label:'Storage', data:[0], backgroundColor:'#0071E3', borderRadius:6, maxBarThickness:60 },
+        { label:'Streaming', data:[0], backgroundColor:'#D6336C', borderRadius:6, maxBarThickness:60 }
+      ] },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{position:'bottom', labels:{boxWidth:10,font:{size:11}}}, tooltip:{callbacks:{label:(c)=> c.dataset.label + ': ' + fmt(c.parsed.x,0) + ' kWh'}} },
+        scales:{ x:{ stacked:true, grid:{color:'#EDEDEF'} }, y:{ stacked:true, grid:{display:false} } } }
+    });
+  }
+
+  function streamingCalc(pop){
+    const gbPerHour = QUALITY_GB_PER_HOUR[state.quality];
+    const bitrateMbps = gbPerHour * 1024 * 8 / 3600;
+    const concurrentStreams = pop * (state.concurrency / 100);
+    const peakMbps = concurrentStreams * bitrateMbps;
+    const appliances = Math.max(1, Math.ceil(peakMbps / OCA_THROUGHPUT_MBPS));
+    return { appliances, rackEquiv: appliances / OCA_PER_RACK, itEnergyKWh: appliances * OCA_POWER_KW * 8760 };
+  }
+
+  function storageCalc(pop){
+    const totalGB = pop * state.datapp * state.redundancy;
+    const totalPB = totalGB / 1000000;
+    const racksExact = totalPB / state.density;
+    return { racksExact, itEnergyKWh: racksExact * state.rackkw * 8760 };
+  }
+
+  function combinedRackEquivalents(pop){
+    return storageCalc(pop).racksExact + streamingCalc(pop).rackEquiv;
+  }
+
+  function recompute(){
+    const storage = storageCalc(state.population);
+    const streaming = streamingCalc(state.population);
+
+    const racksNeeded = Math.max(1, Math.ceil(storage.racksExact));
+    const itEnergyTotal = storage.itEnergyKWh + streaming.itEnergyKWh;
+    const facilityEnergy = itEnergyTotal * state.pue;
+    const waterL = facilityEnergy * state.wue;
+    const carbonKg = facilityEnergy * state.grid;
+    const floorM2 = (storage.racksExact + streaming.rackEquiv) * RACK_FLOOR_M2;
+
+    $('r-racks').textContent = fmt(racksNeeded,0);
+    $('r-appliances').textContent = fmt(streaming.appliances,0);
+    // streaming hours drives the annual data volume delivered (appliance COUNT is sized by peak concurrency)
+    const annualTB = state.population * state.streamhrs * 52 * QUALITY_GB_PER_HOUR[state.quality] / 1000;
+    $('r-appliances-t').textContent = `Netflix-style caching appliance${streaming.appliances==1?'':'s'} for peak streaming demand — delivering ≈ ${fmt(annualTB,0)} TB of video a year at ${state.streamhrs} hrs/person/week.`;
+
+    $('r-floor').textContent = fmt(floorM2, floorM2 < 10 ? 1 : 0);
+    const sitePct = floorM2/SOUTHWARK_SITE_M2*100;
+    $('r-floor-eq').textContent = `≈ ${sitePct.toFixed(3)}% of the 8.4ha Southwark site`;
+    $('r-energy').textContent = fmt(facilityEnergy/1000, 1);
+    $('r-energy-eq').textContent = `≈ ${fmt(facilityEnergy/state.population/HOUSEHOLD_KWH_YR*100,1)}% of an average household's annual electricity, per resident`;
+    $('r-water').textContent = fmt(waterL/1000, 1);
+    $('r-water-eq').textContent = `≈ ${fmt((waterL/state.population)/PERSON_WATER_L_DAY,2)} days of one resident's household water use`;
+    $('r-carbon').textContent = fmt(carbonKg/1000, 2);
+    const carKm = carbonKg / CAR_KG_PER_KM;
+    const trees = carbonKg / TREE_KG_PER_YR;
+    $('r-carbon-eq').textContent = `≈ ${fmt(carKm,0)} km of driving, or ${fmt(trees,0)} trees to absorb it in a year`;
+
+    $('site-summary').innerHTML = `${fmt(racksNeeded,0)} storage rack${racksNeeded==1?'':'s'} plus ${fmt(streaming.appliances,0)} streaming appliance${streaming.appliances==1?'':'s'} need about ${fmt(floorM2,floorM2<10?1:0)} m² of technical space — ${sitePct < 0.01 ? 'a fraction too small to see on a site plan' : 'about ' + sitePct.toFixed(2) + '% of the site'} of Southwark's 8.4-hectare (84,000m²) redevelopment site.`;
+    const ewasteKgYr = (racksNeeded * 320) / state.refresh;
+    $('pp-summary').textContent = `${fmt(facilityEnergy/state.population,1)} kWh, ${fmt(waterL/state.population,0)} L of water, ${fmt(carbonKg/state.population,2)} kg CO₂e and a share of ${fmt(ewasteKgYr/state.population, 3)} kg of e-waste — this resident's share of running the local facility.`;
+
+    // Scenario chart (grid comparison) at current settings
+    scenarioChart.data.datasets[0].data = [ facilityEnergy*0.22/1000, facilityEnergy*0.62/1000, facilityEnergy*0.81/1000 ];
+    scenarioChart.update();
+
+    // Workload mix chart
+    mixChart.data.datasets[0].data = [storage.itEnergyKWh];
+    mixChart.data.datasets[1].data = [streaming.itEnergyKWh];
+    mixChart.update();
+
+    // Scaling chart: combined rack-equivalents from 500 to 2,000,000 people
+    const steps = [500,1000,2000,3120,5000,10000,25000,64500,100000,250000,500000,1000000,1387290,2000000];
+    const points = steps.map(p => ({x:p, y: Math.max(0.01, combinedRackEquivalents(p))}));
+    scalingChart.data.datasets[0].data = points;
+    scalingChart.update();
+
+    const totalAtGreaterAdelaide = combinedRackEquivalents(GREATER_ADELAIDE_POP);
+    const nodesNeeded = GREATER_ADELAIDE_POP / state.population;
+    $('federation-summary').innerHTML = `<b>The federation trade-off:</b> at today's settings, covering all of Greater Adelaide (${fmt(GREATER_ADELAIDE_POP,0)} people) this way needs about ${fmt(totalAtGreaterAdelaide,0)} rack-equivalents in total (storage + streaming) — either as one centralised facility, or spread across roughly ${fmt(nodesNeeded,0)} Southwark-scale local nodes, each about the size of the facility above. For comparison, NEXTDC's A1 Adelaide colocation building alone already runs about ${NEXTDC_A1_RACKS.toLocaleString()} racks.`;
+  }
+
+  initCharts();
+  recompute();
+})();
+</script>
+<style>
+abbr.ab{text-decoration:underline dotted #9a9aa0;text-underline-offset:2px;text-decoration-thickness:1px;cursor:help;font-style:normal}
+</style>
+<script>
+/* ACRO_GLOSSARY — auto-tooltips for every acronym. Hover any dotted term. */
+(function(){
+const G={
+"NCC":"National Construction Code — Australia's technical building code; Volume One is the Building Code of Australia for Class 2–9 buildings",
+"BCA":"Building Code of Australia — NCC Volumes One and Two",
+"DtS":"Deemed-to-Satisfy — the NCC's prescriptive compliance pathway; the alternative is a Performance Solution",
+"FRL":"Fire Resistance Level — structural adequacy / integrity / insulation, in minutes (e.g. 120/120/120)",
+"AS/NZS":"Joint Australian / New Zealand Standard",
+"JV3":"NCC verification method: whole-building energy modelling against a reference building",
+"AACF":"Accessible Adult Change Facility — hoist + adult change table, required in large aquatic venues",
+"TGSI":"Tactile Ground Surface Indicators — warning studs/bars at stairs, ramps and crossings",
+"GSPO":"Guidelines for Safe Pool Operations — Royal Life Saving Australia's national aquatic practice guidance",
+"EHO":"Environmental Health Officer — council officer who licenses and inspects public pools",
+"MFS":"South Australian Metropolitan Fire Service",
+"EWIS":"Emergency Warning and Intercom System — the evacuation speakers and wardens' phones",
+"FIP":"Fire Indicator Panel — where the brigade reads the alarm state",
+"MECP":"Master Emergency Control Panel",
+"VESDA":"Very Early Smoke Detection Apparatus — aspirating smoke detection, standard in data halls",
+"BMS":"Building Management System — the software brain running HVAC, metering and alarms",
+"MDF":"Main Distribution Frame — where communications cabling enters and is distributed",
+"RCP":"Reflected Ceiling Plan — the drawing convention: the ceiling as seen in a mirror on the floor",
+"HVAC":"Heating, Ventilation and Air Conditioning",
+"AHU":"Air Handling Unit — the big box of fans, coils and filters that conditions supply air",
+"VAV":"Variable Air Volume — ducted air conditioning that throttles airflow per zone",
+"VRF":"Variable Refrigerant Flow — multi-head refrigerant systems (ceiling cassettes)",
+"FCU":"Fan Coil Unit — a small local fan + coil serving one zone",
+"TABS":"Thermally Activated Building Systems — heating/cooling pipes cast into the structure itself",
+"ACH":"Air Changes per Hour — how many times the room's air volume is replaced hourly",
+"COP":"Coefficient of Performance — heat moved ÷ electricity used; a heat pump at COP 4 moves 4 kWh of heat per 1 kWh in",
+"DLC":"Direct Liquid Cooling — cold plates on the chips; heat leaves in water, not air",
+"CRAC":"Computer Room Air Conditioner — refrigerant-based data hall cooling unit",
+"CRAH":"Computer Room Air Handler — chilled-water data hall cooling unit",
+"CDU":"Coolant Distribution Unit — pumps and heat exchangers feeding liquid-cooled racks",
+"UPS":"Uninterruptible Power Supply — batteries (or flywheels) that carry the load until generators start",
+"DRUPS":"Diesel Rotary UPS — a flywheel + diesel engine in one machine",
+"BESS":"Battery Energy Storage System — grid-scale battery containers",
+"PPA":"Power Purchase Agreement — a long-term contract to buy renewable electricity from an off-site wind/solar farm; the standard route to claiming 100% renewable operation",
+"PUE":"Power Usage Effectiveness — total facility power ÷ IT power; 1.0 is perfect, ~1.3 is good, air-cooled legacy runs 1.5+",
+"WUE":"Water Usage Effectiveness — litres of water per kWh of IT energy",
+"BTES":"Borehole Thermal Energy Storage — summer heat banked in the ground via borehole arrays, recovered in winter",
+"ATES":"Aquifer Thermal Energy Storage — seasonal heat storage in groundwater",
+"HVO":"Hydrotreated Vegetable Oil — renewable drop-in diesel, ~90% lifecycle carbon cut",
+"PEM":"Proton Exchange Membrane — the fuel-cell type used for hydrogen standby power",
+"EV":"Electric Vehicle",
+"HX":"Heat exchanger — transfers heat between two fluids that never mix",
+"TIA":"Telecommunications Industry Association — TIA-942 is the (voluntary) data centre facility standard",
+"ASHRAE":"American Society of Heating, Refrigerating and Air-Conditioning Engineers — sets server thermal envelopes (TC 9.9)",
+"AFCOM":"Data centre industry association — publishes the State of the Data Center reports",
+"IEA":"International Energy Agency",
+"NGA":"National Greenhouse Accounts — Australia's official emission factors",
+"OCA":"Open Connect Appliance — Netflix's caching server placed inside local networks",
+"HDFS":"Hadoop Distributed File System — its default of 3 copies per file is the storage-redundancy convention",
+"ISP":"Internet Service Provider",
+"IT load":"Information Technology load — the electricity the servers themselves draw, excluding cooling and overheads",
+"UB":"Universal Beam — the standard hot-rolled steel I-beam",
+"UC":"Universal Column — the squat I-section used for columns",
+"PFC":"Parallel Flange Channel — C-shaped steel section",
+"RHS":"Rectangular Hollow Section",
+"SHS":"Square Hollow Section",
+"CHS":"Circular Hollow Section",
+"CLT":"Cross-Laminated Timber — massive plywood-like slabs and walls",
+"LVL":"Laminated Veneer Lumber — engineered timber beam",
+"PSL":"Parallel Strand Lumber — engineered timber",
+"RC":"Reinforced Concrete",
+"PT":"Post-Tensioned — concrete with stressed tendons, allowing thinner longer slabs",
+"DfMA":"Design for Manufacture and Assembly — factory-made components, bolted together on site, un-boltable later",
+"LCA":"Life Cycle Assessment — the accounting of a building's environmental impacts from cradle to grave",
+"GFA":"Gross Floor Area",
+"NFA":"Net Floor Area",
+"O&M":"Operations and Maintenance (manuals)",
+"POE":"Post-Occupancy Evaluation",
+"PCG":"Project Control Group — the client-side governance table above the whole project",
+"D&C":"Design and Construct — contract where the builder owns design completion (AS 4902); consultants are usually novated",
+"QS":"Quantity Surveyor — the cost consultant",
+"PM":"Project Manager",
+"SCAP":"State Commission Assessment Panel — SA's planning authority for major applications",
+"ODASA":"Office for Design and Architecture South Australia — state design review",
+"ESCOSA":"Essential Services Commission of South Australia — licenses energy utilities, including heat networks",
+"OTR":"Office of the Technical Regulator (SA) — technical safety of energy infrastructure",
+"PDI":"Planning, Development and Infrastructure Act 2016 (SA)",
+"WHS":"Work Health and Safety",
+"DDA":"Disability Discrimination Act 1992",
+"GBCA":"Green Building Council of Australia — runs Green Star",
+"NABERS":"National Australian Built Environment Rating System — operational (and now embodied) performance ratings",
+"LETI":"London Energy Transformation Initiative — publishes widely-used embodied carbon targets",
+"RIBA":"Royal Institute of British Architects — its 2030 Climate Challenge sets carbon targets",
+"EPiC":"Environmental Performance in Construction — University of Melbourne's Australian material carbon database",
+"MBR":"Membrane Bioreactor — compact biological water treatment",
+"UF":"Ultrafiltration — membrane water filtering",
+"RO":"Reverse Osmosis",
+"MVA":"Megavolt-ampere — transformer capacity rating",
+"kWp":"Kilowatts-peak — a solar array's rated output in full sun",
+"kPa":"Kilopascal — pressure/load; floor loads: office ≈ 3 kPa, data hall 12–20 kPa",
+"N+1":"Redundancy: the number of units needed, plus one spare",
+"2N":"Redundancy: full duplication — two complete independent systems",
+"FI passage":"Fire-isolated passageway — a fire-rated corridor that is legally part of the exit",
+"kWh":"Kilowatt-hour — the unit of energy: 1 kW running for 1 hour (a dishwasher cycle ≈ 1 kWh)",
+"MWh":"Megawatt-hour — 1,000 kWh (an Australian home uses ~5–6 MWh a year)",
+"GWh":"Gigawatt-hour — 1,000 MWh (this precinct's heat demand ≈ 9 GWh/yr)",
+"PB":"Petabyte — 1,000 terabytes",
+"TB":"Terabyte — 1,000 gigabytes"
+};
+const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+const esc=s=>s.replace(/[.*+?^${}()|[\]\\/]/g,"\\$&");
+const rx=new RegExp("(?<![A-Za-z0-9])("+keys.map(esc).join("|")+")(?![A-Za-z0-9])","g");
+const SKIP=new Set(["SCRIPT","STYLE","ABBR","TEXTAREA","OPTION","TITLE"]);
+let busy=false;
+function annotate(root){
+  busy=true;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){
+    const p=n.parentElement;
+    if(!p||SKIP.has(p.tagName)||p.closest("svg,abbr,.tip"))return NodeFilter.FILTER_REJECT;
+    rx.lastIndex=0;
+    return rx.test(n.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
+  }});
+  const nodes=[];
+  while(walker.nextNode())nodes.push(walker.currentNode);
+  nodes.forEach(n=>{
+    const frag=document.createDocumentFragment();
+    let last=0; rx.lastIndex=0; let m; const txt=n.nodeValue;
+    while((m=rx.exec(txt))){
+      if(m.index>last)frag.appendChild(document.createTextNode(txt.slice(last,m.index)));
+      const a=document.createElement("abbr");
+      a.className="ab"; a.title=G[m[1]]; a.textContent=m[1];
+      frag.appendChild(a);
+      last=m.index+m[1].length;
+    }
+    if(last<txt.length)frag.appendChild(document.createTextNode(txt.slice(last)));
+    n.parentNode.replaceChild(frag,n);
+  });
+  busy=false;
+}
+function run(){annotate(document.body);}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run);else run();
+let t=null;
+new MutationObserver(muts=>{
+  if(busy)return;
+  clearTimeout(t);
+  t=setTimeout(run,300);
+}).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
+</body>
+</html>

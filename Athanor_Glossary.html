@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glossary & Sources — ARCH 5004 + 6004</title>
+<style>
+  :root{
+    --ink:#1d1d1f; --sec:#86868b; --panel:#f5f5f7; --rule:#d2d2d7; --muted:#aeaeb2;
+    --contract:#af52de; --compliance:#0071e3; --planning:#ff9500; --design:#34c759; --governance:#5856d6;
+    --fire:#ff3b30; --water:#30b0c7;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased}
+  nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:18px;padding:11px 40px;font-size:12px;overflow-x:auto;white-space:nowrap}
+  nav a{color:var(--ink);text-decoration:none}
+  nav a:hover{text-decoration:underline}
+  nav .right{margin-left:auto;color:var(--sec)}
+  header{background:#000;color:#fff;padding:74px 40px 60px}
+  header .eyebrow{display:inline-block;background:var(--governance);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:20px;letter-spacing:.03em}
+  header h1{font-size:clamp(40px,6vw,74px);font-weight:700;line-height:1.04;letter-spacing:-.02em}
+  header p.sub{color:#a1a1a6;font-size:16px;line-height:1.55;margin-top:22px;max-width:74ch}
+  header p.tag{color:#6e6e73;font-size:12px;margin-top:26px;max-width:74ch;line-height:1.6}
+  .controls{position:sticky;top:43px;z-index:40;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--rule);padding:16px 40px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .controls input{flex:1;min-width:220px;max-width:420px;border:1px solid var(--rule);border-radius:24px;padding:10px 16px;font-size:14px;font-family:inherit;background:var(--panel)}
+  .controls input:focus{outline:2px solid #0071e3;border-color:transparent;background:#fff}
+  .pills{display:flex;gap:7px;flex-wrap:wrap}
+  .pills button{border:1px solid var(--rule);background:#fff;border-radius:20px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);font-family:inherit}
+  .pills button.on{background:#1d1d1f;color:#fff;border-color:#1d1d1f}
+  .count{margin-left:auto;color:var(--sec);font-size:12px}
+  main{max-width:1180px;margin:0 auto;padding:40px}
+  .sect{margin-bottom:40px}
+  .sect h2{font-size:20px;font-weight:700;letter-spacing:-.01em;margin-bottom:4px;display:flex;align-items:center;gap:10px}
+  .sect h2 .dot{width:12px;height:12px;border-radius:50%;flex:none}
+  .sect .blurb{color:var(--sec);font-size:12.5px;line-height:1.55;margin-bottom:14px;max-width:80ch}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-size:10.5px;color:var(--sec);font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:8px 12px;border-bottom:1.5px solid var(--rule)}
+  td{padding:11px 12px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.5}
+  tr:nth-child(even) td{background:var(--panel)}
+  td.term{font-weight:700;white-space:nowrap}
+  td.src{color:var(--sec);font-size:12px}
+  .acrgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:0 26px}
+  .acrgrid .row{padding:10px 0;border-bottom:1px solid var(--rule);font-size:12.5px;line-height:1.5}
+  .acrgrid .row b{color:var(--ink)}
+  .empty{color:var(--muted);font-size:13px;padding:20px 0;display:none}
+  footer{background:var(--panel);color:var(--sec);font-size:11px;line-height:1.6;padding:34px 40px;margin-top:20px}
+  mark{background:#fff3c4;color:inherit;border-radius:3px;padding:0 1px}
+  @media(max-width:640px){nav,header,.controls,main,footer{padding-left:20px;padding-right:20px}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="Athanor_Project_Web.html">← Project Web</a>
+  <a href="Athanor_Design_Calculators.html">Design Calculators</a>
+  <a href="Athanor_DataCentre_NetZero.html">Net-Zero DC</a>
+  <a href="Data_Footprint_Calculator.html">Data Footprint</a>
+  <a href="Athanor_Embodied_Carbon.html">Embodied Carbon</a>
+  <a href="#" style="color:#5856d6"><b>Glossary & Sources</b></a>
+  <span class="right">ARCH 5004 + 6004 · Athanor</span>
+</nav>
+
+<header>
+  <span class="eyebrow">GLOSSARY &amp; CITED SOURCES</span>
+  <h1>Every term,<br>every citation</h1>
+  <p class="sub">The whole toolkit runs on two kinds of number: <b>code-derived values</b> — traceable to a clause of the NCC or an Australian Standard, which you cite and verify — and <b>named conventions</b> — industry rules of thumb with a source but no legal status, which you attribute and flag. This page collects every code, standard, regulation, reference and acronym the five tools draw on, so you can find the source behind any figure and quote it in your documentation.</p>
+  <p class="tag">All NCC references are <b>NCC 2022 Volume One, as adopted in South Australia</b> (NCC 2025 is deferred in SA until 1 May 2027). Clause numbers are a guide — <b>verify the current clause text yourself at ncc.abcb.gov.au</b> before it appears in a submission. Standards are cited by number; check you are using the current edition.</p>
+</header>
+
+<div class="controls">
+  <input id="q" type="search" placeholder="Search terms, definitions and sources…" aria-label="Search the glossary">
+  <div class="pills" id="pills"></div>
+  <span class="count" id="count"></span>
+</div>
+
+<main id="main"></main>
+<p class="empty" id="empty" style="text-align:center;margin:40px">No entries match your search.</p>
+
+<footer>
+  ARCH 5004 / ARCH 6004 studio teaching resource — Southwark Thermal Commons, prepared July 2026. This glossary is compiled from the sources cited across the five toolkit pages; it is a study aid, not a legal reference. NCC clause numbers are NCC 2022 (as adopted in SA) and must be verified against the current code at ncc.abcb.gov.au; Australian Standards must be read in their current edition; embodied-carbon emission factors are from the NABERS Embodied Carbon calculator v2026.1. Named conventions (Madigan, Ching, BUIL 3004, AIRAH DA-series, aquatic-centre practice, NEXTDC/Equinix/Schneider/TIA-942/ASHRAE precedent data) carry no compliance status — attribute them, and let the relevant consultant verify.
+</footer>
+
+<script>
+/* ===== cited-source data — compiled from the five toolkit pages ===== */
+const CATS=[
+ {k:"ncc", label:"NCC / BCA clauses",                     color:"#0071e3", blurb:"Code-derived. NCC 2022 Volume One (as adopted in SA). Cite the clause, then verify the current text at ncc.abcb.gov.au.", cols:["Clause","What it governs","Cite as"]},
+ {k:"as",  label:"Australian Standards (AS / AS/NZS)",     color:"#5856d6", blurb:"Code-derived. Referenced by the NCC or by consultants. Read the current edition of each.", cols:["Standard","What it governs","Where used"]},
+ {k:"reg", label:"Regulations, authorities & approvals",   color:"#ff9500", blurb:"Statutory. The laws and bodies that grant permission, license operation and enforce compliance.", cols:["Body / instrument","Role","Domain"]},
+ {k:"ind", label:"Voluntary standards & industry data",    color:"#30b0c7", blurb:"Precedent, not regulation. Voluntary standards, published specs and datasets behind the data-centre, streaming and carbon numbers.", cols:["Source","What it provides","Used for"]},
+ {k:"rot", label:"Rules of thumb & studio references",     color:"#af52de", blurb:"Named conventions. Planning rules of thumb for getting sizes roughly right before a consultant exists — attributed, never presented as compliance.", cols:["Source","Convention it underpins","Where used"]},
+ {k:"acr", label:"Acronyms & technical terms",             color:"#34c759", blurb:"The shorthand used across the toolkit — hover any dotted acronym in the tools for the same definitions.", cols:[]},
+];
+const E=[
+/* ---- NCC clauses ---- */
+["ncc","NCC 2022 Vol One (SA)","The technical floor: classification, fire, egress, access, amenity and energy for Class 2–9 buildings.","NCC 2022 (SA)"],
+["ncc","Table D2D18","Occupancy rates in m²/person — e.g. pool water 1.5 (separate from deck), plant rooms 30. Drives population, egress and sanitary counts.","NCC 2022 D-Table D2D18"],
+["ncc","D2D7","Required aggregate exit width: 1 m for ≤100 people; +250 mm per 25 (100–200); then +500 mm per 60 (stairs) or 75 (level) beyond 200.","NCC 2022 D2D7"],
+["ncc","D2D5","Travel distance: no point more than 20 m from an exit or point of choice, then 40 m max to one of two exits.","NCC 2022 D2D5"],
+["ncc","D2D6","Alternative exits must be 9–45 m apart, so one fire can't block both and they still share the load.","NCC 2022 D2D6"],
+["ncc","D2D3","At least two exits required; sets when more than two are needed.","NCC 2022 D2D3"],
+["ncc","D2D4","Fire-isolated exit ≥1 m clear; fire-isolated passageway must discharge to open space.","NCC 2022 D2D4"],
+["ncc","D3 (stairs)","Stair geometry: riser 115–190, going 240–355, 550 ≤ 2R+G ≤ 700, ≤18 risers between landings; door swing in the direction of egress for >200 m² of Class 9b.","NCC 2022 Part D3"],
+["ncc","D4 / Spec 16","Access provisions and pool access: entry type by 40 m / 70 m pool-perimeter bands; aquatic wheelchair requirements.","NCC 2022 Part D4 + Specification 16"],
+["ncc","D4D6","Accessible car-parking rate by building class — Class 9b assembly ≈ 1 per 50 bays or part.","NCC 2022 D4D6"],
+["ncc","Table F4D4","Sanitary fixture counts — separate male/female rates by classification.","NCC 2022 Table F4D4"],
+["ncc","F4D5–F4D7","Accessible WCs and ambulant cubicles — numbers and fit-out.","NCC 2022 F4D5–F4D7"],
+["ncc","F4D12","Accessible Adult Change Facility (AACF) trigger conditions — aquatic Class 9b, pool perimeter.","NCC 2022 F4D12"],
+["ncc","J8","Reclaimed-energy pathway / pool-heating energy-source restrictions — the central Section J compliance argument for the heat cascade.","NCC 2022 Section J (J8)"],
+["ncc","J9","Energy metering — the legal floor the digital twin exceeds.","NCC 2022 Section J (J9)"],
+["ncc","Sections C, D, E","Fire safety and compartmentation (C), access & egress (D), fire services (E) — occupant loads and special hazards.","NCC 2022 Parts C/D/E"],
+/* ---- Australian Standards ---- */
+["as","AS/NZS 1170.1","Structural imposed (live) floor loads — carpark 2.5, office 3, assembly/pool deck 5, plant 5–7.5, data hall 12–20 kPa (client/TIA spec, designed under AS 1170).","Structure + HVAC tools"],
+["as","AS/NZS 2890.1","Off-street parking geometry: bays 2.4–2.6 × 5.4 m, aisle width by angle + user class, ramps 1:4–1:8, headroom.","Parking + structure overlay"],
+["as","AS/NZS 2890.6","Accessible parking — 2.4 m bay + 2.4 m shared zone, 2.5 m headroom.","Parking tool"],
+["as","AS 1428.1","Design for access and mobility — 1:14 ramps, 850 mm doors, landing depths, circulation at doors.","Stairs + access"],
+["as","AS 1668.2","Mechanical ventilation — outdoor air (10 L/s per person as a common default).","HVAC + ceiling services"],
+["as","AS/NZS 3000","Electrical installations (Wiring Rules) — power cable containment.","Ceiling services 1"],
+["as","AS/NZS 3080","Telecommunications / structured cabling (with ISO 11801) — comms + data basket.","Ceiling services 2"],
+["as","AS/NZS 3500","Plumbing and drainage — condensate and pipework.","Ceiling services 4"],
+["as","AS 2118.1","Automatic fire sprinkler systems — head spacing and coverage.","Ceiling services 5"],
+["as","AS 1670.1","Fire detection, alarm and intercom systems (with EWIS).","Ceiling services 6"],
+["as","AS 2293","Emergency escape lighting and exit signs.","Ceiling services 6 + 7"],
+["as","AS/NZS 1680","Interior and workplace lighting.","Ceiling services 7"],
+["as","AS 3780","Storage and handling of corrosive substances — pool chemical stores (acid ≠ chlorine).","Pool plant"],
+["as","AS/NZS 5139","Electrical energy storage (battery / BESS) installation siting.","Net-Zero power + systems"],
+["as","AS 1940","Storage and handling of flammable and combustible liquids — diesel / HVO fuel.","Net-Zero standby power"],
+["as","AS 1210","Pressure equipment — thermal-storage tanks.","Net-Zero systems library"],
+["as","AS 4000","General conditions of contract — construct-only (traditional delivery).","Project Web organigram"],
+["as","AS 4902","Design & Construct contract — the builder owns design completion; consultants usually novated.","Project Web organigram"],
+/* ---- Regulations & authorities ---- */
+["reg","SA Public Health (General) Regs 2013","Public-pool water quality, turnover, disinfection and chemical storage — enforced by council EHOs.","Compliance"],
+["reg","SA Standard for the Operation of Swimming Pools","Pool turnover times, disinfection and chemical storage (paired with the Health regs).","Compliance"],
+["reg","PDI Act 2016","Planning, Development and Infrastructure Act — SA's planning permission framework.","Planning"],
+["reg","Planning & Design Code","The instrument the development application is assessed against; sets parking policy.","Planning"],
+["reg","Disability (Access to Premises) Standards","Access-to-premises compliance for new building work.","Compliance"],
+["reg","Disability Discrimination Act 1992","Federal anti-discrimination basis for access requirements.","Compliance"],
+["reg","WHS Regulations","Work health and safety — plant, confined spaces, construction.","Compliance"],
+["reg","ESCOSA","Essential Services Commission of SA — licenses energy utilities, including heat networks.","Governance"],
+["reg","OTR","Office of the Technical Regulator (SA) — technical safety of energy infrastructure.","Governance"],
+["reg","Plan SA / SCAP","Development-approval pathway; the State Commission Assessment Panel assesses major applications.","Planning"],
+["reg","ODASA","Office for Design and Architecture SA — state design review of significant projects.","Good design"],
+["reg","Renewal SA","State master developer — owns the Southwark Grounds masterplan promises.","Client / governance"],
+["reg","City of West Torrens (Council + EHO)","Local authority — public-health pool licensing, inspections, local infrastructure.","Statutory"],
+["reg","MFS","SA Metropolitan Fire Service — brigade referral on performance solutions.","Statutory"],
+["reg","SafeWork SA","WHS regulator for plant and construction.","Statutory"],
+["reg","SA Power Networks / SA Water","HV connection, water supply, trade waste and Class A recycled-water access.","Statutory"],
+["reg","SA Health","Public-health authority — requires treated backwash stays out of pools.","Statutory"],
+["reg","GBCA / Green Star","Green Building Council of Australia — runs Green Star 5-Star / Communities 6-Star and the Upfront Carbon credit.","Good design / governance"],
+["reg","NABERS","National Australian Built Environment Rating System — operational and (now) embodied performance ratings.","Good design"],
+["reg","Climate Active","Government carbon-neutral certification — accepts market-based accounting with additionality tests.","Governance (ledger)"],
+["reg","GHG Protocol","The corporate carbon-accounting framework the 30-year ledger models.","Governance (ledger)"],
+["reg","Certificate of Occupancy","Final occupancy consent, issued by the building surveyor.","Compliance"],
+/* ---- Voluntary / industry ---- */
+["ind","TIA-942","Voluntary data-centre facility standard — hot/cold aisle widths, ≤12 racks/row, 12 kPa floors, rack density.","Data-centre sizing"],
+["ind","ASHRAE (TC 9.9)","Server thermal envelopes; warm-water classes W3–W5 (35–65 °C) that make heat recovery possible.","Net-Zero cooling"],
+["ind","AFCOM","Data-centre industry association — 'State of the Data Center' reports.","Data-centre"],
+["ind","Schneider Electric","White papers on data-centre design (dossier sizing source).","Data-centre"],
+["ind","NEXTDC","Published Australian colocation specs — kW/rack, kW/m² density, PUE ranges, 48 h fuel, A1 Adelaide 1,470 racks.","Data-centre + footprint"],
+["ind","Equinix","Data-centre facility specifications (dossier sizing source).","Data-centre"],
+["ind","IEA","International Energy Agency — streaming / energy life-cycle figures.","Footprint"],
+["ind","NGA (Factors 2025)","National Greenhouse Accounts — Australia's official emission factors; SA grid 0.22, national 0.62 kg CO₂e/kWh; gas boiler ~0.185 t/MWhₜₕ.","Net-Zero + footprint"],
+["ind","Netflix Open Connect (OCA)","Caching-appliance specs (≤360 TB, ~650 W, 100 Gbps) and data-per-hour by quality (SD 0.7 / HD 3 / 4K 7 GB).","Footprint streaming"],
+["ind","HDFS","Hadoop Distributed File System — its default 3 copies per file is the storage-redundancy convention.","Footprint / sizing"],
+["ind","GSPO","Guidelines for Safe Pool Operations (Royal Life Saving Australia) — turnover, showers 1/20 at peak, lifeguards.","Pool + sanitary"],
+["ind","Uptime Institute","Industry PUE data (e.g. immersion ~1.08).","Net-Zero cooling"],
+["ind","Google 2025 Environmental Report","Fleet PUE average (~1.56) and best-in-class.","Footprint"],
+["ind","Microsoft","Regional WUE factsheets (0.012–2.24 L/kWh); 3 MW hydrogen backup pilot (2022).","Footprint + standby"],
+["ind","pCloud 'Stacks of Storage' survey","Personal cloud-storage split — 500 GB; photos 46%, docs 26%, music 6%.","Footprint storage"],
+["ind","Greenspector","App-level energy measurements.","Footprint"],
+["ind","Berners-Lee, 'How Bad Are Bananas?'","Per-activity carbon figures — email ~4 g (up to 26 g), streaming.","Footprint"],
+["ind","MIT Energy Initiative","Video-call carbon-footprint study.","Footprint"],
+["ind","AirTrunk / IREN","Australian data-centre portfolio comparison figures.","Footprint context"],
+["ind","Finding Infinity — 'A New Normal'","Melbourne net-positive precedent; making energy legible.","Net-Zero typology"],
+["ind","NABERS Embodied Carbon calculator v2026.1","Every A1–A3 emission factor, density and waste rate in the Embodied Carbon tool (Materials database, average EF).","Embodied Carbon"],
+["ind","LETI — Embodied Carbon Primer","Widely-used embodied-carbon band targets (~350 kg CO₂e/m² band A by 2030).","Embodied Carbon + Net-Zero"],
+["ind","RICS whole-life carbon standard","The professional standard behind the benchmark bands.","Embodied Carbon"],
+["ind","RIBA 2030 Climate Challenge","Embodied + operational carbon targets (e.g. <750 kg/m² offices).","Embodied Carbon + Net-Zero"],
+["ind","EPiC database (Univ. Melbourne)","Environmental Performance in Construction — Australian material carbon coefficients.","Net-Zero + Embodied Carbon"],
+["ind","ICE database (UK)","Inventory of Carbon & Energy — UK material coefficients.","Net-Zero embodied"],
+["ind","Infrastructure Australia","National embodied-carbon projections.","Net-Zero embodied"],
+["ind","eTool","Australian whole-of-life LCA software — replaces the rough tools in A2/A3.","Embodied Carbon"],
+["ind","One Click LCA","Building life-cycle assessment software.","Embodied Carbon"],
+/* ---- Rules of thumb ---- */
+["rot","Madigan, 'Structural & Material Rules of Thumb' (UniSA AAD)","Span ÷ ratio = beam depth; column-area sizing. The author calls the ratios 'very loose'.","Structural grid planner"],
+["rot","Ching (via Madigan)","Column quick-size table — section by supported area at 3.6 m height.","Structural grid planner"],
+["rot","BUIL 3004 checklist (UniSA 2016)","Plant space ≈ 5% of net floor area + dedicated rooms.","HVAC + Resource 05"],
+["rot","AIRAH DA09 (DA-series)","First-pass cooling W/m² by use; 83 L/s per kW at 10 K ΔT; 7 m² per 1,000 L/s AHU.","HVAC + ceiling services"],
+["rot","Aquatic-centre planning practice","Pool plant 60–80% of water area; balance tank 10–15% of circulated volume.","Pool plant"],
+["rot","Dossier Resource 05","Building-services spatial checklist — the component-by-component ceiling format (what/where/size/spacing/keep clear).","Ceiling services"],
+["rot","Dossier Resource 03 / 01","Accessibility/health/amenity (pool 40/70 m, AACF); classification & construction type (Type A, timber FRLs by charring).","Structure + pool"],
+["rot","Studio brief / technical dossier","IT-load range, kW/rack, kW/m², white:grey ratio, heat temperatures, solar, water, BTES geology, section variety.","Net-Zero steps"],
+["rot","Brand's shearing layers","Design-for-disassembly lifespans: Site / Structure / Skin / Services / Space / Servers.","Net-Zero typology"],
+];
+
+/* ---- acronym dictionary (shared across the tools + embodied-carbon extras) ---- */
+const ACR={
+"NCC":"National Construction Code — Australia's technical building code; Volume One is the Building Code of Australia for Class 2–9 buildings",
+"BCA":"Building Code of Australia — NCC Volumes One and Two",
+"DtS":"Deemed-to-Satisfy — the NCC's prescriptive compliance pathway; the alternative is a Performance Solution",
+"FRL":"Fire Resistance Level — structural adequacy / integrity / insulation, in minutes (e.g. 120/120/120)",
+"AS/NZS":"Joint Australian / New Zealand Standard",
+"JV3":"NCC verification method: whole-building energy modelling against a reference building",
+"AACF":"Accessible Adult Change Facility — hoist + adult change table, required in large aquatic venues",
+"TGSI":"Tactile Ground Surface Indicators — warning studs/bars at stairs, ramps and crossings",
+"GSPO":"Guidelines for Safe Pool Operations — Royal Life Saving Australia's national aquatic practice guidance",
+"EHO":"Environmental Health Officer — council officer who licenses and inspects public pools",
+"MFS":"South Australian Metropolitan Fire Service",
+"EWIS":"Emergency Warning and Intercom System — the evacuation speakers and wardens' phones",
+"FIP":"Fire Indicator Panel — where the brigade reads the alarm state",
+"MECP":"Master Emergency Control Panel",
+"VESDA":"Very Early Smoke Detection Apparatus — aspirating smoke detection, standard in data halls",
+"BMS":"Building Management System — the software brain running HVAC, metering and alarms",
+"MDF":"Main Distribution Frame — where communications cabling enters and is distributed",
+"RCP":"Reflected Ceiling Plan — the ceiling drawn as seen in a mirror on the floor",
+"HVAC":"Heating, Ventilation and Air Conditioning",
+"AHU":"Air Handling Unit — the box of fans, coils and filters that conditions supply air",
+"VAV":"Variable Air Volume — ducted air conditioning that throttles airflow per zone",
+"VRF":"Variable Refrigerant Flow — multi-head refrigerant systems (ceiling cassettes)",
+"FCU":"Fan Coil Unit — a small local fan + coil serving one zone",
+"TABS":"Thermally Activated Building Systems — heating/cooling pipes cast into the structure itself",
+"ACH":"Air Changes per Hour — how many times the room's air volume is replaced hourly",
+"COP":"Coefficient of Performance — heat moved ÷ electricity used (a heat pump at COP 4 moves 4 kWh of heat per 1 kWh in)",
+"DLC":"Direct Liquid Cooling — cold plates on the chips; heat leaves in water, not air",
+"CRAC":"Computer Room Air Conditioner — refrigerant-based data hall cooling unit",
+"CRAH":"Computer Room Air Handler — chilled-water data hall cooling unit",
+"CDU":"Coolant Distribution Unit — pumps and heat exchangers feeding liquid-cooled racks",
+"UPS":"Uninterruptible Power Supply — batteries (or flywheels) that carry the load until generators start",
+"DRUPS":"Diesel Rotary UPS — a flywheel + diesel engine in one machine",
+"BESS":"Battery Energy Storage System — grid-scale battery containers",
+"PPA":"Power Purchase Agreement — a long-term contract to buy renewable electricity from an off-site farm; the standard route to a 100% renewable claim",
+"PUE":"Power Usage Effectiveness — total facility power ÷ IT power; 1.0 is perfect, ~1.3 is good, air-cooled legacy runs 1.5+",
+"WUE":"Water Usage Effectiveness — litres of water per kWh of IT energy",
+"BTES":"Borehole Thermal Energy Storage — summer heat banked in the ground via boreholes, recovered in winter",
+"ATES":"Aquifer Thermal Energy Storage — seasonal heat storage in groundwater",
+"HVO":"Hydrotreated Vegetable Oil — renewable drop-in diesel, ~90% lifecycle carbon cut",
+"PEM":"Proton Exchange Membrane — the fuel-cell type used for hydrogen standby power",
+"EV":"Electric Vehicle",
+"HX":"Heat exchanger — transfers heat between two fluids that never mix",
+"TIA":"Telecommunications Industry Association — TIA-942 is the (voluntary) data centre facility standard",
+"ASHRAE":"American Society of Heating, Refrigerating and Air-Conditioning Engineers — sets server thermal envelopes (TC 9.9)",
+"AFCOM":"Data centre industry association — publishes the State of the Data Center reports",
+"IEA":"International Energy Agency",
+"NGA":"National Greenhouse Accounts — Australia's official emission factors",
+"OCA":"Open Connect Appliance — Netflix's caching server placed inside local networks",
+"HDFS":"Hadoop Distributed File System — its default of 3 copies per file is the storage-redundancy convention",
+"ISP":"Internet Service Provider",
+"IT load":"Information Technology load — the electricity the servers themselves draw, excluding cooling and overheads",
+"UB":"Universal Beam — the standard hot-rolled steel I-beam",
+"UC":"Universal Column — the squat I-section used for columns",
+"PFC":"Parallel Flange Channel — C-shaped steel section",
+"RHS":"Rectangular Hollow Section",
+"SHS":"Square Hollow Section",
+"CHS":"Circular Hollow Section",
+"CLT":"Cross-Laminated Timber — massive plywood-like slabs and walls",
+"GLT":"Glue-Laminated Timber — glulam; engineered structural timber",
+"LVL":"Laminated Veneer Lumber — engineered timber beam",
+"PSL":"Parallel Strand Lumber — engineered timber",
+"RC":"Reinforced Concrete",
+"PT":"Post-Tensioned — concrete with stressed tendons, allowing thinner longer slabs",
+"AAC":"Autoclaved Aerated Concrete — lightweight precast blockwork/panels",
+"MPa":"Megapascal — concrete compressive strength grade",
+"DfMA":"Design for Manufacture and Assembly — factory-made components, bolted together on site, un-boltable later",
+"LCA":"Life Cycle Assessment — the accounting of a building's environmental impacts from cradle to grave",
+"GWP":"Global Warming Potential — a material's climate impact expressed as kg CO₂e",
+"EPD":"Environmental Product Declaration — a verified, product-specific carbon datasheet",
+"CO₂e":"Carbon dioxide equivalent — all greenhouse gases expressed as the warming of that mass of CO₂",
+"GFA":"Gross Floor Area",
+"NFA":"Net Floor Area",
+"MEP":"Mechanical, Electrical and Plumbing — the building services",
+"O&M":"Operations and Maintenance (manuals)",
+"POE":"Post-Occupancy Evaluation",
+"PCG":"Project Control Group — the client-side governance table above the whole project",
+"D&C":"Design and Construct — contract where the builder owns design completion (AS 4902); consultants usually novated",
+"QS":"Quantity Surveyor — the cost consultant",
+"PM":"Project Manager",
+"SCAP":"State Commission Assessment Panel — SA's planning authority for major applications",
+"ODASA":"Office for Design and Architecture South Australia — state design review",
+"ESCOSA":"Essential Services Commission of South Australia — licenses energy utilities, including heat networks",
+"OTR":"Office of the Technical Regulator (SA) — technical safety of energy infrastructure",
+"PDI":"Planning, Development and Infrastructure Act 2016 (SA)",
+"WHS":"Work Health and Safety",
+"DDA":"Disability Discrimination Act 1992",
+"GBCA":"Green Building Council of Australia — runs Green Star",
+"NABERS":"National Australian Built Environment Rating System — operational (and now embodied) performance ratings; its Embodied Carbon calculator v2026.1 supplies the emission factors",
+"LETI":"London Energy Transformation Initiative — publishes widely-used embodied carbon targets",
+"RIBA":"Royal Institute of British Architects — its 2030 Climate Challenge sets carbon targets",
+"RICS":"Royal Institution of Chartered Surveyors — publishes the whole-life carbon assessment standard",
+"EPiC":"Environmental Performance in Construction — University of Melbourne's Australian material carbon database",
+"MBR":"Membrane Bioreactor — compact biological water treatment",
+"UF":"Ultrafiltration — membrane water filtering",
+"RO":"Reverse Osmosis",
+"MVA":"Megavolt-ampere — transformer capacity rating",
+"kWp":"Kilowatts-peak — a solar array's rated output in full sun",
+"kPa":"Kilopascal — pressure/load; floor loads: office ≈ 3 kPa, data hall 12–20 kPa",
+"N+1":"Redundancy: the number of units needed, plus one spare",
+"2N":"Redundancy: full duplication — two complete independent systems",
+"FI passage":"Fire-isolated passageway — a fire-rated corridor that is legally part of the exit",
+"kWh":"Kilowatt-hour — 1 kW running for 1 hour (a dishwasher cycle ≈ 1 kWh)",
+"MWh":"Megawatt-hour — 1,000 kWh (an Australian home uses ~5–6 MWh a year)",
+"GWh":"Gigawatt-hour — 1,000 MWh (this precinct's heat demand ≈ 9 GWh/yr)",
+"PB":"Petabyte — 1,000 terabytes",
+"TB":"Terabyte — 1,000 gigabytes",
+"eTool":"An Australian whole-of-life LCA software platform",
+"One Click LCA":"A widely-used building life-cycle assessment software platform"
+};
+
+/* ===== render ===== */
+const main=document.getElementById("main");
+let activeCat="all";
+function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function hi(s,q){s=esc(s);if(!q)return s;try{return s.replace(new RegExp("("+q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","ig"),"<mark>$1</mark>");}catch(e){return s;}}
+/* build section shells */
+CATS.forEach(c=>{
+  const sec=document.createElement("section"); sec.className="sect"; sec.dataset.cat=c.k;
+  sec.innerHTML=`<h2><span class="dot" style="background:${c.color}"></span>${c.label} <span style="color:var(--muted);font-weight:600;font-size:13px" data-n></span></h2><div class="blurb">${c.blurb}</div><div data-body></div>`;
+  main.appendChild(sec);
+});
+function draw(){
+  const q=document.getElementById("q").value.trim().toLowerCase();
+  let total=0;
+  CATS.forEach(c=>{
+    const sec=main.querySelector(`.sect[data-cat="${c.k}"]`);
+    const body=sec.querySelector("[data-body]");
+    let rows;
+    if(c.k==="acr"){
+      rows=Object.keys(ACR).filter(k=>!q||(k+" "+ACR[k]).toLowerCase().includes(q));
+      body.innerHTML=rows.length?`<div class="acrgrid">${rows.map(k=>`<div class="row"><b>${hi(k,q)}</b> — ${hi(ACR[k],q)}</div>`).join("")}</div>`:"";
+    }else{
+      rows=E.filter(e=>e[0]===c.k && (!q||(e[1]+" "+e[2]+" "+e[3]).toLowerCase().includes(q)));
+      body.innerHTML=rows.length?`<table><thead><tr><th style="width:20%">${c.cols[0]}</th><th>${c.cols[1]}</th><th style="width:22%">${c.cols[2]}</th></tr></thead><tbody>${rows.map(e=>`<tr><td class="term">${hi(e[1],q)}</td><td>${hi(e[2],q)}</td><td class="src">${hi(e[3],q)}</td></tr>`).join("")}</tbody></table>`:"";
+    }
+    const n=rows.length; total+=n;
+    sec.querySelector("[data-n]").textContent=n?`· ${n}`:"";
+    sec.style.display=(n && (activeCat==="all"||activeCat===c.k))?"":"none";
+  });
+  const shownCats=CATS.filter(c=>activeCat==="all"||activeCat===c.k);
+  document.getElementById("count").textContent=`${total} entr${total===1?"y":"ies"}${q?" match":""}`;
+  document.getElementById("empty").style.display=total===0?"block":"none";
+}
+/* pills */
+const PILL={ncc:"NCC",as:"Standards",reg:"Regulations",ind:"Industry data",rot:"Rules of thumb",acr:"Acronyms"};
+const pills=document.getElementById("pills");
+[["all","All"]].concat(CATS.map(c=>[c.k,PILL[c.k]])).forEach(([k,lab])=>{
+  const b=document.createElement("button"); b.textContent=lab;
+  if(k==="all")b.classList.add("on");
+  b.addEventListener("click",()=>{activeCat=k;[...pills.children].forEach(x=>x.classList.remove("on"));b.classList.add("on");draw();});
+  pills.appendChild(b);
+});
+document.getElementById("q").addEventListener("input",draw);
+draw();
+</script>
+
+</body>
+</html>

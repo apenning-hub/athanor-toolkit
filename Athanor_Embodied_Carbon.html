@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Embodied Carbon — ARCH 5004 + 6004</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#1d1d1f; --sec:#86868b; --panel:#f5f5f7; --rule:#d2d2d7; --muted:#aeaeb2;
+    --contract:#af52de; --compliance:#0071e3; --planning:#ff9500; --design:#34c759; --governance:#5856d6;
+    --fire:#ff3b30; --water:#30b0c7;
+    --ok:#34c759; --warn:#ff9500; --bad:#ff3b30;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased}
+  nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:18px;padding:11px 40px;font-size:12px;overflow-x:auto;white-space:nowrap}
+  nav a{color:var(--ink);text-decoration:none}
+  nav a:hover{text-decoration:underline}
+  nav .right{margin-left:auto;color:var(--sec)}
+  header{background:#000;color:#fff;padding:74px 40px 80px}
+  header .eyebrow{display:inline-block;background:var(--design);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:20px;letter-spacing:.03em}
+  header h1{font-size:clamp(40px,6vw,74px);font-weight:700;line-height:1.04;letter-spacing:-.02em}
+  header p.sub{color:#a1a1a6;font-size:16px;line-height:1.55;margin-top:22px;max-width:70ch}
+  header p.tag{color:#6e6e73;font-size:12px;margin-top:28px}
+  section.tool{padding:60px 40px;max-width:1280px;margin:0 auto}
+  section.tool h2{font-size:clamp(26px,3.4vw,42px);font-weight:700;letter-spacing:-.015em;margin-bottom:8px;display:flex;align-items:center;gap:14px}
+  section.tool h2 .dot{width:14px;height:14px;border-radius:50%;flex:none}
+  section.tool p.lede{color:var(--sec);font-size:14.5px;line-height:1.6;max-width:82ch;margin-bottom:26px}
+  .divider{border:none;border-top:1px solid var(--rule);max-width:1280px;margin:0 auto}
+  .grid{display:grid;grid-template-columns:360px 1fr;gap:24px;align-items:start}
+  @media(max-width:920px){.grid{grid-template-columns:1fr}}
+  .inputs{background:var(--panel);border-radius:18px;padding:22px}
+  .inputs h3{font-size:13px;font-weight:700;margin-bottom:14px}
+  .inputs h3.sub{margin-top:20px;color:var(--sec);text-transform:uppercase;letter-spacing:.05em;font-size:11px}
+  .field{margin-bottom:15px}
+  .field label{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:600;color:var(--ink);margin-bottom:6px}
+  .field label .val{color:var(--design);font-weight:700;background:#e9f8ee;border-radius:12px;padding:1px 10px;font-size:12px}
+  .field input[type=range]{width:100%;accent-color:#34c759}
+  .field select{width:100%;border:1px solid var(--rule);border-radius:10px;padding:8px 10px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink)}
+  .field select:focus{outline:2px solid #0071e3;border-color:transparent}
+  .field .unit{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+  .seg{display:flex;background:#e8e8ea;border-radius:12px;padding:3px;gap:3px;flex-wrap:wrap}
+  .seg button{flex:1;min-width:70px;padding:8px 6px;border:none;border-radius:9px;background:transparent;font-size:11.5px;font-weight:600;color:var(--sec);cursor:pointer;font-family:inherit;transition:background .12s,color .12s}
+  .seg button:hover{color:var(--ink)}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .seg button:focus-visible{outline:2px solid #0071e3;outline-offset:1px}
+  .out{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:14px}
+  .stat{background:var(--panel);border-radius:14px;padding:15px 17px;position:relative}
+  .stat .v{font-size:22px;font-weight:700;letter-spacing:-.01em}
+  .stat .l{font-size:11px;color:var(--sec);margin-top:3px;line-height:1.35;display:inline}
+  .stat.hero{background:#111;color:#fff}
+  .stat.hero .l{color:#a1a1a6}
+  .checks{display:flex;flex-direction:column;gap:8px;margin:14px 0 6px}
+  .chk{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.5;background:var(--panel);border-radius:12px;padding:10px 14px}
+  .chk .b{width:9px;height:9px;border-radius:50%;flex:none;margin-top:4px}
+  .chk.ok .b{background:var(--ok)} .chk.warn .b{background:var(--warn)} .chk.bad .b{background:var(--bad)} .chk.info .b{background:var(--muted)}
+  .chartcard{background:var(--panel);border-radius:18px;padding:18px 18px 10px;margin-top:14px}
+  .chartcard h4{font-size:12px;font-weight:700;margin-bottom:6px;display:flex;align-items:center}
+  .chartcard .cap{font-size:11px;color:var(--sec);margin:2px 0 10px;line-height:1.5}
+  .chart-wrap{position:relative;height:280px}
+  .chart-wrap.short{height:210px}
+  .chartrow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:720px){.chartrow{grid-template-columns:1fr}}
+  .tip{display:inline-flex;width:14px;height:14px;border-radius:50%;background:var(--rule);color:#57575b;font-size:9.5px;align-items:center;justify-content:center;cursor:help;position:relative;margin-left:6px;font-weight:700;flex:none;vertical-align:middle}
+  .tip::after{content:attr(data-tip);position:absolute;bottom:145%;left:50%;transform:translateX(-50%);background:#1d1d1f;color:#fff;font-size:11px;line-height:1.45;font-weight:400;padding:9px 11px;border-radius:9px;width:250px;opacity:0;pointer-events:none;transition:opacity .15s;z-index:70;text-align:left;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+  .tip:hover::after{opacity:1}
+  table.mini{width:100%;border-collapse:collapse;font-size:12px}
+  table.mini th{text-align:left;font-size:10.5px;color:var(--sec);font-weight:600;padding:7px 9px;border-bottom:1px solid var(--rule)}
+  table.mini td{padding:8px 9px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.45}
+  table.mini td.r{text-align:right;font-variant-numeric:tabular-nums}
+  .why{background:#fff;border:1px solid var(--rule);border-radius:14px;margin-top:16px;overflow:hidden}
+  .why summary{cursor:pointer;padding:12px 16px;font-size:12.5px;font-weight:700;color:var(--compliance);list-style:none;display:flex;align-items:center;gap:8px}
+  .why summary::-webkit-details-marker{display:none}
+  .why summary::before{content:"?";width:16px;height:16px;border-radius:50%;background:#e8f1fd;color:var(--compliance);display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex:none}
+  .why[open] summary{border-bottom:1px solid var(--rule)}
+  .why .body{padding:14px 16px;font-size:12.5px;line-height:1.6;color:var(--ink)}
+  .note{font-size:11.5px;color:var(--sec);line-height:1.55;margin-top:12px;max-width:92ch}
+  footer{background:var(--panel);color:var(--sec);font-size:11px;line-height:1.6;padding:34px 40px;margin-top:40px}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="Athanor_Project_Web.html">← Project Web</a>
+  <a href="Athanor_Design_Calculators.html">Design Calculators</a>
+  <a href="Athanor_DataCentre_NetZero.html">Net-Zero DC</a>
+  <a href="Data_Footprint_Calculator.html">Data Footprint</a>
+  <a href="#tool" style="color:#34c759"><b>Embodied Carbon</b></a>
+  <a href="Athanor_Glossary.html" style="color:#5856d6"><b>Glossary ↗</b></a>
+  <span class="right">ARCH 5004 + 6004 · Athanor · embodied carbon</span>
+</nav>
+
+<header>
+  <span class="eyebrow">UPFRONT EMBODIED CARBON</span>
+  <h1>The carbon<br>you spend once</h1>
+  <p class="sub">Operational carbon you can chip away at for sixty years. Upfront embodied carbon — the emissions locked into the concrete, steel, timber and aluminium the day the building opens — you spend once, and you can never get back. Pick an archetype, size it, swap a structural choice, and watch the number move. Every emission factor is read straight from the <b>NABERS Embodied Carbon calculator 2026.1</b>; the material quantities are studio rules of thumb.</p>
+  <p class="tag">A first-pass sketch-design tool — a real LCA (eTool, One Click LCA) and a QS replace it in A2/A3. Feeds the good-design + governance domains of the Project Web.</p>
+</header>
+
+<!-- ============================ TOOL ============================ -->
+<section class="tool" id="tool">
+  <h2><span class="dot" style="background:var(--design)"></span>Choose, size, and swap <span style="font-size:11px;font-weight:700;background:#fdeee8;color:#c46a00;border-radius:12px;padding:3px 10px">EF = NABERS 2026.1 · QUANTITIES = RULE OF THUMB</span></h2>
+  <p class="lede">The building is split into seven elements. An <b>archetype</b> sets a starting material for each; the <b>frame</b>, <b>floor</b> and <b>façade</b> levers let you swap the three that matter most and see the consequence instantly. Modules <b>A1–A3</b> (making the materials) plus <b>A5</b> (construction waste) — the carbon spent before anyone switches on a light.</p>
+  <div class="grid">
+    <div class="inputs">
+      <h3>Building</h3>
+      <div class="field"><label>Archetype</label>
+        <div class="seg" id="arch">
+          <button data-k="concrete" class="on">Concrete frame</button>
+          <button data-k="steel">Steel shed</button>
+          <button data-k="timber">Mass timber</button>
+          <button data-k="hybrid">Hybrid — this project</button>
+        </div>
+        <div class="unit" id="arch_note"></div></div>
+      <div class="field"><label>Gross floor area <span class="val" id="v_gfa">5,000 m²</span></label>
+        <input type="range" id="gfa" min="500" max="30000" value="5000" step="250"></div>
+
+      <h3 class="sub">Choice levers <span class="tip" data-tip="Each lever overrides one element's material and recomputes live. This is where a design decision becomes a carbon number.">i</span></h3>
+      <div class="field"><label>Structural frame</label>
+        <select id="frame">
+          <option value="rc">Reinforced concrete</option>
+          <option value="steel">Structural steel</option>
+          <option value="timber">Mass timber (GLT + CLT)</option>
+        </select></div>
+      <div class="field"><label>Floor system</label>
+        <select id="floor">
+          <option value="rcSlab">RC flat slab</option>
+          <option value="composite">Composite steel–concrete</option>
+          <option value="clt">CLT panel</option>
+          <option value="hollowcore">Precast hollowcore</option>
+        </select></div>
+      <div class="field"><label>Façade</label>
+        <select id="facade">
+          <option value="precast">Precast concrete</option>
+          <option value="brick">Brick veneer</option>
+          <option value="curtainwall">Aluminium curtain wall</option>
+          <option value="lightweight">Timber + lightweight cladding</option>
+        </select></div>
+
+      <h3 class="sub">Construction waste (A5)</h3>
+      <div class="field"><label>Include A5 waste <span class="tip" data-tip="A5 here ≈ the embodied carbon of the over-ordered / off-cut fraction (each material's NABERS default waste rate). A simplification of NABERS' fuller A5, which also counts waste transport and end-of-life.">i</span></label>
+        <div class="seg" id="waste"><button data-k="on" class="on">Include</button><button data-k="off">A1–A3 only</button></div></div>
+      <div id="sel" style="background:#fff;border:1px solid var(--rule);border-radius:12px;padding:10px 12px;font-size:11.5px;line-height:1.5;margin-top:6px"></div>
+    </div>
+
+    <div>
+      <div class="out" id="out"></div>
+      <div class="checks" id="chk"></div>
+      <div class="chartcard">
+        <h4>Where the carbon sits — A1–A3 by element</h4>
+        <div class="cap">The bars that dominate are where a material choice pays off most. Structure and services usually lead; finishes rarely do.</div>
+        <div class="chart-wrap"><canvas id="elemChart"></canvas></div>
+      </div>
+      <div class="chartrow">
+        <div class="chartcard">
+          <h4>Your build vs the four archetypes</h4>
+          <div class="cap">kg CO₂e/m² GFA, at this size + levers. Yours is highlighted.</div>
+          <div class="chart-wrap short"><canvas id="cmpChart"></canvas></div>
+        </div>
+        <div class="chartcard">
+          <h4>Material mass by element</h4>
+          <div class="cap">Tonnes of material moved — the tangible side of the carbon.</div>
+          <div class="chart-wrap short"><canvas id="massChart"></canvas></div>
+        </div>
+      </div>
+      <p class="note">A1–A3 = product stage (raw supply, transport to factory, manufacture). A5 = construction stage (here, just material waste). Excluded: A4 delivery to site, and the in-use (B) and end-of-life (C) stages — this tool is deliberately <b>upfront-only</b>. Biogenic carbon stored in timber is reported separately in the checks, never netted off the headline.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ============================ MATERIALS REFERENCE ============================ -->
+<section class="tool" id="materials">
+  <h2><span class="dot" style="background:var(--planning)"></span>The emission factors behind the numbers</h2>
+  <p class="lede">Every factor below is read directly from the NABERS Embodied Carbon calculator 2026.1 Materials database (A1–A3, average EF). This is the verified half of the tool — the quantities that multiply them are the rule-of-thumb half.</p>
+  <table class="mini" id="mattbl">
+    <thead><tr><th>Material</th><th>Declared unit</th><th class="r">A1–A3 (kg CO₂e/unit)</th><th class="r">density</th><th class="r">waste %</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <p class="note">Source: NABERS Embodied Carbon calculator v2026.1 (Materials database sheet), <i>dossier / embodied energy calculators</i>. Aluminium curtain wall shown at a representative unitised value (NABERS lists 264–680 kg CO₂e/m² across systems). Verify the exact factor for your specification before it appears in a submission.</p>
+</section>
+
+<footer>
+  ARCH 5004 / ARCH 6004 studio teaching resource — Southwark Thermal Commons, prepared July 2026. Upfront embodied-carbon estimate (modules A1–A3 + A5 waste) for design-studio use only. Emission factors from the NABERS Embodied Carbon calculator v2026.1; material quantities are first-pass planning rules of thumb, not a bill of quantities. Not an LCA — verify every number with a recognised LCA tool (eTool, One Click LCA) and a quantity surveyor. Benchmark bands are indicative (LETI / RICS / RIBA 2030) and carry no compliance status.
+</footer>
+
+<script>
+/* ================= helpers ================= */
+const $=id=>document.getElementById(id);
+const f0=x=>Math.round(x).toLocaleString();
+const f1=x=>(Math.round(x*10)/10).toLocaleString();
+
+/* ================= NABERS 2026.1 materials subset =================
+   ef  : A1–A3 kg CO2e per declared unit (average EF)
+   unit: declared unit — m3 | t | m2 | kg
+   dens: kg/m3 (for m3 units)   ad: kg/m2 (for m2 units)
+   waste: NABERS default construction waste rate (fraction)          */
+const MAT={
+ concrete32 :{n:"Concrete in-situ 32 MPa", unit:"m3", ef:305,  dens:2400, waste:0.00},
+ concrete40 :{n:"Concrete in-situ 40 MPa", unit:"m3", ef:354,  dens:2400, waste:0.00},
+ precast    :{n:"Precast concrete panel",   unit:"t",  ef:233,             waste:0.00},
+ hollowcore :{n:"Hollowcore plank",         unit:"m3", ef:339,  dens:1480, waste:0.00},
+ rebar      :{n:"Reinforcing steel",        unit:"t",  ef:1600,            waste:0.10},
+ steelSection:{n:"Structural steel — sections",unit:"t",ef:2270,           waste:0.00},
+ steelFraming:{n:"Structural steel — framing",unit:"t", ef:3010,           waste:0.00},
+ cltSoft    :{n:"GLT + CLT (softwood)",     unit:"m3", ef:242,  dens:518,  waste:0.10, bio:1},
+ lvl        :{n:"LVL",                       unit:"m3", ef:298,  dens:507,  waste:0.10, bio:1},
+ softwood   :{n:"Softwood timber",          unit:"m3", ef:188,  dens:514,  waste:0.10, bio:1},
+ brick      :{n:"Clay brick",               unit:"t",  ef:184,             waste:0.10},
+ curtainwall:{n:"Aluminium curtain wall (unitised)",unit:"m2",ef:390, ad:46, waste:0.00},
+ windowAlu  :{n:"Aluminium window",         unit:"m2", ef:159,  ad:23,     waste:0.00},
+ windowTimber:{n:"Timber window",           unit:"m2", ef:61,   ad:37,     waste:0.00, bio:1},
+ timberClad :{n:"Timber cladding",          unit:"m3", ef:195,  dens:512,  waste:0.10, bio:1},
+ fibreCement:{n:"Fibre cement sheet",       unit:"m2", ef:12.6, ad:14.2,   waste:0.10},
+ plasterboard:{n:"Plasterboard",            unit:"m2", ef:3.4,  ad:11.1,   waste:0.10},
+ steelRoof  :{n:"Steel sheet roof/cladding",unit:"m2", ef:19.1, ad:6.0,    waste:0.00},
+ carpet     :{n:"Carpet",                   unit:"m2", ef:13.3, ad:3.2,    waste:0.10},
+ mep        :{n:"Services (MEP, office)",   unit:"m2", ef:55.3, ad:20,     waste:0.00},
+};
+/* mass of one declared unit, in kg */
+function unitMass(id){const m=MAT[id];return m.unit==="m3"?m.dens:m.unit==="m2"?m.ad:m.unit==="t"?1000:1;}
+
+/* ---- element definitions: each is a list of [materialId, quantity per m² GFA in that material's declared unit] ---- */
+const FIXED={
+  substructure:[["concrete32",0.12],["rebar",0.010]],
+  roof:[["steelRoof",0.30]],
+  internal:[["plasterboard",1.20],["carpet",0.70]],
+  services:[["mep",1.00]],
+};
+const FRAME={
+  rc:    [["concrete32",0.12],["rebar",0.012]],
+  steel: [["steelFraming",0.050]],
+  timber:[["cltSoft",0.055]],
+};
+const FLOOR={
+  rcSlab:    [["concrete32",0.18],["rebar",0.018]],
+  composite: [["steelSection",0.035],["concrete32",0.09],["rebar",0.007]],
+  clt:       [["cltSoft",0.14]],
+  hollowcore:[["hollowcore",0.15],["rebar",0.008]],
+};
+const FACADE={
+  precast:    [["precast",0.18]],
+  brick:      [["brick",0.14],["softwood",0.005]],
+  curtainwall:[["curtainwall",0.55]],
+  lightweight:[["timberClad",0.02],["fibreCement",0.30],["windowTimber",0.10]],
+};
+const ELEM_ORDER=["substructure","frame","floors","facade","roof","internal","services"];
+const ELEM_LABEL={substructure:"Substructure",frame:"Frame",floors:"Floors",facade:"Façade",roof:"Roof",internal:"Internal",services:"Services"};
+const ELEM_COLOR={substructure:"#86868b",frame:"#0071e3",floors:"#30b0c7",facade:"#ff9500",roof:"#af52de",internal:"#34c759",services:"#5856d6"};
+
+const ARCH={
+  concrete:{frame:"rc",   floor:"rcSlab",    facade:"precast",     note:"RC frame + flat slab + precast panels — the heavy baseline most commercial buildings default to."},
+  steel:   {frame:"steel",floor:"composite", facade:"curtainwall", note:"Steel frame + composite floors + glazed skin — long spans, but aluminium and steel carry high factors."},
+  timber:  {frame:"timber",floor:"clt",      facade:"lightweight", note:"GLT/CLT frame + CLT floors + timber cladding — the low-carbon civic option; also stores biogenic carbon."},
+  hybrid:  {frame:"rc",   floor:"clt",       facade:"lightweight", note:"Concrete base + timber floors + light skin — Athanor's real mix: a heavy data-hall podium under lighter civic wings."},
+};
+
+const S={arch:"concrete",gfa:5000,frame:"rc",floor:"rcSlab",facade:"precast",waste:true};
+
+/* ---- core computation: returns per-element {carbon(t), mass(t), waste(t), bio(t)} + totals ---- */
+function lineSet(el,frame,floor,facade){
+  if(el==="frame")return FRAME[frame];
+  if(el==="floors")return FLOOR[floor];
+  if(el==="facade")return FACADE[facade];
+  return FIXED[el];
+}
+function compute(cfg){
+  const {gfa,frame,floor,facade,waste}=cfg;
+  const per={}; let tot={carbon:0,mass:0,waste:0,bio:0};
+  ELEM_ORDER.forEach(el=>{
+    let c=0,ms=0,w=0,bio=0;
+    lineSet(el,frame,floor,facade).forEach(([id,q])=>{
+      const m=MAT[id], qty=q*gfa;                 // qty in declared units
+      const carbon=qty*m.ef/1000;                 // t CO2e
+      const mass=qty*unitMass(id)/1000;           // t
+      c+=carbon; ms+=mass;
+      w+=carbon*m.waste;                          // A5 ≈ carbon of wasted fraction
+      if(m.bio)bio+=mass*0.9;                     // ~0.9 t CO2 stored per t dry timber (indicative)
+    });
+    per[el]={carbon:c,mass:ms,waste:waste?w:0,bio:bio};
+    tot.carbon+=c; tot.mass+=ms; tot.waste+=(waste?w:0); tot.bio+=bio;
+  });
+  tot.perM2=(tot.carbon+tot.waste)*1000/gfa;      // kg CO2e / m²
+  return {per,tot};
+}
+function archM2(key){
+  const a=ARCH[key];
+  const r=compute({gfa:S.gfa,frame:a.frame,floor:a.floor,facade:a.facade,waste:S.waste});
+  return r.tot.perM2;
+}
+
+/* ---- benchmark band for kg CO2e/m² (indicative LETI/RICS/RIBA 2030 for A1–A5) ---- */
+function band(pm){
+  if(pm<200)return["ok","excellent","in reach of the deep-cut targets (≈ LETI band A / RIBA 2030 stretch)"];
+  if(pm<350)return["ok","good practice","around the LETI / RIBA 2030 good-practice line for A1–A5"];
+  if(pm<600)return["warn","typical","business-as-usual for commercial construction — real cuts are on the table"];
+  return["bad","carbon-heavy","well above the 2030 targets — the structure or façade choice is doing the damage"];
+}
+
+/* ================= charts ================= */
+let elemChart,cmpChart,massChart;
+const CO2="kg CO₂e", GN="#34c759";
+function initCharts(){
+  if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)Chart.defaults.animation=false;
+  Chart.defaults.font.family="-apple-system,BlinkMacSystemFont,Helvetica Neue,Arial,sans-serif";
+  Chart.defaults.font.size=11; Chart.defaults.color="#86868b";
+  elemChart=new Chart($("elemChart").getContext("2d"),{
+    type:"bar",
+    data:{labels:ELEM_ORDER.map(e=>ELEM_LABEL[e]),datasets:[{data:[],backgroundColor:ELEM_ORDER.map(e=>ELEM_COLOR[e]),borderRadius:6,maxBarThickness:64}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>f0(c.parsed.y)+" t CO₂e (A1–A3)"}}},
+      scales:{y:{beginAtZero:true,grid:{color:"#ededef"},title:{display:true,text:"t CO₂e"}},x:{grid:{display:false}}}}
+  });
+  cmpChart=new Chart($("cmpChart").getContext("2d"),{
+    type:"bar",
+    data:{labels:["Concrete","Steel","Mass timber","Hybrid"],datasets:[{data:[0,0,0,0],backgroundColor:["#0071e3","#5856d6","#34c759","#ff9500"],borderRadius:6,maxBarThickness:60}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>f0(c.parsed.y)+" kg CO₂e/m²"}}},
+      scales:{y:{beginAtZero:true,grid:{color:"#ededef"},ticks:{callback:v=>v}},x:{grid:{display:false}}}}
+  });
+  massChart=new Chart($("massChart").getContext("2d"),{
+    type:"doughnut",
+    data:{labels:ELEM_ORDER.map(e=>ELEM_LABEL[e]),datasets:[{data:[],backgroundColor:ELEM_ORDER.map(e=>ELEM_COLOR[e]),borderWidth:3,borderColor:"#f5f5f7"}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"right",labels:{boxWidth:10,font:{size:10},padding:8}},tooltip:{callbacks:{label:c=>c.label+": "+f0(c.parsed)+" t"}}}}
+  });
+}
+
+/* ================= render ================= */
+function render(){
+  const r=compute(S);
+  const upfront=r.tot.carbon+r.tot.waste;
+  const pm=r.tot.perM2;
+  const [bs,bl,btxt]=band(pm);
+  /* stats */
+  $("out").innerHTML=`
+    <div class="stat hero"><div class="v">${f0(upfront)} t</div><div class="l">upfront CO₂e (A1–A3${S.waste?" + A5":""})</div></div>
+    <div class="stat"><div class="v">${f0(pm)}</div><div class="l">kg CO₂e / m² GFA</div></div>
+    <div class="stat"><div class="v">${f0(r.tot.waste)} t</div><div class="l">A5 construction waste${S.waste?"":" (off)"}</div></div>
+    <div class="stat"><div class="v">${f0(r.tot.mass)} t</div><div class="l">material mass · ${f1(r.tot.mass*1000/S.gfa)} kg/m²</div></div>`;
+  /* dominant element */
+  let dom=ELEM_ORDER[0]; ELEM_ORDER.forEach(e=>{if(r.per[e].carbon>r.per[dom].carbon)dom=e;});
+  const domShare=r.per[dom].carbon/r.tot.carbon*100;
+  /* comparison to concrete baseline */
+  const baseM2=archM2("concrete"), delta=(baseM2-pm)/baseM2*100;
+  const chks=[
+    [bs,`<b>${f0(pm)} kg CO₂e/m²</b> — ${bl}: ${btxt}.`],
+    ["info",`<b>${ELEM_LABEL[dom]}</b> dominates at ${f0(domShare)}% of A1–A3. That's where a material swap moves the number most.`],
+    [delta>1?"ok":delta<-1?"warn":"info",
+      S.arch==="concrete"&&S.frame==="rc"&&S.floor==="rcSlab"?`This is the concrete baseline. Swap the frame or floor lever to mass timber and watch the total fall.`
+      :`${delta>=0?`<b>${f0(Math.abs(delta))}% below</b>`:`<b>${f0(Math.abs(delta))}% above</b>`} the concrete-frame baseline for the same building — the price (or prize) of your material choices.`],
+  ];
+  if(r.tot.bio>0)chks.push(["info",`The timber in this scheme also <b>stores ≈ ${f0(r.tot.bio)} t</b> of biogenic CO₂ while it stands — real, but temporary, and <b>not netted off</b> the number above (it returns at end of life unless the timber is reused).`]);
+  chks.push(["info",`<b>Rule of thumb.</b> Emission factors are NABERS 2026.1; the quantities are studio intensities. A recognised LCA tool + a QS own the real number — cite this as a starting estimate, never as compliance.`]);
+  const CH={ok:"ok",warn:"warn",bad:"bad",info:"info"};
+  $("chk").innerHTML=chks.map(([s,t])=>`<div class="chk ${CH[s]}"><span class="b"></span><div>${t}</div></div>`).join("");
+  /* selection summary */
+  $("sel").innerHTML=`<b>Build:</b> ${MAT[FRAME[S.frame][0][0]].n.split(" —")[0]} frame · ${floorName(S.floor)} floors · ${facadeName(S.facade)}<br><b>Upfront:</b> ${f0(upfront)} t CO₂e = ${f0(pm)} kg/m² over ${f0(S.gfa)} m².`;
+  /* charts */
+  elemChart.data.datasets[0].data=ELEM_ORDER.map(e=>r.per[e].carbon);
+  elemChart.update();
+  const cmp=["concrete","steel","timber","hybrid"].map(archM2);
+  cmpChart.data.datasets[0].data=cmp;
+  const activeIdx=["concrete","steel","timber","hybrid"].indexOf(S.arch);
+  cmpChart.data.datasets[0].backgroundColor=["#0071e3","#5856d6","#34c759","#ff9500"].map((c,i)=>i===activeIdx?c:c+"66");
+  cmpChart.update();
+  massChart.data.datasets[0].data=ELEM_ORDER.map(e=>r.per[e].mass);
+  massChart.update();
+}
+function floorName(k){return {rcSlab:"RC flat slab",composite:"composite steel–concrete",clt:"CLT panel",hollowcore:"precast hollowcore"}[k];}
+function facadeName(k){return {precast:"precast concrete façade",brick:"brick veneer",curtainwall:"aluminium curtain wall",lightweight:"timber + lightweight cladding"}[k];}
+
+/* ================= wiring ================= */
+function seg(id,cb){const s=$(id);[...s.children].forEach(b=>b.addEventListener("click",()=>{[...s.children].forEach(x=>x.classList.remove("on"));b.classList.add("on");cb(b.dataset.k);}));}
+seg("arch",k=>{
+  S.arch=k; const a=ARCH[k];
+  S.frame=a.frame; S.floor=a.floor; S.facade=a.facade;
+  $("frame").value=a.frame; $("floor").value=a.floor; $("facade").value=a.facade;
+  $("arch_note").textContent=a.note;
+  render();
+});
+seg("waste",k=>{S.waste=(k==="on");render();});
+$("gfa").addEventListener("input",e=>{S.gfa=+e.target.value;$("v_gfa").textContent=f0(S.gfa)+" m²";render();});
+["frame","floor","facade"].forEach(id=>$(id).addEventListener("change",e=>{S[id]=e.target.value;render();}));
+
+/* materials reference table */
+document.querySelector("#mattbl tbody").innerHTML=Object.keys(MAT).map(id=>{
+  const m=MAT[id];
+  const dens=m.unit==="m3"?f0(m.dens)+" kg/m³":m.unit==="m2"?f1(m.ad)+" kg/m²":"—";
+  return `<tr><td>${m.n}</td><td>${m.unit==="m3"?"m³":m.unit==="m2"?"m²":m.unit==="t"?"tonne":"kg"}</td><td class="r">${f1(m.ef)}</td><td class="r">${dens}</td><td class="r">${f0(m.waste*100)}%</td></tr>`;
+}).join("");
+
+/* init */
+$("arch_note").textContent=ARCH.concrete.note;
+if(window.Chart){initCharts();render();}
+else window.addEventListener("load",()=>{ if(window.Chart){initCharts();render();} });
+</script>
+<style>
+abbr.ab{text-decoration:underline dotted #9a9aa0;text-underline-offset:2px;text-decoration-thickness:1px;cursor:help;font-style:normal}
+</style>
+<script>
+/* ACRO_GLOSSARY — auto-tooltips for every acronym. Hover any dotted term. */
+(function(){
+const G={
+"NABERS":"National Australian Built Environment Rating System — its Embodied Carbon calculator (v2026.1) supplies every emission factor in this tool",
+"GWP":"Global Warming Potential — a material's climate impact expressed as kg CO₂e",
+"LCA":"Life Cycle Assessment — the accounting of a building's environmental impacts from cradle to grave",
+"EPD":"Environmental Product Declaration — a verified, product-specific carbon datasheet",
+"CLT":"Cross-Laminated Timber — massive plywood-like slabs and walls",
+"GLT":"Glue-Laminated Timber — glulam; engineered structural timber",
+"LVL":"Laminated Veneer Lumber — engineered timber beam",
+"RC":"Reinforced Concrete",
+"MEP":"Mechanical, Electrical and Plumbing — the building services",
+"GFA":"Gross Floor Area",
+"LETI":"London Energy Transformation Initiative — publishes widely-used embodied carbon targets",
+"RIBA":"Royal Institute of British Architects — its 2030 Climate Challenge sets carbon targets",
+"RICS":"Royal Institution of Chartered Surveyors — publishes the whole-life carbon assessment standard",
+"EPiC":"Environmental Performance in Construction — University of Melbourne's Australian material carbon database",
+"QS":"Quantity Surveyor — the cost consultant",
+"AAC":"Autoclaved Aerated Concrete — lightweight precast blockwork/panels",
+"MPa":"Megapascal — concrete compressive strength grade",
+"CO₂e":"Carbon dioxide equivalent — all greenhouse gases expressed as the warming of that mass of CO₂",
+"eTool":"An Australian whole-of-life LCA software platform",
+"One Click LCA":"A widely-used building life-cycle assessment software platform"
+};
+const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+const esc=s=>s.replace(/[.*+?^${}()|[\]\\/]/g,"\\$&");
+const rx=new RegExp("(?<![A-Za-z0-9])("+keys.map(esc).join("|")+")(?![A-Za-z0-9])","g");
+const SKIP=new Set(["SCRIPT","STYLE","ABBR","TEXTAREA","OPTION","TITLE","CANVAS"]);
+let busy=false;
+function annotate(root){
+  busy=true;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){
+    const p=n.parentElement;
+    if(!p||SKIP.has(p.tagName)||p.closest("svg,abbr,.tip"))return NodeFilter.FILTER_REJECT;
+    rx.lastIndex=0;
+    return rx.test(n.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
+  }});
+  const nodes=[];
+  while(walker.nextNode())nodes.push(walker.currentNode);
+  nodes.forEach(n=>{
+    const frag=document.createDocumentFragment();
+    let last=0; rx.lastIndex=0; let m; const txt=n.nodeValue;
+    while((m=rx.exec(txt))){
+      if(m.index>last)frag.appendChild(document.createTextNode(txt.slice(last,m.index)));
+      const a=document.createElement("abbr");
+      a.className="ab"; a.title=G[m[1]]; a.textContent=m[1];
+      frag.appendChild(a);
+      last=m.index+m[1].length;
+    }
+    if(last<txt.length)frag.appendChild(document.createTextNode(txt.slice(last)));
+    n.parentNode.replaceChild(frag,n);
+  });
+  busy=false;
+}
+function run(){annotate(document.body);}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run);else run();
+let t=null;
+new MutationObserver(muts=>{
+  if(busy)return;
+  clearTimeout(t);
+  t=setTimeout(run,300);
+}).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
+</body>
+</html>

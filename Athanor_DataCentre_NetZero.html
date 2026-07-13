@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Net-Zero Data Centre — ARCH 5004 + 6004</title>
+<style>
+  :root{
+    --ink:#1d1d1f; --sec:#86868b; --panel:#f5f5f7; --rule:#d2d2d7; --muted:#aeaeb2;
+    --contract:#af52de; --compliance:#0071e3; --planning:#ff9500; --design:#34c759; --governance:#5856d6;
+    --fire:#ff3b30; --water:#30b0c7;
+    --ok:#34c759; --warn:#ff9500; --bad:#ff3b30;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased}
+  nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:18px;padding:11px 40px;font-size:12px;overflow-x:auto;white-space:nowrap}
+  nav a{color:var(--ink);text-decoration:none}
+  nav a:hover{text-decoration:underline}
+  nav .right{margin-left:auto;color:var(--sec)}
+  header{background:#000;color:#fff;padding:74px 40px 80px}
+  header .eyebrow{display:inline-block;background:var(--design);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:20px;letter-spacing:.03em}
+  header h1{font-size:clamp(40px,6vw,74px);font-weight:700;line-height:1.04;letter-spacing:-.02em}
+  header p.sub{color:#a1a1a6;font-size:16px;line-height:1.55;margin-top:22px;max-width:70ch}
+  header p.tag{color:#6e6e73;font-size:12px;margin-top:28px}
+  section.step{padding:60px 40px;max-width:1280px;margin:0 auto}
+  .stepnum{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--design);text-transform:uppercase;margin-bottom:8px}
+  section.step h2{font-size:clamp(26px,3.4vw,42px);font-weight:700;letter-spacing:-.015em;margin-bottom:8px}
+  section.step p.lede{color:var(--sec);font-size:14.5px;line-height:1.6;max-width:82ch;margin-bottom:26px}
+  .divider{border:none;border-top:1px solid var(--rule);max-width:1280px;margin:0 auto}
+  .grid{display:grid;grid-template-columns:360px 1fr;gap:24px;align-items:start}
+  @media(max-width:920px){.grid{grid-template-columns:1fr}}
+  .inputs{background:var(--panel);border-radius:18px;padding:22px}
+  .inputs h3{font-size:13px;font-weight:700;margin-bottom:14px}
+  .field{margin-bottom:15px}
+  .field label{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:600;color:var(--ink);margin-bottom:5px}
+  .field label .val{color:var(--design);font-weight:700;background:#e9f8ee;border-radius:12px;padding:1px 10px;font-size:12px}
+  .field input[type=range]{width:100%;accent-color:#34c759}
+  .field select{width:100%;border:1px solid var(--rule);border-radius:10px;padding:8px 10px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink)}
+  .field .unit{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+  .seg{display:flex;background:#e8e8ea;border-radius:12px;padding:3px;gap:3px;flex-wrap:wrap}
+  .seg button{flex:1;min-width:70px;padding:8px 6px;border:none;border-radius:9px;background:transparent;font-size:11.5px;font-weight:600;color:var(--sec);cursor:pointer;font-family:inherit}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .out{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin-bottom:14px}
+  .stat{background:var(--panel);border-radius:14px;padding:15px 17px}
+  .stat .v{font-size:21px;font-weight:700;letter-spacing:-.01em}
+  .stat .l{font-size:11px;color:var(--sec);margin-top:3px;line-height:1.35;display:inline}
+  .checks{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+  .chk{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.5;background:var(--panel);border-radius:12px;padding:10px 14px}
+  .chk .b{width:9px;height:9px;border-radius:50%;flex:none;margin-top:4px}
+  .chk.ok .b{background:var(--ok)} .chk.warn .b{background:var(--warn)} .chk.bad .b{background:var(--bad)} .chk.info .b{background:var(--muted)}
+  .svgwrap{background:var(--panel);border-radius:18px;padding:18px;margin-top:14px}
+  .svgwrap h4{font-size:12px;font-weight:700;margin-bottom:10px;display:flex;align-items:center}
+  .svgwrap svg{width:100%;height:auto;display:block}
+  .note{font-size:11.5px;color:var(--sec);line-height:1.55;margin-top:12px;max-width:90ch}
+  .svgwrap svg rect,.svgwrap svg circle,.svgwrap svg path{transition:opacity .15s,filter .15s}
+  .svgwrap svg rect:hover,.svgwrap svg circle:hover{opacity:.82;filter:brightness(1.06)}
+  .why{background:#fff;border:1px solid var(--rule);border-radius:14px;margin-top:14px;overflow:hidden}
+  .why summary{cursor:pointer;padding:12px 16px;font-size:12.5px;font-weight:700;color:var(--compliance);list-style:none;display:flex;align-items:center;gap:8px}
+  .why summary::before{content:"?";width:16px;height:16px;border-radius:50%;background:#e8f1fd;color:var(--compliance);display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex:none}
+  .why[open] summary{border-bottom:1px solid var(--rule)}
+  .why .body{padding:14px 16px;font-size:12.5px;line-height:1.6;color:var(--ink)}
+  .why .body b{color:var(--compliance)}
+  .why .body ul{list-style:none;margin:6px 0}
+  .why .body li{margin-bottom:6px;padding-left:14px;position:relative}
+  .why .body li::before{content:"—";position:absolute;left:0;color:var(--muted)}
+  .tip{display:inline-flex;width:14px;height:14px;border-radius:50%;background:var(--rule);color:#57575b;font-size:9.5px;align-items:center;justify-content:center;cursor:help;position:relative;margin-left:6px;font-weight:700;flex:none}
+  .tip::after{content:attr(data-tip);position:absolute;bottom:145%;left:50%;transform:translateX(-50%);background:#1d1d1f;color:#fff;font-size:11px;line-height:1.45;font-weight:400;padding:9px 11px;border-radius:9px;width:250px;opacity:0;pointer-events:none;transition:opacity .15s;z-index:70;text-align:left;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+  .tip:hover::after{opacity:1}
+  table.mini{width:100%;border-collapse:collapse;font-size:12px}
+  table.mini th{text-align:left;font-size:10.5px;color:var(--sec);font-weight:600;padding:7px 9px;border-bottom:1px solid var(--rule)}
+  table.mini td{padding:8px 9px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.45}
+  table.mini tr.hl td{background:#e9f8ee;font-weight:700}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+  .card{background:var(--panel);border-radius:16px;padding:20px}
+  .card h3{font-size:14px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .card p{font-size:12px;line-height:1.55;color:var(--ink)}
+  .card .m{font-size:11px;color:var(--sec);margin-top:8px;line-height:1.5}
+  .badge{font-size:9.5px;font-weight:700;border-radius:10px;padding:2px 8px;color:#fff;letter-spacing:.02em}
+  .badge.proven{background:var(--design)} .badge.emerging{background:var(--planning)} .badge.rnd{background:var(--contract)}
+  .verdict{border-radius:18px;padding:26px 28px;margin-top:16px;color:#fff}
+  .verdict h3{font-size:20px;margin-bottom:6px}
+  .verdict p{font-size:13px;line-height:1.55;opacity:.92}
+  footer{background:var(--panel);color:var(--sec);font-size:11px;line-height:1.6;padding:34px 40px;margin-top:40px}
+  .dark{background:#000;color:#fff;max-width:none}
+  .dark .inner{max-width:1280px;margin:0 auto;padding:70px 40px}
+  .dark h2{font-size:clamp(26px,3.4vw,42px);font-weight:700;margin-bottom:8px}
+  .dark p.lede{color:#a1a1a6;font-size:14.5px;line-height:1.6;max-width:82ch;margin-bottom:26px}
+  .dark .card{background:#161617}
+  .dark .card p, .dark .card .m{color:#d2d2d7}
+  .dark .card .m{color:#86868b}
+  .dark .card h3{color:#fff}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="Athanor_Design_Calculators.html">← Design toolkit</a>
+  <a href="Athanor_Project_Web.html">Project Web</a>
+  <a href="Athanor_Embodied_Carbon.html" style="color:#34c759"><b>Embodied Carbon ↗</b></a>
+  <a href="Athanor_Glossary.html" style="color:#5856d6"><b>Glossary ↗</b></a>
+  <a href="#s0">0 People</a>
+  <a href="#s1"><b>1 Size</b></a>
+  <a href="#aisles">1b Aisles</a>
+  <a href="#s2">2 Cooling + Heat</a>
+  <a href="#s3">3 Power</a>
+  <a href="#s4">4 Water</a>
+  <a href="#s5">5 Structure + Embodied</a>
+  <a href="#s6">6 Carbon Ledger</a>
+  <a href="#typology">Typology + DfMA</a>
+  <a href="#systems">Systems Library</a>
+  <span class="right">ARCH 5004 + 6004 · Athanor</span>
+</nav>
+
+<header>
+  <span class="eyebrow">CARBON-POSITIVE BY DESIGN</span>
+  <h1>The Net-Zero<br>Data Centre</h1>
+  <p class="sub">Six decisions stand between a data centre and carbon-positive civic infrastructure: how big, how cooled, how powered, how watered, how built, and how honestly you count. This tool walks through all six in order — every number explains itself, every system comes with a size and a cost, and the ledger at the end tells you the year your building starts paying the planet back.</p>
+  <p class="tag">There is no budget for this project — but there are costs, and you must know them. Systems marked R&amp;D are not excuses; they are design opportunities with dates attached.</p>
+</header>
+
+<!-- ================= STEP 0 ================= -->
+<section class="step" id="s0">
+  <div class="stepnum">Step 0 — Who is this machine for?</div>
+  <h2>People, and their invisible data</h2>
+  <p class="lede">Before sizing hardware, size the <b>demand</b>. Every resident carries a digital shadow — cloud photos, streams, feeds, chats with an AI — and every gram of it runs on a server drawing power somewhere. This step turns people into kilowatts, and reveals the studio's quiet punchline: a whole suburb's digital life is <i>tiny</i> next to the brief's data centre. The Athanor is regional infrastructure wearing a neighbourhood's clothes.</p>
+  <div class="grid">
+    <div class="inputs">
+      <h3>The community</h3>
+      <div class="field"><label>People served <span class="val" id="v_d0pop">3,120</span></label>
+        <input type="range" id="d0pop" min="500" max="250000" value="3120" step="10">
+        <div class="unit">Southwark ≈ 3,120 (1,300 dwellings × 2.4) · Adelaide CBD ≈ 25,000 · West Torrens ≈ 64,500</div></div>
+      <div class="field"><label>Cloud storage per person <span class="val" id="v_d0gb">500 GB</span></label>
+        <input type="range" id="d0gb" min="50" max="2000" value="500" step="50">
+        <div class="unit">Average personal cloud footprint (pCloud survey): photos 46%, documents 26%, music 6%. Stored 3× for redundancy (HDFS default).</div></div>
+      <div class="field"><label>Always-on services per person <span class="val" id="v_d0svc">3 W</span></label>
+        <input type="range" id="d0svc" min="1" max="8" value="3" step="0.5">
+        <div class="unit">The hidden continuous draw of TikTok, Instagram, YouTube, streaming, search, maps: published platform energy ÷ user counts lands each major platform at ~5–15 kWh/user/yr — a full portfolio ≈ 25–70 kWh/yr ≈ 3–8 W, always on, whether you're scrolling or asleep.</div></div>
+      <div class="field"><label>AI queries per person per day <span class="val" id="v_d0ai">10</span></label>
+        <input type="range" id="d0ai" min="0" max="100" value="10" step="5">
+        <div class="unit">≈1 Wh per chat exchange (published estimates 0.3–3 Wh). Image/video generation is 10–100× more.</div></div>
+      <p style="margin-top:6px"><button id="d0btn" style="background:#1d1d1f;color:#fff;border:none;border-radius:20px;padding:10px 18px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer">Size Step 1 to this community →</button></p>
+    </div>
+    <div>
+      <div class="out" id="o0"></div>
+      <div class="checks" id="c0"></div>
+      <div class="svgwrap"><h4>The hidden energy of a scroll — end-to-end footprints<span class="tip" data-tip="End-to-end figures (device + network + data centre) from published life-cycle studies: IEA streaming analysis, Greenspector app measurements, Berners-Lee 'How Bad Are Bananas?'. The DC-side share — what THIS building would carry — is roughly a quarter to a third of each. Context for scale, not a verdict on anyone's habits."></span>
+        <div class="cards" style="margin-top:6px">
+          <div class="card"><h3>1 hour of TikTok / Reels / Shorts</h3><p>≈1–1.5 GB of video · ≈60–90 g CO₂e end-to-end. Short video autoplays in HD and never stops — per hour it out-eats Netflix.</p></div>
+          <div class="card"><h3>1 hour of HD streaming</h3><p>≈3 GB · ≈36–55 g CO₂e (IEA). 4K roughly doubles it. The AU average is 13.6 h/week — streaming is most of a person's data diet.</p></div>
+          <div class="card"><h3>1 AI chat exchange</h3><p>≈0.3–3 Wh · ≈0.2–2 g on SA's grid. Cheap each — but multiply by billions/day, and note image or video generation runs 10–100×.</p></div>
+          <div class="card"><h3>1 email</h3><p>≈4 g CO₂e; up to 26 g with attachments (Berners-Lee). The classic gateway statistic — now a rounding error next to video.</p></div>
+          <div class="card"><h3>A year of photo backup</h3><p>25 GB new photos × 3 copies ≈ a third of a watt, continuously ≈ 3 kWh/yr ≈ 0.7 kg. Storage is astonishingly cheap; it's <i>moving</i> data that costs.</p></div>
+          <div class="card"><h3>The AU daily scroll (~2 h social)</h3><p>≈45–65 kWh/yr of data-centre-side energy per person — the single biggest slice of the 'always-on' dial at left.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ================= STEP 1 ================= -->
+<section class="step" id="s1">
+  <div class="stepnum">Step 1 — How big is the machine?</div>
+  <h2>Size the computation</h2>
+  <p class="lede">Everything downstream — heat, power, water, carbon — scales from one number: the <b>IT load</b>, the electricity the servers themselves consume. Choose it deliberately; the brief's range exists because 1 MW supplies the precinct's heat demand almost exactly.</p>
+  <div class="grid">
+    <div class="inputs">
+      <h3>Inputs</h3>
+      <div class="field"><label>IT load <span class="val" id="v_it">1,250 kW</span></label>
+        <input type="range" id="it" min="250" max="3000" value="1250" step="50">
+        <div class="unit">Brief: 1,000–1,500 kW. Below ~750 kW the heat can't carry the precinct in winter; above ~2 MW the summer surplus becomes a liability.</div></div>
+      <div class="field"><label>Rack density <span class="val" id="v_kwr">15 kW/rack</span></label>
+        <input type="range" id="kwr" min="4" max="140" value="15" step="1">
+        <div class="unit">Set automatically by the cooling strategy in Step 2 — drag to override.</div></div>
+      <div class="field"><label>Technical space density <span class="val" id="v_dens">2.5 kW/m²</span></label>
+        <input type="range" id="dens" min="1.5" max="4.5" value="2.5" step="0.1">
+        <div class="unit">Real NEXTDC portfolio: 1.71 (A1 Adelaide) to 4.33 (P1 Perth).</div></div>
+    </div>
+    <div>
+      <div class="out" id="o1"></div>
+      <details class="why"><summary>Where do these numbers come from?</summary><div class="body">
+        <ul>
+        <li><b>IT load range</b> — the studio brief (§5a): 1.0–1.5 MW gives 0.9–1.7 MW of continuous recoverable heat against a precinct demand of ~9.1 GWh/yr — near-equilibrium. That balance is the whole architectural argument.</li>
+        <li><b>kW/rack</b> — dossier §3.1, from NEXTDC's published specs: air-cooled colocation is built at 4–10 kW/rack; hot-aisle containment carries 10–30; liquid-cooled AI racks run 50–140 (one NVIDIA GB200 rack = 120–140 kW). Above ~30–40 kW/rack, air physically can't carry the heat away.</li>
+        <li><b>kW/m²</b> — dossier §3.3, calculated from published IT capacity ÷ technical space for eleven real Australian facilities. A1 Adelaide = 5 MW ÷ 2,922 m² = 1.71 kW/m².</li>
+        <li><b>White:grey 1:1</b> — dossier §5: traditional colocation splits technical floor and support space (UPS, batteries, switchrooms, cooling plant, security, dock) roughly equally.</li>
+        </ul>
+      </div></details>
+      <div class="svgwrap"><h4>Your design against the real Australian portfolio<span class="tip" data-tip="Bars: kW/m² technical-space density, from NEXTDC published specifications (dossier §3.3). Your design is the green bar."></span></h4><svg id="c_bench"></svg></div>
+    </div>
+  </div>
+</section>
+
+
+<hr class="divider">
+
+<!-- ================= STEP 1b — AISLES ================= -->
+<section class="step" id="aisles">
+  <div class="stepnum">Step 1b — Inside the hall</div>
+  <h2>Hot / cold aisle layout</h2>
+  <p class="lede">The rack count is no longer arbitrary — it follows from Step 1 (IT load ÷ kW per rack), which follows from the demand above. Racks are 600 × 1,200 mm in rows: fronts face fronts across a <b>cold aisle</b> (supply, min 1.2 m — two floor tiles), backs face backs across a <b>hot aisle</b> (exhaust, min 0.9–1.2 m), with containment over the cold aisles (portfolio standard). Clear height 4–5 m; floor 12 kPa.</p>
+  <div class="grid">
+    <div class="inputs">
+      <h3>Layout</h3>
+      <div class="field"><label>Racks — from Step 1 <span class="val" id="v_ain">84</span></label>
+        <div class="unit" id="ai_src" style="margin-bottom:8px"></div></div>
+      <div class="field"><label>Racks per row <span class="val" id="v_airow">12</span></label>
+        <input type="range" id="ai_row" min="4" max="20" value="12" step="1">
+        <div class="unit">Rows beyond ~12 racks (7.2 m) need a cross egress aisle.</div></div>
+      <div class="field"><label>Cold aisle <span class="val" id="v_aicold">1.2 m</span></label>
+        <input type="range" id="ai_cold" min="0.6" max="2.4" value="1.2" step="0.1"></div>
+      <div class="field"><label>Hot aisle <span class="val" id="v_aihot">1.0 m</span></label>
+        <input type="range" id="ai_hot" min="0.6" max="2.0" value="1.0" step="0.1"></div>
+      <div class="field"><label>Perimeter clearance <span class="val" id="v_aiper">1.5 m</span></label>
+        <input type="range" id="ai_per" min="0.8" max="3" value="1.5" step="0.1">
+        <div class="unit">Circulation + CRAC/CDU units along walls (1.2–1.8 m).</div></div>
+    </div>
+    <div>
+      <div class="out" id="oai"></div>
+      <div class="checks" id="cai"></div>
+      <div class="svgwrap"><h4>Plan — rack rows + containment aisles</h4><svg id="ai_svg"></svg></div>
+      <p class="note">Blue = cold (supply), red = hot (return), dark blocks = rack rows. Liquid cooling relaxes the air logic (heat leaves in water) but keeps the row grammar for access and cable reach. Add the 1.2 m wide × 2.4 m high step-free rack route from the dock, CRAC/CDU positions on the perimeter, and gaseous-suppression storage adjacent.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= STEP 2 ================= -->
+<section class="step" id="s2">
+  <div class="stepnum">Step 2 — How is it cooled, and where does the heat go?</div>
+  <h2>Cooling is the heat supply</h2>
+  <p class="lede">In this building, cooling is not overhead — it's the product. The cooling strategy sets four numbers at once: PUE (electrical overhead), the share of heat you can recover, the temperature it arrives at, and the water it consumes. Liquid cooling wins on every axis except cost and familiarity.</p>
+  <div class="grid">
+    <div class="inputs">
+      <h3>Cooling strategy</h3>
+      <div class="seg" id="coolseg">
+        <button data-k="air">Air + CRAC</button>
+        <button data-k="hybrid">Containment hybrid</button>
+        <button data-k="liquid" class="on">Direct liquid (DLC)</button>
+        <button data-k="immersion">Immersion</button>
+      </div>
+      <div class="unit" id="coolnote" style="margin-top:10px"></div>
+      <div class="field" style="margin-top:16px"><label>Heat actually used over the year <span class="val" id="v_use">75%</span></label>
+        <input type="range" id="use" min="30" max="95" value="75" step="5">
+        <div class="unit">Recovered ≠ used: summer demand collapses. Thermal storage tanks lift this to ~70–80%; borehole seasonal storage (BTES) to ~90%+.</div></div>
+      <div class="field"><label>Counterfactual heat source displaced <span class="val" id="v_cf"></span></label>
+        <div class="seg" id="cfseg">
+          <button data-k="gas" class="on">Gas boilers</button>
+          <button data-k="hp">Electric heat pumps</button>
+        </div>
+        <div class="unit">What would have heated the 1,300 homes + bathhouse + greenhouse without you? This choice changes your avoided-carbon claim by 3–4×. Be able to defend it.</div></div>
+    </div>
+    <div>
+      <div class="out" id="o2"></div>
+      <div class="svgwrap"><h4>The heat cascade — from server to suburb<span class="tip" data-tip="Band widths proportional to annual thermal energy. Temperatures from brief §5e: liquid coolant returns at 35–65 °C; heat pumps boost to 60–80 °C where domestic hot water requires it; pools take 28–40 °C directly."></span></h4><svg id="c_cascade"></svg></div>
+      <details class="why"><summary>Where do these numbers come from?</summary><div class="body">
+        <ul>
+        <li><b>PUE by strategy</b> — air ~1.45 (older colocation average), containment ~1.30 (NEXTDC design range 1.25–1.5), direct liquid ~1.15, immersion ~1.08 (vendor + Uptime Institute data; brief targets 1.25–1.35).</li>
+        <li><b>Recoverable share</b> — air systems capture ~25% usefully (low-grade exhaust air); DLC captures 70–90% in water at 35–65 °C (ASHRAE warm-water classes W3–W5); immersion ~95% at up to 50–60 °C.</li>
+        <li><b>Utilisation</b> — the Adelaide problem (brief §5f): heat demand collapses December–February. Storage tanks buffer days; BTES banks the summer for winter. Without either, a third of your heat has nowhere to go.</li>
+        <li><b>Counterfactuals</b> — gas boiler at ~0.185 t CO₂e/MWh<sub>th</sub> (NGA Factors, natural gas + boiler efficiency); electric heat pump at grid 0.22 ÷ COP 4 ≈ 0.055 t/MWh<sub>th</sub>. SA has no reticulated-gas mandate for new precincts — arguing 'we displaced gas' needs evidence the precinct would otherwise have used it.</li>
+        </ul>
+      </div></details>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ================= STEP 3 ================= -->
+<section class="step" id="s3">
+  <div class="stepnum">Step 3 — What powers it?</div>
+  <h2>Power: solar first, honesty always</h2>
+  <p class="lede">A data centre is a constant load in a state whose grid is already ~75% renewable and heading for 100%. Your levers: on-site solar (roof + carpark canopy), a battery to shift the evening, a renewable PPA for the residual — and the standby question, where diesel's days are numbered.</p>
+  <div class="grid">
+    <div class="inputs">
+      <h3>Inputs</h3>
+      <div class="field"><label>On-site solar <span class="val" id="v_pv">1,500 kWp</span></label>
+        <input type="range" id="pv" min="0" max="2500" value="1500" step="50">
+        <div class="unit">Brief §6: 1,000–2,000 kWp achievable on DC roof + companion roofs + carpark canopy (≈5–7 m²/kWp).</div></div>
+      <div class="field"><label>Roof + canopy area available for solar <span class="val" id="v_avail">8,000 m²</span></label>
+        <input type="range" id="avail" min="2000" max="14000" value="8000" step="250">
+        <div class="unit">DC roof + companion roofs + carpark canopy (brief §6: ~7,000–8,000 m² is achievable on the precinct).</div></div>
+      <div class="field"><label>Battery storage <span class="val" id="v_batt">2,000 kWh</span></label>
+        <input type="range" id="batt" min="0" max="8000" value="2000" step="250">
+        <div class="unit">Shifts midday solar into the evening; also rides through grid events (UPS synergy).</div></div>
+      <div class="field"><label>Renewable PPA covering residual <span class="val" id="v_ppa">100%</span></label>
+        <input type="range" id="ppa" min="0" max="100" value="100" step="5">
+        <div class="unit">A rural SA solar/wind PPA 20–50 km out — the standard commercial route to 100% renewable operation (brief §6).</div></div>
+      <div class="field"><label>Standby power</label>
+        <div class="seg" id="sbseg">
+          <button data-k="diesel" class="on">Diesel N+1</button>
+          <button data-k="hvo">HVO biodiesel</button>
+          <button data-k="h2">H₂ fuel cells</button>
+          <button data-k="bess">Big BESS + grid</button>
+        </div>
+        <div class="unit" id="sbnote" style="margin-top:8px"></div></div>
+    </div>
+    <div>
+      <div class="out" id="o3"></div>
+      <div class="svgwrap"><h4>Solar array — spatialised<span class="tip" data-tip="450 W panels ≈ 2.2 m² each; installed at ~5.5 m²/kWp including access, tilt spacing and walkways (brief §6: 5–7 m²/kWp). The two dashed lines are the honesty tests: the array that runs the WHOLE facility at solar noon (kWp = facility draw), and the array that nets the annual bill (annual draw ÷ 1.75 MWh/kWp)."></span></h4><svg id="c_solar"></svg></div>
+      <div class="svgwrap"><h4>Battery — containers, footprint, autonomy<span class="tip" data-tip="Megapack-class container ≈ 3.9 MWh in ~12 m² (allow ~30 m² each with clearances, AS/NZS 5139 siting). Autonomy = battery ÷ facility draw. Targets shown: 5 min UPS ride-through (generator start) and a 4 h evening shift."></span></h4><svg id="c_batt"></svg></div>
+      <div class="svgwrap"><h4>Annual electricity balance<span class="tip" data-tip="Total facility draw = IT × PUE × 8,760 h. Solar yield at 1.75 MWh per kWp per year (Adelaide 4.83 kWh/m²/day, brief §6: 1,500 kWp → ~2.6 GWh). Self-consumption ~80% for a constant load, battery lifts it further. PPA covers the residual with market-based renewable supply."></span></h4><svg id="c_power"></svg></div>
+      <details class="why"><summary>Where do these numbers come from?</summary><div class="body">
+        <ul>
+        <li><b>Solar yield</b> — Adelaide's 4.83 kWh/m²/day (brief §6) → ≈1.75 MWh/kWp/yr for a well-oriented array. 1,500 kWp needs ~7,000–8,000 m² of roof + canopy.</li>
+        <li><b>Self-consumption</b> — a data centre is the ideal solar customer: flat, constant load. ~80% of generation is used on site without storage; each MWh of battery shifts ~300 MWh/yr more (daily cycling).</li>
+        <li><b>PPA</b> — SA commercial power ≈42c/kWh (2026) makes PPAs commercially standard, payback 2–4 years for solar. This is how every serious operator (NEXTDC, AirTrunk, IREN) claims 100% renewable.</li>
+        <li><b>Standby</b> — diesel N+1 is the incumbent (48 h fuel, NEXTDC practice); HVO is a drop-in ~90% lifecycle-carbon cut; hydrogen PEM fuel cells are in live pilots (Microsoft ran a 3 MW hydrogen backup in 2022); grid-scale BESS standby works where the grid itself is the redundancy — an argument SA's big batteries make plausible.</li>
+        </ul>
+      </div></details>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ================= STEP 4 ================= -->
+<section class="step" id="s4">
+  <div class="stepnum">Step 4 — What does it drink?</div>
+  <h2>Water: near-zero, then circular</h2>
+  <p class="lede">Water is the quiet scandal of the industry — evaporative cooling drinks megalitres. Closed-loop liquid cooling takes consumption to near zero; then the building can go further and become a water <i>producer</i> for the precinct: rain capture, pool backwash recycling, condensate recovery.</p>
+  <div class="grid">
+    <div class="inputs">
+      <h3>Inputs</h3>
+      <div class="field"><label>Rain catchment roof area <span class="val" id="v_roof">5,000 m²</span></label>
+        <input type="range" id="roof" min="0" max="10000" value="5000" step="250">
+        <div class="unit">Adelaide ~530 mm/yr × 80% capture efficiency.</div></div>
+      <div class="field"><label>Pool backwash recycling</label>
+        <div class="seg" id="bwseg"><button data-k="on" class="on">Treat + reuse</button><button data-k="off">To sewer</button></div>
+        <div class="unit" style="margin-top:8px">Filter backwash is thousands of kL/yr of lightly dirty water — treatable for greenhouse irrigation (brief §9 water cascade).</div></div>
+    </div>
+    <div>
+      <div class="out" id="o4"></div>
+      <div class="svgwrap"><h4>Annual water balance<span class="tip" data-tip="Cooling demand = IT kWh × WUE for the chosen strategy (dossier: evaporative ~2.9, hybrid ~1.2, closed-loop liquid ~0.2–0.4, immersion ~0.05 L/kWh). Supply bars: rain at 530 mm × 80%; backwash recovery ≈ 8 kL per m² of filter area-equivalent, simplified to ~15% of pool circulation make-up."></span></h4><svg id="c_water"></svg></div>
+      <details class="why"><summary>Where do these numbers come from?</summary><div class="body">
+        <ul>
+        <li><b>WUE by strategy</b> — dossier water table: traditional evaporative ~2.9 L/kWh (≈32 ML/yr at this scale — 175–200 households' worth); modern hybrid ~1.2; closed-loop liquid ~0.2–0.4; immersion ≈0.05. The brief recommends closed-loop precisely because the cooling loop and the heat network become the same water.</li>
+        <li><b>Rain</b> — 5,000 m² × 0.53 m × 0.8 ≈ 2.1 ML/yr (brief §7). Store 100–200 kL; use for pool top-up, greenhouse irrigation, cooling make-up.</li>
+        <li><b>Backwash</b> — public pool filters backwash weekly; a multi-pool facility sends 1,500–3,000 kL/yr to sewer unless treated. A small MBR/UF plant (20–40 m²) recovers most of it for irrigation — SA Health requires the treated stream stays out of the pools themselves.</li>
+        <li><b>Recycled mains</b> — SA Water's Class A recycled network covers much of inner Adelaide (brief §7) — the correct source for any evaporative trim cooling, not potable water.</li>
+        </ul>
+      </div></details>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ================= STEP 5 ================= -->
+<section class="step" id="s5">
+  <div class="stepnum">Step 5 — What is it made of?</div>
+  <h2>Structure, DfMA + embodied carbon</h2>
+  <p class="lede">Operational carbon you can fix later; embodied carbon is spent the day you pour it. The structural typology, the M&amp;E fit-out, and whether the building is designed for disassembly set the carbon debt the operation must repay. This is where the ARCH 5004 documentation package earns its keep.</p>
+  <div class="grid">
+    <div class="inputs">
+      <h3>Inputs</h3>
+      <div class="field"><label>Structural typology</label>
+        <div class="seg" id="tyseg" style="flex-direction:column">
+          <button data-k="rc" style="text-align:left">In-situ concrete frame</button>
+          <button data-k="steel" class="on" style="text-align:left">Steel frame + precast (DfMA-ready)</button>
+          <button data-k="hybrid" style="text-align:left">Hybrid: timber civic + steel/concrete hall</button>
+          <button data-k="mod" style="text-align:left">Modular / volumetric DfMA</button>
+        </div>
+        <div class="unit" id="tynote" style="margin-top:8px"></div></div>
+      <div class="field"><label>Design for disassembly<span class="val" id="v_dfd">On</span></label>
+        <div class="seg" id="dfdseg"><button data-k="on" class="on">Bolted + passported</button><button data-k="off">Conventional</button></div>
+        <div class="unit" style="margin-top:8px">Bolted connections, screw piles, demountable facade cassettes, material passports → end-of-life reuse credit ≈ −15% on fabric embodied.</div></div>
+      <div class="field"><label>M&amp;E embodied intensity <span class="val" id="v_mep">1.5 t/kW IT</span></label>
+        <input type="range" id="mep" min="0.8" max="2.5" value="1.5" step="0.1">
+        <div class="unit">Generators, UPS, batteries, chillers, CDUs, switchgear — in data centres the services often out-weigh the structure. Modular skids + refurbished switchgear pull this down.</div></div>
+    </div>
+    <div>
+      <div class="out" id="o5"></div>
+      <div class="svgwrap"><h4>Upfront embodied carbon by component<span class="tip" data-tip="Fabric: GFA 10,000 m² × typology intensity (A1–A5 structure + envelope). M&E: IT kW × intensity slider. PV: 1.2 t CO₂e/kWp (≈30 g/kWh over life). Battery: 0.08 t/kWh. Thermal storage: 0.25 t/m³ (steel vessels), 500 m³ assumed."></span></h4><svg id="c_embodied"></svg></div>
+      <div class="svgwrap"><h4>Typology comparison — fabric intensity<span class="tip" data-tip="Upfront (A1–A5) structure + envelope benchmarks, kg CO₂e/m² GFA: in-situ RC ~650; steel + precast ~550; hybrid with mass-timber civic wings ~450 (timber stores carbon, but the 12 kPa data hall stays steel/concrete); volumetric modular ~480 with high factory efficiency. Ranges from GBCA / NABERS embodied benchmarking and published LCA studies — treat as first-pass targets, verify with a one-click LCA tool."></span></h4><svg id="c_typo"></svg></div>
+      <div class="svgwrap"><h4>Your whole-building upfront carbon vs published benchmarks<span class="tip" data-tip="Your bar = total upfront embodied (fabric + M&E + energy systems) ÷ 10,000 m² GFA. Benchmarks: LETI 2030 design target (~350 kg CO₂e/m², non-domestic); GBCA Green Star −40% pathway (~510 vs AU reference); RIBA 2030 Climate Challenge (<750, offices); Australian office business-as-usual ~830 (published research range 693–832, ScienceDirect 2024). Data-centre M&E makes this building heavier than an office — argue the heat-network offset, don't hide the number."></span></h4><svg id="c_bmark"></svg></div>
+      <details class="why"><summary>Where do these numbers come from — and what is DfMA really?</summary><div class="body">
+        <ul>
+        <li><b>Fabric intensities</b> — Australian upfront-carbon benchmarks (GBCA 'Embodied Carbon' guidance, NABERS embodied benchmarks, published whole-building LCAs): office/civic RC ~600–800 kg CO₂e/m², steel-framed industrial ~450–650, mass timber ~350–500. A Green Star Buildings submission now requires a 20–40% upfront-carbon reduction against a reference building.</li>
+        <li><b>M&amp;E embodied</b> — the data centre peculiarity: gensets, UPS, batteries and cooling plant can exceed the structure's footprint. Industry LCAs put DC M&amp;E at 1–2.5 t CO₂e per kW IT. Design responses: modular plant skids (reused between refresh cycles), refurbished switchgear, right-sizing over provisioning.</li>
+        <li><b>DfMA</b> — Design for Manufacture and Assembly: components engineered off-site (plant skids, precast cassettes, volumetric pods, prefabricated risers), assembled on site with bolted connections. Benefits here: speed (the energy centre can be operational before the bathhouse opens), quality (welds in a factory, not a trench), and <b>disassembly</b> — the building becomes a material bank. Document it with a material passport (e.g. Madaster-style register) in your A2 package.</li>
+        <li><b>Disassembly credit</b> — designing for deconstruction preserves ~10–20% of fabric carbon value at end-of-life (steel reuse vs recycling). Claimed here as −15% on fabric — cite it as scenario, not certainty.</li>
+        <li><b>Benchmark sources to cite in your LCA</b> — NABERS Embodied Carbon rating (AU verification scheme, A1–A5); GBCA Green Star 'Upfront Carbon Emissions' credit (−20%/−40% vs reference); RIBA 2030 Climate Challenge v2 (&lt;750 kg/m² offices by 2030); LETI Embodied Carbon Primer (band targets, ~350 by 2030); University of Melbourne EPiC database (AU material coefficients); ICE database (UK coefficients); Infrastructure Australia embodied-carbon projections; published AU office LCAs (693–832 kg/m² upfront BAU). Tools: eTool, One Click LCA.</li>
+        </ul>
+      </div></details>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ================= STEP 6 ================= -->
+<section class="step" id="s6">
+  <div class="stepnum">Step 6 — Count it honestly</div>
+  <h2>The carbon ledger</h2>
+  <p class="lede">One chart, thirty years. The building starts life in carbon debt (embodied). Each year it earns credits: avoided heating emissions across the precinct, exported renewable generation — minus whatever grid carbon it still imports. Where the line crosses zero, your building becomes <b>carbon positive</b>. Your job is to drag that crossing left.</p>
+  <div class="out" id="o6"></div>
+  <div class="svgwrap"><h4>Cumulative carbon position, years 0–30<span class="tip" data-tip="Year 0: upfront embodied (Step 5). Each year adds: grid imports × 0.22 t/MWh (held flat — conservative; SA trends toward zero) minus avoided heat (delivered MWh × counterfactual factor) minus exported solar × 0.22. Market-based accounting for the PPA. This is a teaching model of GHG Protocol thinking, not a compliance calculation."></span></h4><svg id="c_ledger"></svg></div>
+  <div id="verdict"></div>
+  <details class="why"><summary>How to defend this claim in a jury</summary><div class="body">
+    <ul>
+    <li><b>Scope it</b> — this ledger covers upfront embodied (A1–A5) + operational energy (B6) + avoided emissions. It excludes refurbishment cycles (B4–B5: server refresh every 4–5 years is real — mention it), water treatment chemistry, and residents' consumption.</li>
+    <li><b>Avoided emissions are an argument, not a measurement</b> — they depend entirely on the counterfactual. Show both gas and heat-pump scenarios; claim the range, not the best case.</li>
+    <li><b>The PPA question</b> — market-based accounting lets a PPA zero your residual; location-based accounting doesn't. A rigorous submission shows both numbers. Green Star and Climate Active both accept market-based with additionality tests.</li>
+    <li><b>Carbon positive ≠ offset shopping</b> — this pathway needs zero purchased offsets. That is the point: the building's own infrastructure does the work. If your numbers only close with offsets, redesign.</li>
+    </ul>
+  </div></details>
+</section>
+
+<hr class="divider">
+
+<!-- ================= TYPOLOGY (dark) ================= -->
+<section class="step dark" id="typology" style="padding:0">
+  <div class="inner">
+  <h2>Building typologies for a civic machine</h2>
+  <p class="lede">Three credible parti diagrams for a 10,000 m² programme where one quarter is sealed machine and three quarters are public life. Each solves the same problem — the data hall's mute, heavy, secure box — differently. Steal one, or argue a fourth.</p>
+  <div class="cards">
+    <div class="card"><h3>1 · The Shed + Specials</h3>
+      <p>One big industrial roof (steel, 12–18 m spans) covers the data hall, energy centre and fabrication; the bathhouse, greenhouse and community rooms plug in as 'specials' with their own environmental envelopes. The Victorian pumping-station lineage.</p>
+      <p class="m">+ Cheapest structure per m² · + DfMA-natural · + future flexibility (hall convertible to market/fab use)<br>− Risks reading as a warehouse — the civic edge must work hard</p></div>
+    <div class="card"><h3>2 · The Stacked Hybrid</h3>
+      <p>Data hall and plant form a heavy 2-storey podium (12 kPa floors, thermal mass); the bathhouse sits beside it drawing heat directly; lighter timber community levels stack above the research wing. Section variety becomes the architecture (brief §10).</p>
+      <p class="m">+ Compact footprint frees the courtyard · + gravity-fed thermal cascade · + timber where timber works<br>− Vertical services coordination is the studio's hardest drawing set</p></div>
+    <div class="card"><h3>3 · The Campus of Pavilions</h3>
+      <p>Each programme is its own small building around the courtyard — the data hall a sealed monolith, the greenhouse a glass hall, the bathhouse a masonry bath-block — tied together by the visible district-heating spine as a covered public street.</p>
+      <p class="m">+ Each envelope tuned to its physics · + staged delivery (DfMA package per pavilion) · + legible energy narrative<br>− Most facade, most heat loss, most expensive per m²</p></div>
+  </div>
+  <div class="cards" style="margin-top:14px">
+    <div class="card"><h3>Design for disassembly — the six layers</h3>
+      <p>Brand's shearing layers, applied: <b>Site</b> (forever) · <b>Structure</b> (60–100 yr — bolted steel, screw piles) · <b>Skin</b> (30 yr — demountable cassettes) · <b>Services</b> (7–15 yr — skid-mounted, exposed, replaceable without touching structure) · <b>Space</b> (5 yr) · <b>Servers</b> (4 yr refresh). A data centre's services churn faster than any building type — design the chase, tray and skid geometry for the third refresh, not the first install.</p>
+      <p class="m">Document in A2: connection details drawn for un-bolting, a material passport schedule, and a 2050 'second life' drawing — what is this building when the servers leave?</p></div>
+    <div class="card"><h3>The 12 kPa argument</h3>
+      <p>The data hall floor (12–20 kPa, TIA-942) is 3–5× an office slab. That's embodied carbon — so make it earn a second life: heavy floors accept fabrication, archives, market halls, even pools. Over-capacity is only waste if you never plan to use it.</p>
+      <p class="m">Dossier §5.1 + §7: the adaptive-reuse questions run both directions — your new building should answer them before an engineer asks.</p></div>
+    <div class="card"><h3>Precedent: A New Normal — Finding Infinity</h3>
+      <p>Melbourne consultancy Finding Infinity's 10-point plan to make Melbourne self-sufficient: a <b>$100 billion</b> transformation that pays for itself in under 10 years and creates 80,000+ jobs — sewage plants that double as nightclubs, carparks as community hubs, and a mandate that new buildings be <b>net-positive</b>. Your project is A New Normal at precinct scale: infrastructure as public life, with the business case attached. Study how they draw it: one bold number per idea.</p>
+      <p class="m">findinginfinity.com · exhibited Melbourne Design Week / NGV — the graphic benchmark for making energy legible.</p></div>
+    <div class="card"><h3>Grids that let programmes swap</h3>
+      <p>An 8.4 m grid carries racks (14 × 600 mm), carparking (3 bays), lap lanes (2.5 m × 3+), greenhouse gutters (4.2 m bays) and classrooms. One dumb, generous grid beats four clever ones — it is the cheapest disassembly strategy there is.</p>
+      <p class="m">Test your grid against every programme in the brief before Week 4's sketch plan.</p></div>
+  </div>
+  </div>
+</section>
+
+<!-- ================= SYSTEMS LIBRARY ================= -->
+<section class="step" id="systems">
+  <div class="stepnum">Reference — what things cost and how big they are</div>
+  <h2>Net-zero systems library</h2>
+  <p class="lede">Every system on the pathway, with indicative installed cost (AUD 2026, order-of-magnitude — there is no budget, but you must know what you're asking for), physical size for your plans, and technology readiness. <span class="badge proven">PROVEN</span> = specify it. <span class="badge emerging">EMERGING</span> = specify with a named precedent. <span class="badge rnd">R&amp;D</span> = propose it as the research edge of your graduate project.</p>
+  <div class="cards" id="syslib"></div>
+</section>
+
+<footer>
+  ARCH 5004 / ARCH 6004 studio teaching resource — Southwark Thermal Commons, prepared July 2026. All figures are first-pass planning numbers for design studio use: sizing from the studio technical dossier (NEXTDC/Equinix published specifications, TIA-942, ASHRAE, AFCOM), energy and water from the studio brief's Adelaide modelling, carbon factors from the Australian National Greenhouse Accounts 2025, embodied benchmarks from NABERS Embodied Carbon, GBCA Upfront Carbon Emissions (interim credit), RIBA 2030 Climate Challenge v2, LETI Embodied Carbon Primer, University of Melbourne EPiC database and published Australian office LCAs (693–832 kg CO₂e/m² upfront BAU), costs from published Australian project data — order-of-magnitude only. Narrative precedent: Finding Infinity, "A New Normal" (Melbourne) — findinginfinity.com. Verify everything with consultants; carbon claims in submissions should show scope, counterfactuals and both market- and location-based accounting.
+</footer>
+
+<script>
+/* ============ helpers ============ */
+const $=id=>document.getElementById(id);
+const f0=x=>Math.round(x).toLocaleString();
+const f1=x=>(Math.round(x*10)/10).toLocaleString();
+function stats(el,arr){el.innerHTML=arr.map(([v,l,tip])=>`<div class="stat"><div class="v">${v}</div><div class="l">${l}</div>${tip?`<span class="tip" data-tip="${tip}">i</span>`:""}</div>`).join("");}
+function checks(el,arr){el.innerHTML=arr.map(([s,t])=>`<div class="chk ${s}"><span class="b"></span><div>${t}</div></div>`).join("");}
+const DEFS=`<defs>
+ <linearGradient id="gGreen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3ddb6d"/><stop offset="1" stop-color="#22a04c"/></linearGradient>
+ <linearGradient id="gBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b8ff0"/><stop offset="1" stop-color="#0058b8"/></linearGradient>
+ <linearGradient id="gOrange" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffab2e"/><stop offset="1" stop-color="#e07f00"/></linearGradient>
+ <linearGradient id="gPurple" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c06ef0"/><stop offset="1" stop-color="#8f35c9"/></linearGradient>
+ <linearGradient id="gRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5f52"/><stop offset="1" stop-color="#d92b1f"/></linearGradient>
+ <linearGradient id="gTeal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#46c8dc"/><stop offset="1" stop-color="#1f93a6"/></linearGradient>
+ <linearGradient id="gGrey" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9b9be"/><stop offset="1" stop-color="#8e8e93"/></linearGradient>
+ <linearGradient id="gInk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3a3d"/><stop offset="1" stop-color="#141416"/></linearGradient>
+ <linearGradient id="gFadeG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34c759" stop-opacity=".30"/><stop offset="1" stop-color="#34c759" stop-opacity=".02"/></linearGradient>
+ <linearGradient id="gFadeR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff3b30" stop-opacity=".28"/><stop offset="1" stop-color="#ff3b30" stop-opacity=".02"/></linearGradient>
+</defs>`;
+const GR=c=>({"#34c759":"url(#gGreen)","#0071e3":"url(#gBlue)","#ff9500":"url(#gOrange)","#af52de":"url(#gPurple)","#ff3b30":"url(#gRed)","#30b0c7":"url(#gTeal)","#aeaeb2":"url(#gGrey)","#1d1d1f":"url(#gInk)","#8fc3f5":"url(#gBlue)","#d2b4ea":"url(#gPurple)"}[c]||c);
+function seg(id,cb){const s=$(id);[...s.children].forEach(b=>b.addEventListener("click",()=>{[...s.children].forEach(x=>x.classList.remove("on"));b.classList.add("on");cb(b.dataset.k);}));}
+
+/* ============ state ============ */
+const S={it:1250,kwr:15,dens:2.5,cool:"liquid",use:75,cf:"gas",pv:1500,batt:2000,ppa:100,avail:8000,sb:"diesel",roof:5000,bw:"on",ty:"steel",dfd:"on",mep:1.5};
+
+const COOL={
+  air:{pue:1.45,rec:0.25,wue:1.2,kwr:6,note:"CRAC units + raised floor. The incumbent — and the worst heat-recovery choice: exhaust air at 30–35 °C is barely usable."},
+  hybrid:{pue:1.30,rec:0.55,wue:0.6,kwr:15,note:"Hot-aisle containment + indirect economisers — the current NEXTDC portfolio standard. Half the heat is recoverable via coil retrofit."},
+  liquid:{pue:1.15,rec:0.85,wue:0.25,kwr:80,note:"Cold plates on chips, coolant distribution units, warm-water loops (ASHRAE W3–W5). Heat leaves in water at 35–65 °C — the brief's recommended architecture."},
+  immersion:{pue:1.08,rec:0.95,wue:0.05,kwr:100,note:"Servers submerged in dielectric fluid. Highest recovery, near-zero water, silent — and the strongest civic-display argument: computation you can watch."}
+};
+const CF={gas:0.185,hp:0.055};
+const TY={
+  rc:{f:650,note:"Familiar, mute, heavy. Highest upfront carbon; hardest to disassemble. Justify only where mass does thermal work (bathhouse)."},
+  steel:{f:550,note:"Bolted steel + precast planks: the DfMA workhorse. 12 kPa floors easy; connections un-boltable; the shed + specials natural."},
+  hybrid:{f:450,note:"Mass-timber civic wings (community, research, café) over/beside a steel-concrete hall. Timber stores ~250 kg CO₂e/m³; the sealed hall stays non-combustible (Type A logic, Resource 01)."},
+  mod:{f:480,note:"Volumetric pods + skidded plant, craned in. Fastest; factory quality; the data hall industry already builds this way (modular halls are a product category)."}
+};
+const SB={
+  diesel:{note:"N+1 diesel, 48 h fuel (NEXTDC practice). ~0.7 t CO₂e per test-run hour set — small in the ledger, big in the argument. AS 1940 fuel storage."},
+  hvo:{note:"Hydrotreated vegetable oil — drop-in for diesel, ~90% lifecycle carbon cut, same engines and AS 1940 rooms. Supply contracts exist in AU since 2024."},
+  h2:{note:"PEM fuel cells + H₂ storage. Zero-emission standby; Microsoft ran a 3 MW pilot in 2022. Storage volume ~4× diesel energy-equivalent; DG regs still maturing — flag as the R&D edge."},
+  bess:{note:"Grid + big battery as the redundancy layer — plausible in SA (Torrens Island BESS is next door). Needs a fault-tolerant grid argument the certifier will test."}
+};
+
+/* ============ systems library data ============ */
+const SYS=[
+ ["Rooftop + canopy solar (1,500 kWp)","proven","≈7,000–8,000 m² of panel area across DC roof + carpark canopy","$1.7–2.4M ($1.1–1.6/W installed)","Covers ~20–40% of civic demand; the visible half of the energy story."],
+ ["Renewable PPA (residual supply)","proven","Contract, not plant — rural SA solar/wind 20–50 km out","≈42c/kWh avoided; PPA strike typically 6–9c/kWh under retail","The standard route to 100% renewable operation (brief §6)."],
+ ["Li-ion battery (2 MWh)","proven","~40-ft container footprint, 25–35 m² + clearances","$1.2–1.8M ($600–900/kWh installed)","Evening shift + ride-through; AS/NZS 5139 siting."],
+ ["Vanadium flow battery (2 MWh)","emerging","~2× li-ion footprint, 50–70 m²","$1.6–2.4M ($800–1,200/kWh)","20,000+ cycles, no thermal runaway — pairs with public display of 'liquid electricity'."],
+ ["Direct liquid cooling plant + CDUs","proven","250 m² cooling plant room (brief programme)","$1.9–3.1M ($1,500–2,500/kW IT)","The system that turns cooling into heat supply; PUE ~1.15."],
+ ["Immersion cooling tanks","emerging","~1.4 m² per tank (≈2 racks equiv); no raised floor","$2.5–4.4M ($2,000–3,500/kW IT)","95% heat capture at 50–60 °C; strongest R&D + civic-display case."],
+ ["Plate heat exchangers (2 MW)","proven","In the 400 m² Energy Exchange Hall — each unit ~3 × 1 m","$60–120k ($30–60/kW)","Cheap, visible, essential: the separation point between DC loop and district loop."],
+ ["Water-to-water heat pumps (2 MW th)","proven","100–150 m² plant room; ~40 t plant","$0.8–1.6M ($400–800/kW th)","Boosts 35–50 °C DC return to 60–80 °C for domestic hot water."],
+ ["Thermal storage tanks (2 × 250 m³)","proven","Ø 6.5 × 8 m each — the monumental civic objects of brief §4d","$0.75–1.5M ($1,500–3,000/m³ installed)","Buffers days; lifts heat utilisation to ~75%; AS 1210 pressure equipment."],
+ ["Borehole seasonal storage — BTES (100 × 150 m)","emerging","Field under courtyard/carpark ≈ 2,000–3,000 m²; header pit 20 m²","$0.9–1.8M ($60–120/m drilled) + geotech","Banks summer heat for winter; lifts utilisation toward 90%+. Needs Adelaide geology confirmed (brief §8)."],
+ ["Absorption chillers (1 MW cooling)","proven","60–100 m² plant; cooling water circuit","$0.4–0.7M ($400–700/kW c)","Turns summer surplus heat into cooling for apartments + greenhouse (brief §5f)."],
+ ["Diesel standby N+1 (2 × 1 MVA)","proven","2 × 60–80 m² + day tanks + 48 h bulk fuel (AS 1940)","$1.0–1.8M ($500–900/kW)","The incumbent. Test-runs monthly — audible, visible, arguable."],
+ ["HVO renewable diesel conversion","proven","Same rooms, same engines — a fuel contract","+10–40% fuel cost over diesel","~90% lifecycle carbon cut on standby; the easy win."],
+ ["Hydrogen PEM fuel-cell standby (1–3 MW)","rnd","Fuel cells 100–150 m²; H₂ storage ~4× diesel volume-equivalent","$3–6k/kW today; falling","Zero-emission standby; Microsoft 3 MW pilot (2022). Regulatory pathway in SA via OTR — genuine graduate-project territory."],
+ ["Rainwater harvest (5,000 m² → ~2 ML/yr)","proven","150–200 kL tanks; 30–50 m² plant + filtration","$250–500k","Pool top-up, greenhouse irrigation, cooling make-up (brief §7)."],
+ ["Backwash / greywater recycling (UF-MBR)","emerging","20–40 m² beside pool plant","$150–400k","Recovers 1,500–3,000 kL/yr from filter backwash for irrigation; SA Health keeps it out of the pools."],
+ ["Precinct blackwater MBR (water positive)","rnd","150–300 m², odour-controlled, below podium","$0.5–1.5M+","Full water-cycle closure for 1,300 homes — precedents exist (Sydney's Central Park). The 'water positive' stretch goal."],
+ ["Digital twin + metering (J9++)","proven","Control room in Energy Hub (brief §4e); sensors throughout","$200–600k software + instrumentation","Makes the whole ledger public, live — governance made visible; NCC J9 metering is the legal floor."],
+ ["Modular plant skids (DfMA)","proven","Factory-built pump/HX/control skids, craned in","≈cost-neutral vs in-situ; 30–50% faster","Services designed for the third refresh: unbolt, re-skid, reuse. Material passport entries."],
+ ["Mass-timber civic structure","proven","Community/research wings; not the 12 kPa hall","≈+5–15% structure cost; −150–250 kg CO₂e/m²","Carbon storage + warmth where people are; steel/concrete where servers are."],
+];
+
+/* ============ step 1 ============ */
+function s1(){
+  const racks=Math.ceil(S.it/S.kwr), white=S.it/S.dens, grey=white;
+  stats($("o1"),[
+    [f0(racks),"racks","IT ÷ kW/rack. A1 Adelaide runs 1,470 racks at 3.4 kW average."],
+    [f0(white)+" m²","white space","IT ÷ kW/m². Cross-check: "+f0(racks*3)+" m² at ~3 m²/rack with aisles."],
+    [f0(grey)+" m²","grey space (1:1)","UPS, batteries, switchrooms, cooling plant, security, dock — dossier §5."],
+    [f0(S.it)+" kW","continuous heat","Every watt of IT power becomes heat — the thermal engine of the precinct."],
+  ]);
+  const bench=[["A1 Adelaide",1.71,"#aeaeb2"],["C1 Canberra",1.95,"#aeaeb2"],["M1 Melbourne",2.50,"#aeaeb2"],["S2 Sydney",3.45,"#aeaeb2"],["P1 Perth",4.33,"#aeaeb2"],["Your design",S.dens,"#34c759"]];
+  const svg=$("c_bench"),W=800,bh=26,g=8;
+  svg.setAttribute("viewBox",`0 0 ${W} ${bench.length*(bh+g)+8}`);
+  const mx=4.6;
+  svg.innerHTML=DEFS+bench.map((r,i)=>{
+    const y=i*(bh+g)+4,bw=(W-260)*r[1]/mx;
+    return `<text x="130" y="${y+bh/2+4}" text-anchor="end" font-size="11.5" font-weight="${r[2]==="#34c759"?"800":"600"}">${r[0]}</text>
+      <rect x="140" y="${y}" width="${bw}" height="${bh}" rx="7" fill="${GR(r[2])}"><title>${r[0]}: ${r[1]} kW/m²</title></rect>
+      <text x="${148+bw}" y="${y+bh/2+4}" font-size="11.5" font-weight="700" fill="#1d1d1f">${r[1]} kW/m²</text>`;
+  }).join("");
+}
+
+/* ============ step 2 ============ */
+function s2(){
+  const c=COOL[S.cool];
+  $("coolnote").innerHTML=c.note+` <b>Sets:</b> PUE ${c.pue} · ${Math.round(c.rec*100)}% heat recoverable · WUE ${c.wue} L/kWh · ~${c.kwr} kW/rack.`;
+  $("v_cf").textContent=S.cf==="gas"?"gas":"heat pumps";
+  const heatGen=S.it*8.76; // MWh th potential = IT energy
+  const recovered=heatGen*c.rec;
+  const used=Math.min(recovered*(S.use/100),9100);
+  const rejected=heatGen-used;
+  const avoided=used*CF[S.cf];
+  stats($("o2"),[
+    [f0(heatGen)+" MWh","heat generated / yr","IT kW × 8,760 h — computation is a resistive heater with a career."],
+    [f0(recovered)+" MWh","recoverable ("+Math.round(c.rec*100)+"%)","Strategy-dependent capture share — see 'where from' below."],
+    [f0(used)+" MWh","delivered to precinct","× utilisation "+S.use+"%, capped at the precinct's ~9,100 MWh/yr demand (brief §5d)."],
+    [f0(avoided)+" t CO₂e/yr","avoided emissions","Delivered heat × "+CF[S.cf]+" t/MWh ("+(S.cf==="gas"?"gas boiler, NGA Factors":"heat pump COP 4 on SA grid")+")."],
+  ]);
+  /* cascade */
+  const svg=$("c_cascade"),W=820,H=240;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const scale=120/heatGen;
+  const bands=[["Bathhouse 28–40 °C",Math.min(used*.45,4100),"#30b0c7"],["Homes 60–65 °C (HP boost)",Math.min(used*.45,4100),"#ff9500"],["Greenhouse 20–28 °C",used*.10,"#34c759"]];
+  let y=40;
+  let out=`<rect x="20" y="40" width="150" height="${heatGen*scale}" rx="10" fill="url(#gPurple)"/>
+    <text x="95" y="${40+heatGen*scale/2}" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">SERVERS</text>
+    <text x="95" y="${40+heatGen*scale/2+14}" text-anchor="middle" font-size="9.5" fill="#fff">${f0(heatGen)} MWh · 35–65 °C</text>
+    <rect x="300" y="40" width="130" height="${used*scale}" rx="10" fill="url(#gInk)"/>
+    <text x="365" y="${40+used*scale/2}" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">HX + STORAGE</text>
+    <text x="365" y="${40+used*scale/2+13}" text-anchor="middle" font-size="9" fill="#fff">${f0(used)} MWh used</text>
+    <path d="M 170 ${40} C 240 ${40}, 240 ${40}, 300 ${40} L 300 ${40+used*scale} C 240 ${40+used*scale}, 240 ${40+used*scale}, 170 ${40+used*scale} Z" fill="rgba(175,82,222,.25)"/>
+    <path d="M 170 ${40+used*scale} L 300 ${40+heatGen*scale} L 170 ${40+heatGen*scale} Z" fill="rgba(174,174,178,.3)"/>
+    <text x="235" y="${40+heatGen*scale+16}" font-size="9.5" fill="#86868b" text-anchor="middle">rejected / unrecovered ${f0(rejected)} MWh → absorption chilling + BTES reduce this</text>`;
+  let by=40;
+  bands.forEach(b=>{
+    const h=Math.max(10,b[1]*scale);
+    out+=`<rect x="560" y="${by}" width="230" height="${h}" rx="8" fill="${GR(b[2])}"><title>${b[0]} — ${f0(b[1])} MWh/yr</title></rect>
+      <text x="675" y="${by+h/2+4}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#fff">${b[0]} · ${f0(b[1])} MWh</text>
+      <path d="M 430 ${40} L 560 ${by} L 560 ${by+h} L 430 ${40+used*scale} Z" fill="${b[2]}" opacity=".16"/>`;
+    by+=h+8;
+  });
+  svg.innerHTML=DEFS+out;
+}
+
+/* ============ step 3 ============ */
+function s3(){
+  const c=COOL[S.cool];
+  const draw=S.it*c.pue*8.76; // MWh/yr
+  const gen=S.pv*1.75;
+  const selfBase=gen*0.80;
+  const battShift=Math.min(S.batt*0.9*330/1000, gen*0.18);
+  const self=Math.min(draw,selfBase+battShift);
+  const exported=Math.max(0,gen-self);
+  const residual=Math.max(0,draw-self);
+  const ppaMWh=residual*S.ppa/100;
+  const gridMWh=residual-ppaMWh;
+  $("sbnote").innerHTML=SB[S.sb].note;
+  stats($("o3"),[
+    [f1(draw/1000)+" GWh","total draw / yr","IT × PUE "+c.pue+" × 8,760 h. Brief: 9–13 GWh for the full DC."],
+    [f1(gen/1000)+" GWh","solar generation","kWp × 1.75 MWh/kWp (Adelaide 4.83 kWh/m²/day)."],
+    [Math.round(self/draw*100)+"%","self-supplied on site","Solar self-consumption + battery shifting ÷ total draw."],
+    [f1(gridMWh/1000)+" GWh","unmatched grid residual","After PPA "+S.ppa+"% — this is the only line still carrying grid carbon (0.22 t/MWh)."],
+  ]);
+  const svg=$("c_power"),W=820;
+  svg.setAttribute("viewBox",`0 0 ${W} 150`);
+  const T=Math.max(draw,gen);
+  const segs=[["Solar self-use",self,"#34c759"],["PPA renewable",ppaMWh,"#0071e3"],["Grid residual",gridMWh,"#ff3b30"]];
+  let x=20,out="";
+  segs.forEach(s=>{
+    const w=(W-40)*s[1]/T;
+    out+=`<rect x="${x}" y="46" width="${Math.max(0,w)}" height="38" rx="5" fill="${GR(s[2])}"><title>${s[0]}: ${f0(s[1])} MWh/yr</title></rect>`;
+    if(w>80)out+=`<text x="${x+w/2}" y="69" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">${s[0]} ${f0(s[1])} MWh</text>`;
+    x+=w;
+  });
+  out+=`<rect x="20" y="46" width="${(W-40)*draw/T}" height="38" fill="none" stroke="#1d1d1f" stroke-width="1.5"/>
+    <text x="20" y="36" font-size="11" font-weight="700" fill="#1d1d1f">Facility draw ${f0(draw)} MWh/yr</text>`;
+  if(exported>0){
+    const ex=(W-40)*exported/T;
+    out+=`<rect x="20" y="100" width="${ex}" height="24" rx="5" fill="url(#gGreen)" opacity=".55"/><text x="${28+ex}" y="116" font-size="10.5" fill="#34c759" font-weight="700">+ ${f0(exported)} MWh exported to precinct/grid</text>`;
+  }
+  svg.innerHTML=DEFS+out;
+  solarBatt(draw,gen);
+}
+
+/* ---------- solar spatialiser + battery sizing ---------- */
+function solarBatt(draw){
+  const avail=S.avail||8000;
+  const M2KWP=5.5, PANEL=0.45, PAREA=2.2;
+  const panels=Math.ceil(S.pv/PANEL);
+  const area=S.pv*M2KWP;
+  const noonKWp=S.it*COOL[S.cool].pue;         /* run the whole building at solar noon */
+  const netKWp=draw/1.75;                       /* net the annual bill */
+  const sv=$("c_solar"),W=840,H=330,pad=30;
+  /* draw available area as a rectangle ~roof proportions 2:1 */
+  const availW=W-2*pad, ratio=2;
+  const availH=200;
+  const sc2=avail/(availW*availH);              /* m² per px² */
+  const fillFrac=Math.min(1,area/avail);
+  const noonFrac=noonKWp*M2KWP/avail, netFrac=netKWp*M2KWP/avail;
+  sv.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  let out=`<rect x="${pad}" y="26" width="${availW}" height="${availH}" rx="8" fill="#fff" stroke="#1d1d1f" stroke-width="1.6"/>`;
+  /* panel grid within filled fraction */
+  const fw=availW*fillFrac;
+  out+=`<rect x="${pad}" y="26" width="${fw}" height="${availH}" rx="8" fill="url(#gBlue)" opacity=".9"><title>${f0(panels)} × 450 W panels · ${f0(area)} m²</title></rect>`;
+  for(let x=pad+9;x<pad+fw-6;x+=16)out+=`<line x1="${x}" y1="30" x2="${x}" y2="${22+availH}" stroke="rgba(255,255,255,.35)" stroke-width="1"/>`;
+  for(let y=26+12;y<26+availH-4;y+=14)out+=`<line x1="${pad+2}" y1="${y}" x2="${pad+fw-2}" y2="${y}" stroke="rgba(255,255,255,.3)" stroke-width="1"/>`;
+  /* markers */
+  [[noonFrac,"#ff3b30","runs the building at noon: "+f0(noonKWp)+" kWp"],[netFrac,"#34c759","nets the annual bill: "+f0(netKWp)+" kWp"]].forEach(([f,c,l],i)=>{
+    const x=pad+availW*Math.min(f,1.04);
+    out+=`<line x1="${x}" y1="16" x2="${x}" y2="${availH+36}" stroke="${c}" stroke-width="2.2" stroke-dasharray="6 4"/>
+      <text x="${Math.min(x+6,W-250)}" y="${availH+52+i*15}" font-size="10.5" font-weight="800" fill="${c}">${l}${f>1?" — EXCEEDS the roof: canopy or PPA required":""}</text>`;
+  });
+  out+=`<text x="${pad}" y="18" font-size="11" font-weight="700" fill="#1d1d1f">Available roof + canopy: ${f0(avail)} m²</text>
+    <text x="${pad+fw+8}" y="${26+availH/2}" font-size="11" font-weight="800" fill="${fillFrac>=1?"#c22e26":"#0058b8"}">${f0(panels)} panels · ${f0(area)} m² (${f0(fillFrac*100)}%)</text>`;
+  sv.innerHTML=DEFS+out;
+  /* battery */
+  const bt=$("c_batt"),BW=840,BH=210;
+  const containers=Math.max(0,Math.ceil(S.batt/3900));
+  const foot=containers*30;
+  const autonomyMin=S.batt/(S.it*COOL[S.cool].pue)*60;
+  bt.setAttribute("viewBox",`0 0 ${BW} ${BH}`);
+  let ob="";
+  const show=Math.min(containers,8);
+  for(let i=0;i<show;i++){
+    ob+=`<rect x="${30+i*92}" y="26" width="80" height="46" rx="8" fill="url(#gGreen)"><title>Megapack-class · 3.9 MWh · ~30 m² sited</title></rect>
+      <text x="${70+i*92}" y="54" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">3.9 MWh</text>`;
+  }
+  if(containers>8)ob+=`<text x="${30+8*92+6}" y="54" font-size="12" font-weight="800" fill="#1d1d1f">+${containers-8}</text>`;
+  if(containers===0)ob+=`<text x="30" y="54" font-size="12" fill="#86868b">No battery — evening solar shift and ride-through fall to the grid + generators.</text>`;
+  /* autonomy bar vs targets */
+  const amax=Math.max(autonomyMin,260);
+  const ax=m=>30+(BW-70)*m/amax;
+  ob+=`<rect x="30" y="110" width="${BW-70}" height="26" rx="7" fill="#ececee"/>
+    <rect x="30" y="110" width="${Math.max(2,ax(autonomyMin)-30)}" height="26" rx="7" fill="url(#gTeal)"><title>${f0(autonomyMin)} minutes at full facility load</title></rect>
+    <text x="${Math.min(ax(autonomyMin)+8,BW-160)}" y="128" font-size="11.5" font-weight="800" fill="#1d1d1f">${autonomyMin>=120?f1(autonomyMin/60)+" h":f0(autonomyMin)+" min"} at full load</text>`;
+  [[5,"UPS ride-through"],[240,"4 h evening shift"]].forEach(([m,l])=>{
+    ob+=`<line x1="${ax(m)}" y1="100" x2="${ax(m)}" y2="146" stroke="#1d1d1f" stroke-width="1.6" stroke-dasharray="4 3"/><text x="${ax(m)}" y="162" text-anchor="middle" font-size="9.5" font-weight="700" fill="#57575b">${l}</text>`;
+  });
+  ob+=`<text x="30" y="16" font-size="11" font-weight="700" fill="#1d1d1f">${containers} container${containers===1?"":"s"} · ≈${f0(foot)} m² sited (AS/NZS 5139) · $${f1(S.batt*0.75/1000)}M @ $750/kWh</text>
+    <text x="30" y="${BH-14}" font-size="9.5" fill="#86868b">Grid-interactive batteries can double as the UPS ride-through — one asset, two duties: the SA big-battery argument at building scale.</text>`;
+  bt.innerHTML=DEFS+ob;
+}
+
+/* ============ step 4 ============ */
+function s4(){
+  const c=COOL[S.cool];
+  const coolW=S.it*8760*c.wue/1000; // kL
+  const rain=S.roof*0.53*0.8; // kL
+  const bwRec=S.bw==="on"?2200:0;
+  stats($("o4"),[
+    [f0(coolW)+" kL/yr","cooling water demand","IT kWh × WUE "+c.wue+" L/kWh. Evaporative at this scale would drink ~32,000 kL — 175–200 households."],
+    [f0(rain)+" kL/yr","rain captured","Roof "+f0(S.roof)+" m² × 530 mm × 80%. Store 150–200 kL."],
+    [f0(bwRec)+" kL/yr","backwash recovered",S.bw==="on"?"UF/MBR treatment → greenhouse irrigation. Never back to the pools (SA Health).":"Currently to sewer — toggle recycling on to claim it."],
+    [(rain+bwRec-coolW>0?"+":"")+f0(rain+bwRec-coolW)+" kL/yr","net water position","Capture minus cooling demand. Positive = the building waters the precinct."],
+  ]);
+  const svg=$("c_water"),W=820;
+  const rows=[["Cooling demand",coolW,"#ff3b30"],["Rain capture",rain,"#30b0c7"],["Backwash recovery",bwRec,"#34c759"]];
+  const mx=Math.max(...rows.map(r=>r[1]),1);
+  svg.setAttribute("viewBox",`0 0 ${W} ${rows.length*34+6}`);
+  svg.innerHTML=DEFS+rows.map((r,i)=>{
+    const y=i*34+4,bw=(W-300)*r[1]/mx;
+    return `<text x="160" y="${y+17}" text-anchor="end" font-size="11.5" font-weight="600">${r[0]}</text>
+      <rect x="170" y="${y}" width="${Math.max(2,bw)}" height="24" rx="7" fill="${GR(r[2])}"><title>${r[0]}: ${f0(r[1])} kL/yr</title></rect>
+      <text x="${178+bw}" y="${y+17}" font-size="11.5" font-weight="700">${f0(r[1])} kL/yr</text>`;
+  }).join("");
+}
+
+/* ============ step 5 ============ */
+function s5(){
+  const t=TY[S.ty];
+  $("tynote").textContent=t.note;
+  $("v_dfd").textContent=S.dfd==="on"?"On":"Off";
+  const GFA=10000;
+  const fabric=GFA*t.f/1000*(S.dfd==="on"?0.85:1);
+  const mepT=S.it*S.mep;
+  const pvT=S.pv*1.2;
+  const battT=S.batt*0.08;
+  const tankT=500*0.25;
+  const total=fabric+mepT+pvT+battT+tankT;
+  stats($("o5"),[
+    [f0(fabric)+" t","fabric (A1–A5)","10,000 m² × "+t.f+" kg/m²"+(S.dfd==="on"?" × 0.85 disassembly credit":"")+"."],
+    [f0(mepT)+" t","M&E fit-out","IT "+f0(S.it)+" kW × "+S.mep+" t/kW — often the biggest single line in a DC."],
+    [f0(pvT+battT+tankT)+" t","energy systems","PV "+f0(pvT)+" + battery "+f0(battT)+" + tanks "+f0(tankT)+" t."],
+    [f0(total)+" t CO₂e","total upfront debt","The number the ledger must repay. Green Star wants −20–40% vs reference."],
+  ]);
+  stackedBar($("c_embodied"),[["Fabric",fabric,"#af52de"],["M&E",mepT,"#0071e3"],["PV",pvT,"#34c759"],["Battery",battT,"#ff9500"],["Tanks",tankT,"#30b0c7"]]);
+  const svg=$("c_typo"),W=800;
+  const rows=Object.entries(TY).map(([k,v])=>[{rc:"In-situ concrete",steel:"Steel + precast",hybrid:"Hybrid timber",mod:"Modular DfMA"}[k],v.f,k===S.ty?"#34c759":"#aeaeb2"]);
+  const mx=700;
+  svg.setAttribute("viewBox",`0 0 ${W} ${rows.length*34+6}`);
+  svg.innerHTML=DEFS+rows.map((r,i)=>{
+    const y=i*34+4,bw=(W-300)*r[1]/mx;
+    return `<text x="150" y="${y+17}" text-anchor="end" font-size="11.5" font-weight="${r[2]==="#34c759"?"800":"600"}">${r[0]}</text>
+      <rect x="160" y="${y}" width="${bw}" height="24" rx="7" fill="${GR(r[2])}"><title>${r[0]}: ${r[1]} kg CO₂e/m²</title></rect>
+      <text x="${168+bw}" y="${y+17}" font-size="11.5" font-weight="700">${r[1]} kg CO₂e/m²</text>`;
+  }).join("");
+  /* benchmark comparison */
+  const per=total/GFA*1000; /* kg/m² whole-building upfront */
+  const bm=[["LETI 2030 design target",350,"#34c759"],["GBCA Green Star −40% path",510,"#0071e3"],["RIBA 2030 (offices)",750,"#ff9500"],["AU office BAU (research 2024)",830,"#aeaeb2"],["Your design (incl. DC M&E)",Math.round(per),"#af52de"]];
+  const bs=$("c_bmark"),BW2=800,rh2=30,gp2=9;
+  bs.setAttribute("viewBox",`0 0 ${BW2} ${bm.length*(rh2+gp2)+8}`);
+  const mx2=Math.max(900,per*1.1);
+  bs.innerHTML=DEFS+bm.map((r,i)=>{
+    const y2=i*(rh2+gp2)+4,bw2=(BW2-330)*r[1]/mx2;
+    const you=r[0].startsWith("Your");
+    return `<text x="215" y="${y2+rh2/2+4}" text-anchor="end" font-size="11" font-weight="${you?"800":"600"}">${r[0]}</text>
+      <rect x="225" y="${y2}" width="${Math.max(3,bw2)}" height="${rh2}" rx="8" fill="${GR(r[2])}" ${you?'stroke="#1d1d1f" stroke-width="1.5"':''}><title>${r[0]}: ${f0(r[1])} kg CO₂e/m² upfront (A1–A5)</title></rect>
+      <text x="${233+bw2}" y="${y2+rh2/2+4}" font-size="11" font-weight="700">${f0(r[1])} kg/m²</text>`;
+  }).join("");
+  return total;
+}
+function stackedBar(svg,segs){
+  const W=820,T=segs.reduce((a,s)=>a+s[1],0)||1;
+  svg.setAttribute("viewBox",`0 0 ${W} 108`);
+  let x=20,out="",lx=20;
+  segs.forEach(s=>{
+    const w=(W-40)*s[1]/T;
+    out+=`<rect x="${x}" y="40" width="${Math.max(1,w)}" height="36" rx="5" fill="${GR(s[2])}"><title>${s[0]}: ${f0(s[1])} t CO₂e</title></rect>`;
+    if(w>70)out+=`<text x="${x+w/2}" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#fff">${s[0]}</text>`;
+    x+=w;
+  });
+  segs.forEach(s=>{out+=`<circle cx="${lx+5}" cy="16" r="5" fill="${s[2]}"/><text x="${lx+14}" y="20" font-size="10.5" fill="#86868b">${s[0]} ${f0(s[1])} t</text>`;lx+=14+(s[0].length*6.2)+f0(s[1]).length*6.2+34;});
+  svg.innerHTML=DEFS+out;
+}
+
+/* ============ step 6 ============ */
+function s6(){
+  const c=COOL[S.cool];
+  const embodied=s5();
+  const draw=S.it*c.pue*8.76;
+  const gen=S.pv*1.75, self=Math.min(draw,gen*0.80+Math.min(S.batt*0.9*330/1000,gen*0.18));
+  const exported=Math.max(0,gen-self);
+  const residual=Math.max(0,draw-self), gridMWh=residual*(1-S.ppa/100);
+  const used=Math.min(S.it*8.76*c.rec*(S.use/100),9100);
+  const avoided=used*CF[S.cf];
+  const gridEmis=gridMWh*0.22, expCred=exported*0.22;
+  const annualNet=gridEmis-avoided-expCred;
+  let cum=embodied, series=[[0,embodied]], cross=null;
+  for(let y=1;y<=30;y++){cum+=annualNet;series.push([y,cum]);if(cross===null&&cum<=0)cross=y;}
+  stats($("o6"),[
+    [f0(embodied)+" t","upfront debt (yr 0)","Step 5 total embodied."],
+    [f0(gridEmis)+" t/yr","operational emissions","Grid residual "+f0(gridMWh)+" MWh × 0.22 (held flat — conservative; SA grid is decarbonising)."],
+    [f0(avoided+expCred)+" t/yr","credits earned","Avoided heat "+f0(avoided)+" + exported renewables "+f0(expCred)+" t."],
+    [annualNet<0?f0(-annualNet)+" t/yr":"—","net annual repayment",annualNet<0?"The building runs carbon-negative in operation.":"Operation is still net-positive-emissions — pull the levers upstream."],
+  ]);
+  const svg=$("c_ledger"),W=840,H=300,p=46;
+  const ys=series.map(s=>s[1]);
+  const ymax=Math.max(...ys)*1.08, ymin=Math.min(0,Math.min(...ys)*1.15);
+  const sx=(W-2*p)/30, sy=(H-2*p)/(ymax-ymin||1);
+  const Y=v=>H-p-(v-ymin)*sy;
+  let path=series.map((s,i)=>`${i?"L":"M"} ${p+s[0]*sx} ${Y(s[1])}`).join(" ");
+  const area=path+` L ${p+30*sx} ${Y(0)} L ${p} ${Y(0)} Z`;
+  let out=`<line x1="${p}" y1="${Y(0)}" x2="${W-p}" y2="${Y(0)}" stroke="#1d1d1f" stroke-width="1.4"/>
+    <text x="${W-p}" y="${Y(0)-6}" text-anchor="end" font-size="10.5" font-weight="700" fill="#1d1d1f">carbon neutral</text>
+    <rect x="${p}" y="${Y(0)}" width="${W-2*p}" height="${H-p-Y(0)}" fill="rgba(52,199,89,.08)"/>
+    <path d="${area}" fill="${annualNet<0?"url(#gFadeG)":"url(#gFadeR)"}"/>
+    <path d="${path}" fill="none" stroke="${annualNet<0?"#34c759":"#ff3b30"}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  for(let y=0;y<=30;y+=5)out+=`<text x="${p+y*sx}" y="${H-p+18}" text-anchor="middle" font-size="10" fill="#86868b">yr ${y}</text>`;
+  [ymax,embodied,0].forEach(v=>{out+=`<text x="${p-8}" y="${Y(v)+4}" text-anchor="end" font-size="10" fill="#86868b">${f0(v)} t</text>`;});
+  if(cross)out+=`<circle cx="${p+cross*sx}" cy="${Y(0)}" r="7" fill="#34c759"/><text x="${p+cross*sx}" y="${Y(0)+26}" text-anchor="middle" font-size="11.5" font-weight="800" fill="#34c759">CARBON POSITIVE — YEAR ${cross}</text>`;
+  svg.innerHTML=DEFS+out;
+  const v=$("verdict");
+  if(annualNet>=0){
+    v.innerHTML=`<div class="verdict" style="background:#ff3b30"><h3>Not yet a net-zero building.</h3><p>The operation still emits ${f0(annualNet)} t/yr net. Levers, in order of power: raise the PPA to 100% · switch cooling toward liquid/immersion (more recoverable heat, lower PUE) · raise heat utilisation with storage/BTES · add solar. Embodied choices can't save an operation that leaks.</p></div>`;
+  } else if(cross&&cross<=12){
+    v.innerHTML=`<div class="verdict" style="background:#34c759"><h3>Carbon positive from year ${cross}.</h3><p>The building repays its ${f0(embodied)} t construction debt in ${cross} years and then removes ${f0(-annualNet)} t/yr net — every year, for the life of the precinct, without purchasing an offset. That sentence belongs on the first page of your A1 submission; the rest of the toolkit is its evidence.</p></div>`;
+  } else {
+    v.innerHTML=`<div class="verdict" style="background:#ff9500"><h3>Net zero — but the payback is slow${cross?` (year ${cross})`:""}.</h3><p>Operation is carbon-negative, but the embodied debt takes ${cross?cross+" years":"over 30 years"} to repay. Attack Step 5: lighter typology, DfMA + disassembly credit, leaner M&E, and check whether every square metre of the 10,000 needs conditioning at all.</p></div>`;
+  }
+}
+
+/* ============ library ============ */
+$("syslib").innerHTML=SYS.map(s=>`<div class="card"><h3>${s[0]} <span class="badge ${s[1]}">${s[1]==="rnd"?"R&D":s[1].toUpperCase()}</span></h3>
+  <p>${s[4]}</p><p class="m"><b>Size:</b> ${s[2]}<br><b>Indicative cost:</b> ${s[3]}</p></div>`).join("");
+
+/* ============ step 0: people -> kilowatts ============ */
+const D0={pop:3120,gb:500,svc:3,ai:10};
+function d0PerW(){
+  const stor=D0.gb*3/1e6/5*7600;     /* GB×3 copies → PB ÷ 5 PB/rack × 7.6 kW (AFCOM avg) → W */
+  const aiW=D0.ai*1/24;              /* ~1 Wh per query */
+  return {stor, svc:D0.svc, ai:aiW, tot:stor+D0.svc+aiW};
+}
+function d0Calc(){
+  const w=d0PerW();
+  const commKW=D0.pop*w.tot/1000;
+  const served=Math.round(S.it*1000/w.tot);
+  const pct=commKW/S.it*100;
+  stats($("o0"),[
+    [f1(w.tot)+" W","per person, continuous","Storage "+f1(w.stor)+" W (500 GB × 3 on 5 PB/7.6 kW racks) + always-on services "+f1(w.svc)+" W + AI "+f1(w.ai)+" W. ≈ "+f0(w.tot*8.76)+" kWh/yr each — a fridge's worth of invisible infrastructure."],
+    [f1(commKW)+" kW","this community's whole digital life",f0(D0.pop)+" people × "+f1(w.tot)+" W. Compare: one household kettle is 2.2 kW."],
+    [f1(pct)+"%","of your Step 1 data centre","The brief's machine is "+f0(100/Math.max(pct,0.01))+"× this community's own demand."],
+    [f0(served),"people your "+f0(S.it)+" kW actually serves","IT load ÷ per-person draw — the honest catchment: a regional facility, hosted by a neighbourhood, paying rent in heat."],
+  ]);
+  checks($("c0"),[
+    [pct<10?"info":"ok",pct<10?`Southwark alone cannot justify this machine — and that's the point. The civic argument isn't "our data": it's hosting <b>${f0(served).toLocaleString?f0(served):f0(served)}</b> people's digital lives and keeping the waste heat home.`:`At this population the community demand approaches the machine — a genuinely local utility.`],
+    ["info",`Per-person figures are DC-side planning estimates assembled from published platform energy ÷ user counts, IEA streaming analysis and AFCOM rack averages — attribute them, don't gospel them. The Data Footprint explorer models the same question workload-by-workload.`],
+  ]);
+}
+["d0pop","d0gb","d0svc","d0ai"].forEach(id=>{
+  $(id).addEventListener("input",()=>{
+    D0[id.slice(2)]=+$(id).value;
+    $("v_"+id).textContent=(+$(id).value).toLocaleString()+({d0pop:"",d0gb:" GB",d0svc:" W",d0ai:""}[id]);
+    d0Calc();
+  });
+});
+$("d0btn").addEventListener("click",()=>{
+  const w=d0PerW();
+  const kw=Math.max(250,Math.round(D0.pop*w.tot/1000/50)*50);
+  $("it").value=Math.min(3000,kw); S.it=+$("it").value;
+  $("v_it").textContent=S.it.toLocaleString()+" kW";
+  all();
+  const s1el=document.getElementById("s1"); if(s1el.scrollIntoView)s1el.scrollIntoView({behavior:"smooth"});
+});
+
+/* ============ step 1b: aisles (racks follow Step 1) ============ */
+const AI={row:12,cold:1.2,hot:1.0,per:1.5};
+function aiCalc(){
+  const n=Math.max(4,2*Math.round(Math.ceil(S.it/S.kwr)/2));
+  $("v_ain").textContent=f0(n);
+  const w=d0PerW();
+  $("ai_src").innerHTML=`${f0(S.it)} kW ÷ ${S.kwr} kW/rack (Step 1) — serving ≈ <b>${f0(S.it*1000/w.tot)}</b> people's digital lives.`;
+  const per=AI.row, cw=AI.cold, hw=AI.hot, pm=AI.per;
+  const rows=Math.ceil(n/per), RD=1.2, RW=0.6;
+  const aisles=rows-1, nCold=Math.ceil(aisles/2), nHot=Math.floor(aisles/2);
+  const hallL=2*pm+rows*RD+nCold*cw+nHot*hw;
+  const hallW=2*pm+per*RW;
+  const area=hallL*hallW;
+  stats($("oai"),[
+    [rows+" rows","of "+per+" racks ("+f0(n)+" total)","Racks ÷ racks-per-row, rounded up."],
+    [f1(hallW)+" × "+f1(hallL)+" m","hall footprint","Perimeter + rows × 1.2 m rack depth + alternating aisles."],
+    [f0(area)+" m²","hall area — "+f1(area/n)+" m²/rack","Typical 2.2–3.5 m²/rack; A1 Adelaide runs 1.99 across its whole floor. Cross-check Step 1's white space."],
+  ]);
+  checks($("cai"),[
+    [cw>=1.2?"ok":"bad",`Cold aisle <b>${cw} m</b> — min 1.2 m (two 600 mm tiles); 1.8 m if front-serviced.${cw<1.2?" <b>Too narrow.</b>":""}`],
+    [hw>=0.9?"ok":"bad",`Hot aisle <b>${hw} m</b> — min 0.9 m; 1.2 m preferred with containment doors.${hw<0.9?" <b>Too narrow.</b>":""}`],
+    [per<=12?"ok":"warn",`Rows of <b>${per}</b> ${per<=12?"— under the ~12-rack egress guideline.":"— over 12 racks / 7.2 m: add a mid-row cross aisle (≥1 m)."}`],
+    ["info",`Containment interacts with sprinkler/gaseous-suppression coverage — coordinate ceiling zones early. TIA-942 is practice, not law: the NCC + AS 1170 govern the building (Verify Register, toolkit page).`],
+  ]);
+  const svg=$("ai_svg");
+  const pad=34, maxW=820, maxH=440;
+  const s=Math.min(maxW/hallW,maxH/hallL);
+  const w2=hallW*s, h2=hallL*s;
+  svg.setAttribute("viewBox",`0 0 ${w2+pad*2} ${h2+pad+46}`);
+  let x0=pad,y0=pad;
+  let out=`<rect x="${x0}" y="${y0}" width="${w2}" height="${h2}" fill="#fff" stroke="#1d1d1f" stroke-width="1.5" rx="3"/>`;
+  let y=y0+pm*s;
+  for(let r=0;r<rows;r++){
+    out+=`<rect x="${x0+pm*s}" y="${y}" width="${per*RW*s}" height="${RD*s}" fill="#1d1d1f" rx="1.5"/>`;
+    for(let k=1;k<per;k++)out+=`<line x1="${x0+pm*s+k*RW*s}" y1="${y}" x2="${x0+pm*s+k*RW*s}" y2="${y+RD*s}" stroke="#4a4a4d" stroke-width="0.7"/>`;
+    y+=RD*s;
+    if(r<rows-1){
+      const cold=(r%2===0), aw=(cold?cw:hw)*s;
+      out+=`<rect x="${x0+pm*s}" y="${y}" width="${per*RW*s}" height="${aw}" fill="${cold?"rgba(48,176,199,.28)":"rgba(255,59,48,.22)"}"/>`;
+      if(aw>11)out+=`<text x="${x0+pm*s+per*RW*s/2}" y="${y+aw/2+3.5}" text-anchor="middle" font-size="9.5" font-weight="700" fill="${cold?"#1a7c8f":"#c22e26"}">${cold?"COLD":"HOT"} ${cold?cw:hw} m</text>`;
+      y+=aw;
+    }
+  }
+  out+=`<text x="${x0+w2/2}" y="${y0+h2+26}" text-anchor="middle" font-size="11" font-weight="600" fill="#86868b">${f1(hallW)} × ${f1(hallL)} m · ${f0(area)} m² · ${rows} rows × ${per} · perimeter ${pm} m · serving ≈ ${f0(S.it*1000/d0PerW().tot)} people</text>`;
+  svg.innerHTML=DEFS+out;
+}
+[["ai_row","row",""],["ai_cold","cold"," m"],["ai_hot","hot"," m"],["ai_per","per"," m"]].forEach(([id,key,suf])=>{
+  $(id).addEventListener("input",()=>{AI[key]=+$(id).value;$("v_"+id.replace("_","")).textContent=f1(AI[key])+suf;aiCalc();});
+});
+
+/* ============ wiring ============ */
+function all(){s1();aiCalc();s2();s3();s4();s6();d0Calc();}
+[["it"," kW",v=>S.it=v],["avail"," m²",v=>S.avail=v],["kwr"," kW/rack",v=>S.kwr=v],["dens"," kW/m²",v=>S.dens=v],["use","%",v=>S.use=v],
+ ["pv"," kWp",v=>S.pv=v],["batt"," kWh",v=>S.batt=v],["ppa","%",v=>S.ppa=v],["roof"," m²",v=>S.roof=v],["mep"," t/kW IT",v=>S.mep=v]
+].forEach(([id,suf,set])=>{
+  $(id).addEventListener("input",()=>{const v=+$(id).value;set(v);$("v_"+id).textContent=v.toLocaleString()+suf;all();});
+});
+seg("coolseg",k=>{S.cool=k;S.kwr=COOL[k].kwr;$("kwr").value=S.kwr;$("v_kwr").textContent=S.kwr+" kW/rack";all();});
+seg("cfseg",k=>{S.cf=k;all();});
+seg("sbseg",k=>{S.sb=k;all();});
+seg("bwseg",k=>{S.bw=k;all();});
+seg("tyseg",k=>{S.ty=k;all();});
+seg("dfdseg",k=>{S.dfd=k;all();});
+all();
+</script>
+<style>
+abbr.ab{text-decoration:underline dotted #9a9aa0;text-underline-offset:2px;text-decoration-thickness:1px;cursor:help;font-style:normal}
+</style>
+<script>
+/* ACRO_GLOSSARY — auto-tooltips for every acronym. Hover any dotted term. */
+(function(){
+const G={
+"NCC":"National Construction Code — Australia's technical building code; Volume One is the Building Code of Australia for Class 2–9 buildings",
+"BCA":"Building Code of Australia — NCC Volumes One and Two",
+"DtS":"Deemed-to-Satisfy — the NCC's prescriptive compliance pathway; the alternative is a Performance Solution",
+"FRL":"Fire Resistance Level — structural adequacy / integrity / insulation, in minutes (e.g. 120/120/120)",
+"AS/NZS":"Joint Australian / New Zealand Standard",
+"JV3":"NCC verification method: whole-building energy modelling against a reference building",
+"AACF":"Accessible Adult Change Facility — hoist + adult change table, required in large aquatic venues",
+"TGSI":"Tactile Ground Surface Indicators — warning studs/bars at stairs, ramps and crossings",
+"GSPO":"Guidelines for Safe Pool Operations — Royal Life Saving Australia's national aquatic practice guidance",
+"EHO":"Environmental Health Officer — council officer who licenses and inspects public pools",
+"MFS":"South Australian Metropolitan Fire Service",
+"EWIS":"Emergency Warning and Intercom System — the evacuation speakers and wardens' phones",
+"FIP":"Fire Indicator Panel — where the brigade reads the alarm state",
+"MECP":"Master Emergency Control Panel",
+"VESDA":"Very Early Smoke Detection Apparatus — aspirating smoke detection, standard in data halls",
+"BMS":"Building Management System — the software brain running HVAC, metering and alarms",
+"MDF":"Main Distribution Frame — where communications cabling enters and is distributed",
+"RCP":"Reflected Ceiling Plan — the drawing convention: the ceiling as seen in a mirror on the floor",
+"HVAC":"Heating, Ventilation and Air Conditioning",
+"AHU":"Air Handling Unit — the big box of fans, coils and filters that conditions supply air",
+"VAV":"Variable Air Volume — ducted air conditioning that throttles airflow per zone",
+"VRF":"Variable Refrigerant Flow — multi-head refrigerant systems (ceiling cassettes)",
+"FCU":"Fan Coil Unit — a small local fan + coil serving one zone",
+"TABS":"Thermally Activated Building Systems — heating/cooling pipes cast into the structure itself",
+"ACH":"Air Changes per Hour — how many times the room's air volume is replaced hourly",
+"COP":"Coefficient of Performance — heat moved ÷ electricity used; a heat pump at COP 4 moves 4 kWh of heat per 1 kWh in",
+"DLC":"Direct Liquid Cooling — cold plates on the chips; heat leaves in water, not air",
+"CRAC":"Computer Room Air Conditioner — refrigerant-based data hall cooling unit",
+"CRAH":"Computer Room Air Handler — chilled-water data hall cooling unit",
+"CDU":"Coolant Distribution Unit — pumps and heat exchangers feeding liquid-cooled racks",
+"UPS":"Uninterruptible Power Supply — batteries (or flywheels) that carry the load until generators start",
+"DRUPS":"Diesel Rotary UPS — a flywheel + diesel engine in one machine",
+"BESS":"Battery Energy Storage System — grid-scale battery containers",
+"PPA":"Power Purchase Agreement — a long-term contract to buy renewable electricity from an off-site wind/solar farm; the standard route to claiming 100% renewable operation",
+"PUE":"Power Usage Effectiveness — total facility power ÷ IT power; 1.0 is perfect, ~1.3 is good, air-cooled legacy runs 1.5+",
+"WUE":"Water Usage Effectiveness — litres of water per kWh of IT energy",
+"BTES":"Borehole Thermal Energy Storage — summer heat banked in the ground via borehole arrays, recovered in winter",
+"ATES":"Aquifer Thermal Energy Storage — seasonal heat storage in groundwater",
+"HVO":"Hydrotreated Vegetable Oil — renewable drop-in diesel, ~90% lifecycle carbon cut",
+"PEM":"Proton Exchange Membrane — the fuel-cell type used for hydrogen standby power",
+"EV":"Electric Vehicle",
+"HX":"Heat exchanger — transfers heat between two fluids that never mix",
+"TIA":"Telecommunications Industry Association — TIA-942 is the (voluntary) data centre facility standard",
+"ASHRAE":"American Society of Heating, Refrigerating and Air-Conditioning Engineers — sets server thermal envelopes (TC 9.9)",
+"AFCOM":"Data centre industry association — publishes the State of the Data Center reports",
+"IEA":"International Energy Agency",
+"NGA":"National Greenhouse Accounts — Australia's official emission factors",
+"OCA":"Open Connect Appliance — Netflix's caching server placed inside local networks",
+"HDFS":"Hadoop Distributed File System — its default of 3 copies per file is the storage-redundancy convention",
+"ISP":"Internet Service Provider",
+"IT load":"Information Technology load — the electricity the servers themselves draw, excluding cooling and overheads",
+"UB":"Universal Beam — the standard hot-rolled steel I-beam",
+"UC":"Universal Column — the squat I-section used for columns",
+"PFC":"Parallel Flange Channel — C-shaped steel section",
+"RHS":"Rectangular Hollow Section",
+"SHS":"Square Hollow Section",
+"CHS":"Circular Hollow Section",
+"CLT":"Cross-Laminated Timber — massive plywood-like slabs and walls",
+"LVL":"Laminated Veneer Lumber — engineered timber beam",
+"PSL":"Parallel Strand Lumber — engineered timber",
+"RC":"Reinforced Concrete",
+"PT":"Post-Tensioned — concrete with stressed tendons, allowing thinner longer slabs",
+"DfMA":"Design for Manufacture and Assembly — factory-made components, bolted together on site, un-boltable later",
+"LCA":"Life Cycle Assessment — the accounting of a building's environmental impacts from cradle to grave",
+"GFA":"Gross Floor Area",
+"NFA":"Net Floor Area",
+"O&M":"Operations and Maintenance (manuals)",
+"POE":"Post-Occupancy Evaluation",
+"PCG":"Project Control Group — the client-side governance table above the whole project",
+"D&C":"Design and Construct — contract where the builder owns design completion (AS 4902); consultants are usually novated",
+"QS":"Quantity Surveyor — the cost consultant",
+"PM":"Project Manager",
+"SCAP":"State Commission Assessment Panel — SA's planning authority for major applications",
+"ODASA":"Office for Design and Architecture South Australia — state design review",
+"ESCOSA":"Essential Services Commission of South Australia — licenses energy utilities, including heat networks",
+"OTR":"Office of the Technical Regulator (SA) — technical safety of energy infrastructure",
+"PDI":"Planning, Development and Infrastructure Act 2016 (SA)",
+"WHS":"Work Health and Safety",
+"DDA":"Disability Discrimination Act 1992",
+"GBCA":"Green Building Council of Australia — runs Green Star",
+"NABERS":"National Australian Built Environment Rating System — operational (and now embodied) performance ratings",
+"LETI":"London Energy Transformation Initiative — publishes widely-used embodied carbon targets",
+"RIBA":"Royal Institute of British Architects — its 2030 Climate Challenge sets carbon targets",
+"EPiC":"Environmental Performance in Construction — University of Melbourne's Australian material carbon database",
+"MBR":"Membrane Bioreactor — compact biological water treatment",
+"UF":"Ultrafiltration — membrane water filtering",
+"RO":"Reverse Osmosis",
+"MVA":"Megavolt-ampere — transformer capacity rating",
+"kWp":"Kilowatts-peak — a solar array's rated output in full sun",
+"kPa":"Kilopascal — pressure/load; floor loads: office ≈ 3 kPa, data hall 12–20 kPa",
+"N+1":"Redundancy: the number of units needed, plus one spare",
+"2N":"Redundancy: full duplication — two complete independent systems",
+"FI passage":"Fire-isolated passageway — a fire-rated corridor that is legally part of the exit",
+"kWh":"Kilowatt-hour — the unit of energy: 1 kW running for 1 hour (a dishwasher cycle ≈ 1 kWh)",
+"MWh":"Megawatt-hour — 1,000 kWh (an Australian home uses ~5–6 MWh a year)",
+"GWh":"Gigawatt-hour — 1,000 MWh (this precinct's heat demand ≈ 9 GWh/yr)",
+"PB":"Petabyte — 1,000 terabytes",
+"TB":"Terabyte — 1,000 gigabytes"
+};
+const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+const esc=s=>s.replace(/[.*+?^${}()|[\]\\/]/g,"\\$&");
+const rx=new RegExp("(?<![A-Za-z0-9])("+keys.map(esc).join("|")+")(?![A-Za-z0-9])","g");
+const SKIP=new Set(["SCRIPT","STYLE","ABBR","TEXTAREA","OPTION","TITLE"]);
+let busy=false;
+function annotate(root){
+  busy=true;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){
+    const p=n.parentElement;
+    if(!p||SKIP.has(p.tagName)||p.closest("svg,abbr,.tip"))return NodeFilter.FILTER_REJECT;
+    rx.lastIndex=0;
+    return rx.test(n.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
+  }});
+  const nodes=[];
+  while(walker.nextNode())nodes.push(walker.currentNode);
+  nodes.forEach(n=>{
+    const frag=document.createDocumentFragment();
+    let last=0; rx.lastIndex=0; let m; const txt=n.nodeValue;
+    while((m=rx.exec(txt))){
+      if(m.index>last)frag.appendChild(document.createTextNode(txt.slice(last,m.index)));
+      const a=document.createElement("abbr");
+      a.className="ab"; a.title=G[m[1]]; a.textContent=m[1];
+      frag.appendChild(a);
+      last=m.index+m[1].length;
+    }
+    if(last<txt.length)frag.appendChild(document.createTextNode(txt.slice(last)));
+    n.parentNode.replaceChild(frag,n);
+  });
+  busy=false;
+}
+function run(){annotate(document.body);}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run);else run();
+let t=null;
+new MutationObserver(muts=>{
+  if(busy)return;
+  clearTimeout(t);
+  t=setTimeout(run,300);
+}).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
+</body>
+</html>
