@@ -85,3 +85,17 @@ Sliders, presets, quality toggle and `recompute()` were verified updating output
 ## Remaining recommendations (not actioned)
 1. **Self-host Chart.js.** F-1 shows CDN drift is a real risk, and it's the only thing keeping the Footprint page from being fully offline like its siblings. Dropping `chart.umd.min.js` next to the HTML and pointing the `<script>` at it would make the whole toolkit self-contained. (Not done unilaterally — it changes the offline story and adds a binary to the Box folder; worth a yes/no.)
 2. If any of the small in-box diagrams (parking accessible bay, ceiling detection tile) are ever reworked, bump the remaining 8.5–9.5 px labels to 10 px at the same time.
+
+---
+
+## Addendum — full-site sweep + two new pages (13 July 2026)
+
+The site grew from four pages to **six**, and a full sweep was re-run across all of them.
+
+**New — `Athanor_Embodied_Carbon.html`.** A rough upfront-embodied-carbon tool: pick an archetype (concrete / steel / mass timber / hybrid), size it by GFA, swap frame/floor/façade levers, and see A1–A3 + A5-waste carbon, kg CO₂e/m² and material mass move live. Emission factors are read from the NABERS Embodied Carbon calculator v2026.1 (materials-reference table on the page); quantities are labelled rules of thumb. Three Chart.js charts (carbon-by-element, archetype comparison, mass doughnut). Verified: concrete 316 → mass-timber 196 kg/m²; levers move the total independently; biogenic-storage check appears for timber; responsive at 390 px; 0 runtime errors. Design spec: `embodied_carbon_tool_SPEC.md`.
+
+**New — `Athanor_Glossary.html`.** A searchable, categorised **cited** glossary — 202 entries: 16 NCC clauses, 18 Australian Standards, regulations/authorities, voluntary/industry data sources, rule-of-thumb references, and 108 acronyms — each traceable to the NCC clause, AS number or named convention it comes from, compiled from what the tools actually cite. Live search + category filters verified. Carries the "verify the clause at ncc.abcb.gov.au" caveat throughout.
+
+**Sweep result (all six pages).** `node --check` passes on every inline script; jsdom loads each page with **0 runtime errors** (Footprint's only error is the expected Chart canvas under jsdom). All six navs now include the Embodied Carbon and Glossary links and scroll horizontally; **all cross-page links resolve in both directions**; every glossary re-annotates without touching SVG/.tip; responsive at 1440 px and 390 px. No numbers, formulas, sources or disclaimers were changed.
+
+**Published.** The whole site is on GitHub Pages: **https://apenning-hub.github.io/athanor-toolkit/** (repo `apenning-hub/athanor-toolkit`, public), with an `index.html` hub linking all six tools. This resolves recommendation 1 above for the shared copy: the site is self-contained except the Chart.js CDN (now pinned to the working 4.4.1) used by the Footprint and Embodied Carbon pages.
