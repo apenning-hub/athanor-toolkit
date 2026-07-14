@@ -85,7 +85,7 @@
   .cypill:hover{border-color:var(--muted);color:var(--ink)}
   .cypill.on{background:#1d1d1f;color:#fff;border-color:#1d1d1f}
   .cypill:focus-visible{outline:2px solid #0071e3;outline-offset:1px}
-  #cy_card tr.head td{background:var(--panel);font-weight:700;font-size:12.5px;border-bottom:1px solid var(--rule)}
+  #cy_card tr.head td,#fy_card tr.head td{background:var(--panel);font-weight:700;font-size:12.5px;border-bottom:1px solid var(--rule)}
 </style>
 </head>
 <body>
@@ -95,6 +95,7 @@
   <a href="Athanor_DataCentre_NetZero.html"><b>Net-Zero Data Centre ↗</b></a>
   <a href="#structure">Structure</a>
   <a href="#services">Ceiling Services</a>
+  <a href="#fire">Fire Protection</a>
   <a href="Data_Footprint_Calculator.html">Data Footprint ↗</a>
   <a href="Athanor_Embodied_Carbon.html" style="color:#34c759"><b>Embodied Carbon ↗</b></a>
   <a href="Athanor_Glossary.html" style="color:#5856d6"><b>Glossary ↗</b></a>
@@ -208,6 +209,38 @@
         </div>
       </div>
       <div class="checks" id="svc_chk"></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ============================ 2d. FIRE PROTECTION ============================ -->
+<section class="tool" id="fire">
+  <h2><span class="dot" style="background:var(--fire)"></span>Fire protection — system by system <span style="font-size:11px;font-weight:700;background:#fdeaea;color:#c22e26;border-radius:12px;padding:3px 10px">NCC SECTION E — VERIFY EVERY CLAUSE</span></h2>
+  <p class="lede">Beyond the ceiling stack sits the building's <b>fire safety system</b> — and almost all of it is mandated by <b>NCC 2022 Section E</b>: <b>E1</b> fire-fighting equipment, <b>E2</b> smoke hazard management, <b>E3</b> lifts, <b>E4</b> emergency lighting, exit signs and warning — plus <b>C4</b> fire-stopping where a service crosses a compartment. A ~10,000 m² Class 5/6/8/9b hybrid triggers nearly the full set. Cycle each system: what it is, where it sits, its indicative size (Resource 05), and the clause that makes it law.</p>
+  <div class="grid">
+    <div class="inputs">
+      <h3>NCC Section E — the map</h3>
+      <div id="fire_parts" style="display:flex;flex-direction:column;gap:6px"></div>
+      <h3 style="margin-top:18px;color:var(--sec);text-transform:uppercase;letter-spacing:.05em;font-size:11px">What this building triggers</h3>
+      <div id="fire_trig" style="background:#fff;border:1px solid var(--rule);border-radius:12px;padding:10px 12px;font-size:11.5px;line-height:1.55"></div>
+      <div id="fire_sel" style="background:#fff;border:1px solid var(--rule);border-radius:12px;padding:10px 12px;font-size:11.5px;line-height:1.5;margin-top:12px"></div>
+    </div>
+    <div>
+      <div class="out" id="fire_out"></div>
+      <div class="svgwrap">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <button class="cybtn" id="fy_prev">←</button>
+          <div id="fy_pills" style="display:flex;gap:5px;flex-wrap:wrap;flex:1"></div>
+          <button class="cybtn" id="fy_next">→</button>
+        </div>
+        <table class="mini" id="fy_card"><tbody></tbody></table>
+        <h4 style="font-size:11.5px;font-weight:700;margin:16px 0 8px;color:var(--sec)">WHERE IT SITS — the fire system located in the building</h4>
+        <svg id="fire_svg"></svg>
+      </div>
+      <div class="checks" id="fire_chk"></div>
+      <p class="note"><b>Section E is a floor, not a ceiling.</b> Which systems are actually triggered depends on your final classifications, effective height, compartment sizes and floor areas — <b>verify every clause at ncc.abcb.gov.au</b> and confirm the DtS triggers (or a Performance Solution) with the fire engineer and certifier. Sizes are indicative allowances from Resource 05; gaseous suppression and VESDA are industry/insurer requirements layered over the NCC, not the NCC itself.</p>
     </div>
   </div>
 </section>
@@ -953,20 +986,20 @@ function svcComps(){
     spc:hv.spc,
     clr:"≥1.0 m from smoke detectors; return ≥3 m from supply; keep clear of the sprinkler spray envelope",
     pos:"The middle of the zone — the layer that sets the total depth ("+sysD+" mm for this system)"},
-   {n:"4 · Condensate + pipework",c:"#30b0c7",who:"Hydraulic engineer",vf:"AS/NZS 3500",band:[150+Math.max(0,sysD-80),150+sysD],
-    size:"Ø25–40 condensate; heating/chilled mains Ø50–150 + 50 mm lagging each side",
-    spc:"Falls continuously ≥1:100 to a riser or tundish — the ONLY layer that cannot be level; 450 sq access panel at every valve/trap",
-    clr:"NEVER above switchboards (offset or drip tray); lagging clearance 50 mm all round",
-    pos:"Weaves through the air layer's underside — gravity gives it no choice"},
+   {n:"4 · Hydronic + condensate pipework",c:"#30b0c7",who:"Hydraulic + mechanical engineer",vf:"AS/NZS 3500 · AS 4041",band:[150+Math.max(0,sysD-80),150+sysD],
+    size:"Chilled + heating flow & return mains Ø50–150 (district loop / chilled beams) + 40 mm lagging each side; condensate drains Ø25–40",
+    spc:"Chilled/heating mains run level along the grid, branching to each zone; condensate falls continuously ≥1:100 to a riser/tundish — the one layer that can't be level; 450 sq access panel at every valve/trap",
+    clr:"NEVER above switchboards (offset or drip tray); lagging + condensation clearance 50 mm all round; keep chilled mains clear of electrical trays",
+    pos:"Weaves through the underside of the air layer — the big mains want a clear lane, the falls give condensate no choice"},
    {n:"5 · Sprinklers",c:"#ff3b30",who:"Fire services (hydraulic) eng.",vf:"AS 2118.1",band:[150+sysD-60,150+sysD+40],
     size:"Range pipes Ø25–65; heads + escutcheons at the ceiling plane",
     spc:"Heads ≤ ~4.0–4.6 m apart (light hazard), min ~2.4 m; from walls between 0.1 m and half the spacing",
     clr:"≥500 mm clear space below every deflector; EXTRA heads beneath any duct/obstruction wider than ~1.0 m; ~0.3 m from luminaires",
     pos:"Pipes ride just above the ceiling plane; heads drop through it"},
-   {n:"6 · Fire detection + EWIS",c:"#c22e26",who:"Fire engineer + electrical",vf:"AS 1670.1 / AS 2293",band:[150+sysD,150+sysD+SVC_BASE-60],
-    size:"Point detectors Ø100; speakers Ø150–200; exit signs 350 × 150",
-    spc:"Detectors ~1 per 80–100 m², grid ≤ ~10 m; speakers every 8–12 m; exit signs at every exit + direction change (viewing ≤24 m)",
-    clr:"≥1.0 m from supply diffusers (airflow washes smoke past); ≥0.5 m from walls, beams + luminaires",
+   {n:"6 · Fire detection + EWIS",c:"#c22e26",who:"Fire engineer + electrical",vf:"AS 1670.1 / AS 1670.4 (EWIS)",band:[150+sysD,150+sysD+SVC_BASE-60],
+    size:"Point smoke/thermal detectors Ø100; aspirating (VESDA) sampling pipes Ø25 in the data hall; EWIS speakers Ø150–200; exit signs 350 × 150",
+    spc:"Detectors ~1 per 80–100 m², grid ≤ ~10 m; VESDA pipe network samples the white space + return air; EWIS speakers every 8–12 m; exit signs at every exit + direction change (≤24 m viewing)",
+    clr:"≥1.0 m from supply diffusers (airflow washes smoke past); ≥0.5 m from walls, beams + luminaires; every device monitored back to the FIP",
     pos:"At the ceiling plane — the last layer fixed, the first the certifier looks at"},
    {n:"7 · Lighting + emergency",c:"#0071e3",who:"Electrical + lighting designer",vf:"AS/NZS 1680 / AS 2293",band:[150+sysD+20,150+sysD+SVC_BASE],
     size:"Recessed troffers 50–120 deep (1,200 × 300 typ); downlights 90–150 deep; emergency fittings + battery packs",
@@ -983,6 +1016,11 @@ function svcComps(){
     spc:"≥1 per control zone; CO₂ on the return-air path",
     clr:"≥1.5 m from diffusers + doors (false readings); away from heat sources",
     pos:"Ceiling plane — small, cheap, and the digital twin is blind without them"},
+   {n:"10 · Fire & smoke dampers",c:"#e0552b",who:"Mechanical + fire services eng.",vf:"NCC C4 / E2 · AS 1682 · AS 1668.1",band:[150,150+sysD],
+    size:"Fire dampers (curtain/blade) or combined fire/smoke dampers with actuators, in a sleeve at the wall line; access panel each side",
+    spc:"One at EVERY duct penetration of a fire- or smoke-compartment wall or shaft — located by the compartment plan, never a grid",
+    clr:"≥500 mm access to the reset/actuator each side; damper wholly within the fire-rated element; fusible link or motor wired to the BMS/FIP",
+    pos:"Buried in the air layer, inside the ducts where they cross a compartment boundary — invisible until the certifier asks for the damper schedule"},
   ];
 }
 let CY=0;
@@ -1034,14 +1072,14 @@ function cyRender(){
   cyDepth(c);cyPlan(c);
 }
 /* ---- depth section: the four bands, and which component lives in each ---- */
-const SVC_SHORT=["Power tray","Data","Air system","Condensate","Sprinklers","Detection","Lighting","Security","BMS"];
+const SVC_SHORT=["Power tray","Data","Air system","Pipework","Sprinklers","Detection","Lighting","Security","BMS","Dampers"];
 function cyDepth(c){
   const svg=$("svc_depth");
   const zone=svcDepth(), ceilH=svcCeil(), sysD=SVC_SYS[SVC.sys].d;
   const comps=svcComps();
   const bands=[
     {name:"BAND 1 · CONTAINMENT",mm:150,fill:"#f3ecfa",edge:"#af52de",desc:"trays tight to structure",comps:[0,1]},
-    {name:"BAND 2 · AIR SYSTEM",mm:sysD,fill:"#fdf1e3",edge:"#ff9500",desc:SVC_SYS[SVC.sys].n+" — sets the depth",comps:[2,3]},
+    {name:"BAND 2 · AIR SYSTEM",mm:sysD,fill:"#fdf1e3",edge:"#ff9500",desc:SVC_SYS[SVC.sys].n+" — sets the depth",comps:[2,3,9]},
     {name:"BAND 3 · WET + LIGHT",mm:SVC_BASE,fill:"#fdeaea",edge:"#ff3b30",desc:"everything at the ceiling plane",comps:[4,5,6,7,8]},
     {name:"BAND 4 · CEILING",mm:ceilH,fill:"#e8e8ea",edge:"#1d1d1f",desc:ceilH?"finish + suspension":"exposed — no ceiling",comps:[]},
   ];
@@ -1136,17 +1174,26 @@ function cyPlan(c){
     out+=`<path d="M ${X(8.0)} ${X(0.4)} L ${X(6.2)} ${X(1.3)} L ${X(8.0)} ${X(2.0)} Z" fill="rgba(134,134,139,.35)" stroke="#57575b" stroke-width="1.4"/><text x="${X(6.0)}" y="${X(0.85)}" text-anchor="end" font-size="10" font-weight="700" fill="#57575b">CCTV — entries + nodes</text>
       <rect x="${X(3.9)-0.25*sc}" y="${X(4.2)-0.25*sc}" width="${0.5*sc}" height="${0.5*sc}" rx="4" fill="none" stroke="#57575b" stroke-width="1.8"/><text x="${X(3.9)}" y="${X(4.2)+30}" text-anchor="middle" font-size="10" font-weight="700" fill="#57575b">WAP — every ~15–20 m</text>
       <circle cx="${X(3.9)}" cy="${X(4.2)}" r="${3.5*sc}" fill="none" stroke="#86868b" stroke-width=".8" stroke-dasharray="4 4"/>`;
-  } else { /* bms */
+  } else if(k===8){ /* bms */
     out+=`<circle cx="${X(5.6)}" cy="${X(6.4)}" r="9" fill="none" stroke="#22a04c" stroke-width="2.2"/><text x="${X(5.6)}" y="${X(6.4)+4}" text-anchor="middle" font-size="10" font-weight="800" fill="#22a04c">T</text>
       <rect x="${X(2.4)-0.25*sc}" y="${X(2.4)-0.25*sc}" width="${0.5*sc}" height="${0.5*sc}" fill="none" stroke="#c46a00" stroke-width="1.6"/>
       ${dim(X(2.75),X(2.4),X(5.6),X(6.0),"≥1.5 m from diffusers")}
       <text x="${X(4.2)}" y="${X(7.95)}" text-anchor="middle" font-size="10" fill="#22a04c">1+ per control zone · CO₂ on the return path · label everything for the digital twin</text>`;
+  } else { /* fire & smoke dampers */
+    out+=`<rect x="${pad}" y="${X(4.0)}" width="${Wm*sc}" height="${0.45*sc}" fill="rgba(224,85,43,.16)" stroke="#e0552b" stroke-width="1.4"/>`;
+    for(let hx=0.15;hx<Wm;hx+=0.5)out+=`<line x1="${X(hx)}" y1="${X(4.0)}" x2="${X(hx+0.28)}" y2="${X(4.45)}" stroke="#e0552b" stroke-width=".6" opacity=".5"/>`;
+    out+=`<text x="${X(0.25)}" y="${X(3.7)}" font-size="10" font-weight="700" fill="#e0552b">FIRE / SMOKE COMPARTMENT WALL (FRL)</text>`;
+    out+=`<rect x="${X(3.6)}" y="${pad}" width="${1.2*sc}" height="${Wm*sc}" fill="rgba(255,149,0,.12)" stroke="#c46a00" stroke-width="1.4"/><text x="${X(4.2)}" y="${X(1.35)}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#c46a00">duct</text>`;
+    out+=`<rect x="${X(3.6)}" y="${X(3.95)}" width="${1.2*sc}" height="${0.55*sc}" fill="rgba(224,85,43,.45)" stroke="#e0552b" stroke-width="2"/>`;
+    out+=`<line x1="${X(3.75)}" y1="${X(4.02)}" x2="${X(4.65)}" y2="${X(4.42)}" stroke="#fff" stroke-width="1.3"/><line x1="${X(3.75)}" y1="${X(4.42)}" x2="${X(4.65)}" y2="${X(4.02)}" stroke="#fff" stroke-width="1.3"/>`;
+    out+=`<text x="${X(5.0)}" y="${X(4.32)}" font-size="10" font-weight="700" fill="#e0552b">damper at the wall line</text>`;
+    out+=`<text x="${X(4.2)}" y="${X(7.95)}" text-anchor="middle" font-size="10" fill="#e0552b">one at EVERY compartment penetration · fusible link / motor to the FIP</text>`;
   }
   out+=`<text x="${pad}" y="${H-7}" font-size="10" fill="#86868b">8.4 × 8.4 m bay · spacings are RULES OF THUMB — verify ${c.vf}</text>`;
   svg.innerHTML=out;
 }
-$("cy_prev").addEventListener("click",()=>{CY=(CY+8)%9;cyRender();});
-$("cy_next").addEventListener("click",()=>{CY=(CY+1)%9;cyRender();});
+$("cy_prev").addEventListener("click",()=>{CY=(CY+9)%10;cyRender();});
+$("cy_next").addEventListener("click",()=>{CY=(CY+1)%10;cyRender();});
 seg2("svc_seg",k=>{SVC.sys=k;svcCalc();});
 seg2("svc_ceil",k=>{SVC.ceil=k;svcCalc();});
 
@@ -1427,8 +1474,115 @@ function seg2(id,cb){const s=$(id);[...s.children].forEach(b=>b.addEventListener
 ["stx_sys","stx_load","stx_st"].forEach(id=>$(id).addEventListener("input",stxCalc));
 ["stx_fw","stx_fd"].forEach(id=>$(id).addEventListener("input",()=>{SST[id==="stx_fw"?"fw":"fd"]=Math.max(8,+$(id).value||0);stxCalc();}));
 
+/* ================= FIRE PROTECTION ================= */
+const FIRE_PARTS={
+  E1:{c:"#ff3b30",t:"E1 · Fire-fighting equipment"},
+  E2:{c:"#ff9500",t:"E2 · Smoke hazard management"},
+  E3:{c:"#30b0c7",t:"E3 · Lift installations"},
+  E4:{c:"#0071e3",t:"E4 · Emergency lighting, signs + warning"},
+  C4:{c:"#af52de",t:"C4 · Fire-stopping / compartmentation"},
+  IND:{c:"#86868b",t:"Industry / insurer (beyond the NCC)"},
+};
+const FB={gx0:60,gx1:500,hx1:770,yg:398,yr:70,fl:[398,316,234,152],stairX:470,liftX:383};
+function fireBase(){
+  const {gx0,gx1,hx1,yg,yr}=FB;
+  let s=`<rect x="500" y="${yr}" width="270" height="${yg-yr}" fill="#f7f7f9" stroke="#d2d2d7"/><text x="635" y="${yr+15}" text-anchor="middle" font-size="10" font-weight="700" fill="#aeaeb2">ENERGY EXCHANGE HALL (tall public volume)</text>`;
+  s+=`<rect x="${gx0}" y="${yr}" width="${gx1-gx0}" height="${yg-yr}" fill="#fbfbfd" stroke="#d2d2d7"/>`;
+  [316,234,152].forEach(y=>s+=`<line x1="${gx0}" y1="${y}" x2="${hx1}" y2="${y}" stroke="#e3e3e6" stroke-width="1.2"/>`);
+  s+=`<line x1="40" y1="${yg}" x2="${hx1+10}" y2="${yg}" stroke="#1d1d1f" stroke-width="2.5"/>`;
+  s+=`<rect x="440" y="${yr}" width="60" height="${yg-yr}" fill="#f4f1fb" stroke="#af52de" stroke-width="1.2" stroke-dasharray="4 3"/><text x="470" y="${(yr+yg)/2}" text-anchor="middle" font-size="9" font-weight="700" fill="#8f35c9" transform="rotate(-90 470 ${(yr+yg)/2})">FIRE-ISOLATED STAIR</text>`;
+  s+=`<rect x="360" y="${yr}" width="46" height="${yg-yr}" fill="#eef6f8" stroke="#30b0c7" stroke-width="1"/><text x="383" y="${(yr+yg)/2}" text-anchor="middle" font-size="8.5" font-weight="700" fill="#1f93a6" transform="rotate(-90 383 ${(yr+yg)/2})">LIFT</text>`;
+  s+=`<rect x="${gx0}" y="234" width="240" height="82" fill="rgba(175,82,222,.05)"/><text x="${gx0+120}" y="230" text-anchor="middle" font-size="9.5" font-weight="700" fill="#aeaeb2">DATA HALL · Class 8</text>`;
+  s+=`<text x="${gx0+95}" y="${yr+15}" text-anchor="middle" font-size="10" font-weight="700" fill="#aeaeb2">MAIN BUILDING · Class 5/6/9b</text>`;
+  s+=`<rect x="${gx0}" y="360" width="66" height="38" fill="#fff" stroke="#1d1d1f" stroke-width="1.3"/><text x="${gx0+33}" y="${yg+15}" text-anchor="middle" font-size="9" fill="#86868b">principal entry</text>`;
+  return s;
+}
+const FIRE_SYS=[
+ {n:"1 · Fire hydrants + booster",part:"E1",clause:"E1D2",std:"AS 2419.1",
+  what:"A wet hydrant system with a street booster for the brigade to charge; internal hydrants in the fire-isolated stairs give 30 m hose coverage to every point.",
+  where:"Booster near the principal entry (in sight of it); risers + outlets in the FI stairs.",size:"Booster 3000 × 800 mm; 150 mm risers",trig:"Total floor area &gt; 500 m² — triggered here.",
+  draw(){let s=`<rect x="20" y="350" width="30" height="44" rx="3" fill="#ff3b30"/><text x="35" y="343" text-anchor="middle" font-size="8.5" font-weight="700" fill="#ff3b30">BOOSTER</text>`;s+=`<line x1="470" y1="82" x2="470" y2="398" stroke="#ff3b30" stroke-width="3"/>`;[316,234,152].forEach(y=>s+=`<circle cx="470" cy="${y-14}" r="4.5" fill="#ff3b30"/>`);s+=`<text x="486" y="126" font-size="9" font-weight="700" fill="#ff3b30">hydrant riser + outlets</text>`;return s;}},
+ {n:"2 · Fire hose reels",part:"E1",clause:"E1D3",std:"AS 2441",
+  what:"First-attack hose reels for occupants, in the Class 8/9 areas served by internal hydrants.",
+  where:"Within 4 m of an exit on every level; 1 m clear radius on the egress path.",size:"Reel + ~36 m hose",trig:"Class 8/9 areas with internal hydrants.",
+  draw(){let s='';[398,316,234,152].forEach(y=>s+=`<circle cx="426" cy="${y-18}" r="7" fill="none" stroke="#ff3b30" stroke-width="2.2"/>`);s+=`<text x="300" y="180" font-size="9" font-weight="700" fill="#ff3b30">hose reels ≤ 4 m from each exit →</text>`;return s;}},
+ {n:"3 · Sprinklers (+ pre-action)",part:"E1",clause:"E1D5",std:"AS 2118.1",
+  what:"Automatic sprinklers throughout; a separate <b>pre-action</b> system for the data hall so a single accidental head can't wet the servers.",
+  where:"Heads across every ceiling; a pre-action valve set for the white space.",size:"Range pipes Ø25–65; tanks 2 × 25–50 kL",trig:"Effective height &gt; 25 m, large isolated buildings, some 9b — and adopted for the data centre.",
+  draw(){let s='';[398,316,234,152].forEach(y=>{for(let x=80;x<760;x+=42)s+=`<circle cx="${x}" cy="${y-9}" r="2.6" fill="#ff3b30"/>`;});s+=`<rect x="60" y="234" width="240" height="82" fill="none" stroke="#ff3b30" stroke-width="1.4" stroke-dasharray="5 3"/><text x="180" y="250" text-anchor="middle" font-size="9" font-weight="700" fill="#ff3b30">pre-action · data hall</text>`;return s;}},
+ {n:"4 · Portable fire extinguishers",part:"E1",clause:"E1D6",std:"AS 2444",
+  what:"Extinguishers matched to each space's hazard — CO₂ / clean-agent by the electrical and server rooms, never water.",
+  where:"Throughout, on the egress path and by high-risk plant.",size:"Wall-mounted units",trig:"Throughout, per class of hazard.",
+  draw(){let s='';[[104,360],[330,278],[560,352],[330,120],[430,300]].forEach(([x,y])=>s+=`<rect x="${x}" y="${y}" width="9" height="15" rx="2" fill="#ff3b30"/>`);s+=`<text x="150" y="352" font-size="9" font-weight="700" fill="#ff3b30">extinguishers throughout · clean-agent near electrical</text>`;return s;}},
+ {n:"5 · Fire pump room + water storage",part:"E1",clause:"E1D2 / E1D5",std:"AS 2419.1 / AS 2118.1",
+  what:"The pumpset and stored water that make the hydrants and sprinklers work when the mains can't — usually one combined pumpset.",
+  where:"Ground floor, external or fire-stair access, beside the tanks.",size:"6.0 × 6.0 m + tank room (2 × 25–50 kL)",trig:"Wherever hydrants / sprinklers are provided.",
+  draw(){return `<rect x="150" y="350" width="96" height="48" fill="rgba(255,59,48,.14)" stroke="#ff3b30" stroke-width="1.8"/><text x="198" y="372" text-anchor="middle" font-size="9" font-weight="700" fill="#ff3b30">FIRE PUMP</text><text x="198" y="386" text-anchor="middle" font-size="9" font-weight="700" fill="#ff3b30">+ TANKS</text>`;}},
+ {n:"6 · Fire control — FIP + MECP",part:"E4",clause:"E2 / E4",std:"AS 1670.1 / AS 1670.4",
+  what:"The Fire Indicator Panel (where the brigade reads the alarm) co-located with the Master Emergency Control Panel (the EWIS brain) — the one place the whole system is monitored and controlled.",
+  where:"Ground-floor foyer on the brigade access path; co-locate FIP + MECP.",size:"800w + 750w × full height",trig:"Alarm monitoring + occupant warning (AS 1670-series).",
+  draw(){return `<rect x="140" y="352" width="15" height="38" fill="#c22e26"/><rect x="160" y="352" width="15" height="38" fill="#c22e26"/><text x="157" y="345" text-anchor="middle" font-size="9" font-weight="700" fill="#c22e26">FIP + MECP</text><text x="157" y="413" text-anchor="middle" font-size="8.5" fill="#c22e26">on the brigade access path</text>`;}},
+ {n:"7 · Smoke detection + VESDA",part:"E2",clause:"E2 / Spec 20",std:"AS 1670.1",
+  what:"Building-wide smoke and thermal detection, monitored to the FIP; the data hall adds aspirating (VESDA) early-warning that samples the air before smoke is visible.",
+  where:"Detectors on every ceiling; a VESDA pipe network in the white space + return air.",size:"Point detectors Ø100; VESDA pipe Ø25",trig:"Building-wide (heat detectors in the humid pool zones).",
+  draw(){let s='';[398,316,234,152].forEach(y=>{for(let x=100;x<500;x+=72)s+=`<circle cx="${x}" cy="${y-11}" r="3.4" fill="none" stroke="#ff9500" stroke-width="2"/>`;});s+=`<path d="M 70 254 H 292" stroke="#ff9500" stroke-width="2.2" stroke-dasharray="6 3"/><text x="180" y="250" text-anchor="middle" font-size="9" font-weight="700" fill="#ff9500">VESDA sampling · data hall</text>`;return s;}},
+ {n:"8 · Smoke hazard management",part:"E2",clause:"E2D-series",std:"AS 1668.1",
+  what:"Keeping escape routes clear of smoke — smoke exhaust or smoke-and-heat vents for the tall public volume, and stair pressurisation where needed.",
+  where:"Exhaust fans / vents at the top of the Energy Exchange Hall; pressurisation to the FI stairs.",size:"System-dependent",trig:"Large 9b compartments and tall atria — the Energy Exchange Hall likely triggers this.",
+  draw(){let s=`<rect x="596" y="56" width="78" height="16" fill="#ff9500"/><text x="635" y="50" text-anchor="middle" font-size="9" font-weight="700" fill="#ff9500">SMOKE EXHAUST</text>`;[560,635,710].forEach(x=>s+=`<path d="M ${x} 232 L ${x} 92 M ${x-6} 106 L ${x} 92 L ${x+6} 106" stroke="#ff9500" stroke-width="1.6" fill="none"/>`);s+=`<text x="635" y="262" text-anchor="middle" font-size="9" fill="#ff9500">tall volume → exhaust / vents</text>`;return s;}},
+ {n:"9 · Emergency lighting + exit signs",part:"E4",clause:"E4",std:"AS 2293.1",
+  what:"Battery-backed emergency lighting and illuminated exit signs, so people can find and follow the egress path when the power fails.",
+  where:"Every storey and every exit; signs at each exit and direction change.",size:"Fittings + battery packs",trig:"Throughout all storeys and exits.",
+  draw(){let s='';[398,316,234,152].forEach(y=>{s+=`<rect x="414" y="${y-22}" width="20" height="11" fill="#34c759"/><text x="424" y="${y-13.5}" text-anchor="middle" font-size="6" font-weight="800" fill="#fff">EXIT</text>`;for(let x=100;x<490;x+=95)s+=`<circle cx="${x}" cy="${y-9}" r="2.6" fill="#0071e3"/>`;});s+=`<text x="250" y="130" font-size="9" font-weight="700" fill="#0071e3">emergency lights + exit signs · all storeys</text>`;return s;}},
+ {n:"10 · Emergency / fire lift",part:"E3",clause:"E3",std:"AS 1735.2",
+  what:"A lift with firefighter controls (and, above 25 m, an emergency lift) so the brigade can reach upper floors — plus the accessible passenger lift the building needs anyway.",
+  where:"The lift core, with firefighter recall + control.",size:"Shaft ~2500 × 2000",trig:"Emergency lift where effective height &gt; 25 m; accessible lift in any multi-storey accessible building.",
+  draw(){return `<rect x="360" y="72" width="46" height="326" fill="rgba(48,176,199,.18)" stroke="#30b0c7" stroke-width="1.8"/><rect x="366" y="352" width="34" height="42" fill="#30b0c7"/><text x="383" y="379" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">▲</text><text x="383" y="413" text-anchor="middle" font-size="8.5" fill="#1f93a6">firefighter lift controls</text>`;}},
+ {n:"11 · Gaseous suppression (data hall)",part:"IND",clause:"— not NCC",std:"AS ISO 14520",
+  what:"Inert-gas or clean-agent flooding that snuffs a fire in the white space without water — protecting the servers. An insurer / industry requirement, <b>not an NCC one</b>.",
+  where:"Cylinder bank beside the white space; nozzles in the data-hall ceiling; room-integrity (door-fan) tested.",size:"Cylinder room 20–40 m²",trig:"Client / insurer requirement, layered over the NCC.",
+  draw(){let s='';[70,84,98].forEach(x=>s+=`<rect x="${x}" y="262" width="9" height="42" rx="4" fill="#86868b"/>`);[150,200,250].forEach(x=>s+=`<path d="M ${x-6} 236 L ${x+6} 236 L ${x} 246 Z" fill="#86868b"/>`);s+=`<text x="190" y="228" text-anchor="middle" font-size="9" font-weight="700" fill="#57575b">gaseous suppression · industry, not NCC</text>`;return s;}},
+ {n:"12 · Fire-stopping at penetrations",part:"C4",clause:"C4D15",std:"AS 4072.1 / AS 1530.4",
+  what:"Every service that pierces a fire compartment — ducts, cable trays, the district-heat pipes — must be fire-stopped so the compartment keeps its FRL. The invisible system that lets all the others work.",
+  where:"At every compartment wall/floor penetration and the site-boundary crossing.",size:"Collars, wraps, mortar, pillows",trig:"Wherever a service crosses fire-resisting construction.",
+  draw(){let s='';[[440,316],[440,234],[440,152],[500,290],[360,316]].forEach(([x,y])=>s+=`<circle cx="${x}" cy="${y}" r="6" fill="none" stroke="#af52de" stroke-width="2.6"/>`);s+=`<text x="285" y="200" font-size="9" font-weight="700" fill="#8f35c9">fire-stop every compartment penetration →</text>`;return s;}},
+];
+let FY=0;
+function fireName(x){return x.n.slice(x.n.indexOf("· ")+2);}
+function fireRender(){
+  const s=FIRE_SYS[FY], p=FIRE_PARTS[s.part];
+  $("fy_pills").innerHTML=FIRE_SYS.map((x,i)=>`<button class="cypill ${i===FY?"on":""}" data-i="${i}" title="${fireName(x)}" ${i===FY?`style="background:${FIRE_PARTS[x.part].c};border-color:${FIRE_PARTS[x.part].c}"`:""}>${i+1}</button>`).join("");
+  [...$("fy_pills").children].forEach(b=>b.addEventListener("click",()=>{FY=+b.dataset.i;fireRender();}));
+  $("fire_parts").innerHTML=Object.keys(FIRE_PARTS).map(k=>`<div style="display:flex;align-items:center;gap:8px;font-size:11.5px;${k===s.part?"font-weight:700":"opacity:.5"}"><span style="width:11px;height:11px;border-radius:3px;background:${FIRE_PARTS[k].c};flex:none"></span>${FIRE_PARTS[k].t}</div>`).join("");
+  stats($("fire_out"),[
+    [s.clause,"NCC clause"+(s.part==="IND"?" — none":""),"NCC 2022 (as adopted in SA) — VERIFY the clause number and its DtS triggers at ncc.abcb.gov.au."],
+    [s.std,"key standard","The referenced Australian Standard — read the current edition."],
+    [p.t.split(" · ")[0],"Section E part",p.t],
+  ]);
+  document.querySelector("#fy_card tbody").innerHTML=`
+    <tr class="head"><td colspan="2"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.c};margin-right:8px"></span>${s.n} &nbsp;·&nbsp; <b style="color:${p.c}">${s.clause}${s.part==="IND"?"":" · "+p.t.split(" · ")[0]}</b></td></tr>
+    <tr><td>What it is</td><td>${s.what}</td></tr>
+    <tr><td>Where it sits</td><td>${s.where}</td></tr>
+    <tr><td>Indicative size <span style="color:#c46a00;font-weight:800">(Resource 05)</span></td><td>${s.size}</td></tr>
+    <tr><td>Triggered when</td><td>${s.trig}</td></tr>
+    <tr><td>Verify against</td><td><b>NCC 2022 ${s.clause}</b> · <b>${s.std}</b> — and the fire engineer + certifier, who always govern.</td></tr>`;
+  const svg=$("fire_svg"); svg.setAttribute("viewBox","0 0 800 430"); svg.innerHTML=fireBase()+s.draw();
+  checks($("fire_chk"),[
+    s.part==="IND"?["warn","This one is <b>not in the NCC</b> — it's a client / insurer / industry requirement layered on top. Name it as such in your documentation, and design the space for it anyway."]
+      :["ok",`Mandated by <b>NCC 2022 ${s.clause}</b> (${p.t}) via <b>${s.std}</b> — a code-derived requirement: cite the clause, then verify it.`],
+    ["info","Whether the DtS trigger actually catches your building turns on the final classifications, effective height and compartment sizes — pressure-test it with the fire engineer."],
+  ]);
+  $("fire_sel").innerHTML=`<b>Selected:</b> ${fireName(s)}<br><b>NCC:</b> ${s.clause} · ${s.std}`;
+}
+function fireInit(){
+  $("fire_trig").innerHTML=`This ~10,000 m² hybrid: <b>&gt; 500 m²</b> → hydrants (E1D2); <b>Class 8 data hall</b> → sprinklers + suppression + VESDA; <b>Class 9b bathhouse + Energy Exchange Hall</b> → assembly egress + smoke management (E2); <b>all storeys</b> → detection, emergency lighting + exit signs (E2 / E4); multi-storey + accessible → lifts (E3).`;
+  $("fy_prev").addEventListener("click",()=>{FY=(FY+FIRE_SYS.length-1)%FIRE_SYS.length;fireRender();});
+  $("fy_next").addEventListener("click",()=>{FY=(FY+1)%FIRE_SYS.length;fireRender();});
+  fireRender();
+}
+
 /* init */
-stCalc();egCalc();pkCalc();hvCalc();plCalc();exDefaults();exCalc();svcCalc();
+stCalc();egCalc();pkCalc();hvCalc();plCalc();exDefaults();exCalc();svcCalc();fireInit();
 </script>
 <style>
 abbr.ab{position:relative;text-decoration:underline dotted #9a9aa0;text-underline-offset:2px;text-decoration-thickness:1px;cursor:help;font-style:normal}
