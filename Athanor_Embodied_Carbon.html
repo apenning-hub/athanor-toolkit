@@ -396,7 +396,9 @@ if(window.Chart){initCharts();render();}
 else window.addEventListener("load",()=>{ if(window.Chart){initCharts();render();} });
 </script>
 <style>
-abbr.ab{text-decoration:underline dotted #9a9aa0;text-underline-offset:2px;text-decoration-thickness:1px;cursor:help;font-style:normal}
+abbr.ab{position:relative;text-decoration:underline dotted #9a9aa0;text-underline-offset:2px;text-decoration-thickness:1px;cursor:help;font-style:normal}
+abbr.ab::after{content:attr(data-def);position:absolute;left:50%;bottom:150%;transform:translateX(-50%);background:#1d1d1f;color:#fff;font-size:11px;line-height:1.45;font-weight:400;font-style:normal;letter-spacing:normal;text-align:left;text-decoration:none;padding:9px 11px;border-radius:9px;width:260px;max-width:72vw;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .12s;z-index:80;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+abbr.ab:hover::after{opacity:1;visibility:visible}
 </style>
 <script>
 /* ACRO_GLOSSARY — auto-tooltips for every acronym. Hover any dotted term. */
@@ -432,7 +434,7 @@ function annotate(root){
   busy=true;
   const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){
     const p=n.parentElement;
-    if(!p||SKIP.has(p.tagName)||p.closest("svg,abbr,.tip"))return NodeFilter.FILTER_REJECT;
+    if(!p||SKIP.has(p.tagName)||p.closest("svg,abbr,.tip,nav"))return NodeFilter.FILTER_REJECT;
     rx.lastIndex=0;
     return rx.test(n.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
   }});
@@ -444,7 +446,7 @@ function annotate(root){
     while((m=rx.exec(txt))){
       if(m.index>last)frag.appendChild(document.createTextNode(txt.slice(last,m.index)));
       const a=document.createElement("abbr");
-      a.className="ab"; a.title=G[m[1]]; a.textContent=m[1];
+      a.className="ab"; a.setAttribute("data-def",G[m[1]]); a.setAttribute("aria-label",G[m[1]]); a.textContent=m[1];
       frag.appendChild(a);
       last=m.index+m[1].length;
     }

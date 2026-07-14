@@ -1220,10 +1220,9 @@ function stxCalc(){
   chks.push([inX&&inY?"ok":"bad",`Grid ${f1(gx)} × ${f1(gy)} m — ${inX&&inY?"workable":"OUTSIDE the typical range"} for ${s[0].replace(" †","")} (typ. ${s[3]}–${s[4]} m).`]);
   chks.push([nested||flat?"ok":"warn",nested?`Nesting achieved: the ${(typeof SVC!=="undefined")?SVC_SYS[SVC.sys].n:"air system"} zone sits inside the beam depth. Free depth — spend it on ceiling height.`:flat?`Flat soffit: services run in an uninterrupted ${f0(effSvc)} mm layer — shallow air systems (chilled beams, cassettes) pay off directly here.`:`The services zone exceeds the beam depth by ${f0(effSvc-govern)} mm. Options: cellular beams (through the web), a shallower system in Ceiling Services, or accept the depth.`]);
   if(SST.ov==="park"){
-    const pf=parkFit(gy,2);
-    if(pf.h[0]>0)chks.push(["warn",`Even with the module shifted, a column line lands <b>in the aisle</b> (grid Y ${f1(gy)} vs the 5.4 / 6.0 / 5.4 module) — cars can't drive through columns. Use 8.4 / 16.8, or the classic uneven grid: 5.4 – 6.0 – 5.4.`]);
-    else if(pf.o>0||pf.h[1]>0)chks.push(["ok",`Parking module shifted ${f1(pf.o)} m so column lines land on the bay/aisle boundary${pf.h[1]?" (some columns sit at the rear of bays — accepted practice: rear third, never the door-swing zone)":""}. AS/NZS 2890.1 — VERIFY.`]);
-    else chks.push(["ok",`Column lines land on the bay/aisle boundary — structure and parking module agree. Columns at bay corners, never in the door-swing third (AS/NZS 2890.1 — VERIFY).`]);
+    const pk=parkPhase(gy,footD);
+    if(pk.bad>0)chks.push(["warn",`A column line still lands <b>in a drive aisle</b> — grid Y ${f1(gy)} doesn't clear the 16.8 m parking module (cars can't drive through columns). Use <b>16.8</b> (clear-span), or the classic uneven grid <b>5.4 – 6.0 – 5.4</b>.`]);
+    else chks.push(["ok",`Parking ${pk.phase>0.1?`shifted ${f1(pk.phase)} m so that `:""}column lines land at bay heads and rears — <b>clear of the drive aisles</b>, never the door-swing third (AS/NZS 2890.1 — VERIFY).`]);
   }
   if(cant>0){
     const lim=gx/3, sweet=gx/4;
@@ -1239,13 +1238,15 @@ function stxCalc(){
   stxBars(s,gx,gy);
 }
 
-/* parking module: find the offset (0 or 3.0 m) that best aligns columns with bay/aisle lines */
-function parkFit(gy,ny){
-  function hits(off){let a=0,b=0;for(let j=0;j<=ny;j++){const yy=(((j*gy-off)%16.8)+16.8)%16.8;
-    if(yy>5.7&&yy<11.1)a++; else if(!(yy<0.3||yy>16.5||Math.abs(yy-5.4)<0.3||Math.abs(yy-11.4)<0.3))b++;}return[a,b];}
-  const cands=[0,3.0].map(o=>({o,h:hits(o)}));
-  cands.sort((p,q)=>(p.h[0]*10+p.h[1])-(q.h[0]*10+q.h[1]));
-  return cands[0]; /* {o: offset, h:[inAisle, midBay]} */
+/* parking module: choose the phase that keeps column lines OUT of the 6 m drive aisles */
+function parkPhase(gy,D){
+  let best=0,bs=1e9,bad0=0;
+  for(let p=0;p<16.79;p+=0.3){
+    let bad=0;for(let y=0;y<=D+0.01;y+=gy){const r=(((y-p)%16.8)+16.8)%16.8;if(r>5.65&&r<11.15)bad++;}
+    const score=bad*100+p;                 /* fewest aisle-columns, then smallest top margin */
+    if(score<bs){bs=score;best=p;bad0=bad;}
+  }
+  return {phase:best,bad:bad0};   /* module bays tile at y = phase + k·16.8 (+11.4 for the back bay) */
 }
 /* ---------- plan: overlays BETWEEN columns ---------- */
 function stxPlan(s,flat,gx,gy,cant){
@@ -1265,10 +1266,12 @@ function stxPlan(s,flat,gx,gy,cant){
   let out="";
   /* ---- overlay fills the whole plate ---- */
   if(SST.ov==="park"){
-    const module=16.8, bd=5.4;
-    /* full-depth bay rows only, tiled flush from the top — never a clipped stub */
+    const module=16.8, bd=5.4, ph=parkPhase(gy,footD).phase;
+    /* drive-aisle bands (light) so the plate reads as bays + aisles, columns clear of the aisles */
+    for(let m=-1;ph+m*module<footD;m++){const a0=Math.max(0,ph+m*module+bd),a1=Math.min(footD,ph+m*module+11.4);if(a1-a0>0.4)out+=`<rect x="${X(0)}" y="${Y(a0)}" width="${footW*sc}" height="${(a1-a0)*sc}" fill="rgba(88,86,214,.05)"/>`;}
+    /* full-depth bay rows only (no clipped stubs), tiled at the aligned phase */
     const rowYs=[];
-    for(let m=0;m*module<footD-0.1;m++)for(const by of [m*module,m*module+11.4])if(by+bd<=footD+0.05)rowYs.push(by);
+    for(let m=-1;ph+m*module<footD;m++)for(const by of [ph+m*module,ph+m*module+11.4])if(by>=-0.05&&by+bd<=footD+0.05)rowYs.push(by);
     /* accessible bays — NCC D4D6 (Class 9b ≈ 1 per 50), clustered top-left near the entry */
     const accTotal=Math.max(1,Math.ceil((footW*footD/26)/50)); let accLeft=accTotal;
     for(let i=0;i<nx;i++){
@@ -1276,13 +1279,13 @@ function stxPlan(s,flat,gx,gy,cant){
       rowYs.forEach((by,ri)=>{
         for(let b=0;b<n;b++){
           const bx=xs[i]+b*bwm, acc=(ri===0&&accLeft>0);
-          out+=`<rect x="${X(bx)+1.5}" y="${Y(by)+1}" width="${bwm*sc-3}" height="${bd*sc-2}" fill="${acc?"rgba(0,113,227,.18)":"rgba(88,86,214,.10)"}" stroke="${acc?"#0071e3":"#5856d6"}" stroke-width="${acc?1.1:0.7}"/>`;
+          out+=`<rect x="${X(bx)+1.5}" y="${Y(by)+1}" width="${bwm*sc-3}" height="${bd*sc-2}" fill="${acc?"rgba(0,113,227,.18)":"rgba(88,86,214,.12)"}" stroke="${acc?"#0071e3":"#5856d6"}" stroke-width="${acc?1.1:0.7}"/>`;
           if(acc){out+=`<text x="${X(bx+bwm/2)}" y="${Y(by+bd/2)+Math.min(bwm*sc*.18,6)}" text-anchor="middle" font-size="${Math.min(bwm*sc*.55,16)}" fill="#0071e3">♿</text>`;accLeft--;}
         }
       });
-      if(i===0)out+=`<text x="${X(bwm/2)}" y="${Y(0.35)+10}" text-anchor="middle" font-size="9" font-weight="700" fill="#5856d6" opacity=".85">${f1(bwm)} m</text>`;
+      if(i===0&&rowYs.length)out+=`<text x="${X(bwm/2)}" y="${Y(rowYs[0]+0.35)+10}" text-anchor="middle" font-size="9" font-weight="700" fill="#5856d6" opacity=".9">${f1(bwm)} m</text>`;
     }
-    for(let m=0;m*module<footD-0.1;m++){const ay=m*module+8.4;if(ay>0.6&&ay<footD-0.6)out+=`<text x="${X(gx/2)}" y="${Y(ay)+4}" text-anchor="middle" font-size="10" font-weight="700" fill="#5856d6" opacity=".7">AISLE 6.0 m</text>`;}
+    for(let m=-1;ph+m*module<footD;m++){const ay=ph+m*module+8.4;if(ay>0.6&&ay<footD-0.6)out+=`<text x="${X(gx/2)}" y="${Y(ay)+4}" text-anchor="middle" font-size="10" font-weight="700" fill="#5856d6" opacity=".72">AISLE 6.0 m</text>`;}
     out+=`<text x="${X(0)}" y="${Y(0)-9}" font-size="10" font-weight="700" fill="#0071e3">♿ ${accTotal} accessible bay${accTotal>1?"s":""} · AS/NZS 2890.6 + NCC D4D6</text>`;
   } else if(SST.ov==="racks"){
     const CZ=0.3, rw=0.6*sc, rd=1.2*sc, ca=1.2*sc, ha=1.0*sc;
@@ -1325,59 +1328,67 @@ function stxPlan(s,flat,gx,gy,cant){
 
 /* ---------- section: slab-on-beams, nested services, thin ceiling ---------- */
 function stxSec(s,flat,band,dSec,dPri,slab,svcD,ceil,zone,nested,cellular,govern){
-  const svg=$("stx_sec"),W=840;
-  const sc=Math.min(0.34,190/zone);
-  const x0=90,bw=620;
-  const slabH=Math.max((flat?dSec:slab)*sc,10);
-  const beamH=flat?0:govern*sc;
-  const svcH=svcD*sc;
-  const ceilH=ceil?Math.max(ceil*sc,4):0;
-  const H=40+slabH+Math.max(beamH,(nested?beamH:beamH+svcH))+(flat?svcH:0)+ceilH+70;
+  const svg=$("stx_sec"),W=940;
+  const sc=Math.min(0.30,168/zone);              /* scale so the whole zone fits ~168px tall */
+  const x0=118,bw=520,colW=22;
+  const slabH=Math.max((flat?dSec:slab)*sc,13);
+  const beamD=flat?0:govern*sc;                  /* governing (deepest) beam depth, px */
+  const priD=flat?0:dPri*sc, secD=flat?0:dSec*sc;
+  const svcH=Math.max(svcD*sc,14);
+  const ceilH=ceil?Math.max(ceil*sc,6):0;
+  const zoneH=flat?svcH:(nested?beamD:beamD+svcH);
+  const H=34+slabH+zoneH+ceilH+66;
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const beamCol=s[5]==="timber"?"#c98a3d":s[5]==="steel"?"#0071e3":"#8e8e93";
+  const lx=x0+bw+colW+12;                          /* right-hand label column */
+  const lbl=(yy,txt,col,wt)=>`<text x="${lx}" y="${yy+4}" font-size="11" fill="${col||"#86868b"}"${wt?' font-weight="700"':''}>${txt}</text>`;
   let y=34,out="";
-  /* columns full height */
-  const colH=slabH+(flat?svcH:Math.max(beamH,nested?beamH:beamH+svcH))+ceilH+34;
-  out+=`<rect x="${x0-26}" y="${y}" width="26" height="${colH}" fill="#d2d2d7"/><rect x="${x0+bw}" y="${y}" width="26" height="${colH}" fill="#d2d2d7"/>`;
-  /* slab with depth */
-  out+=`<rect x="${x0-26}" y="${y}" width="${bw+52}" height="${slabH}" fill="#aeaeb2"/>
-    <text x="${x0+bw+34}" y="${y+slabH/2+4}" font-size="10" fill="#86868b">${flat?s[0].replace(" †","")+" "+f0(dSec)+" mm":"slab "+slab+" mm"}</text>`;
+  const zoneBottom=34+slabH+zoneH+ceilH;
+  /* columns (behind everything) */
+  out+=`<rect x="${x0-colW}" y="${y}" width="${colW}" height="${zoneBottom-y+18}" fill="#d2d2d7"/><rect x="${x0+bw}" y="${y}" width="${colW}" height="${zoneBottom-y+18}" fill="#d2d2d7"/>`;
+  /* slab */
+  out+=`<rect x="${x0-colW}" y="${y}" width="${bw+2*colW}" height="${slabH}" fill="#aeaeb2"/>`;
+  out+=lbl(y+slabH/2,(flat?s[0].replace(" †",""):"slab")+" "+f0(flat?dSec:slab)+" mm","#86868b");
   y+=slabH;
+  const bt=y;                                      /* beam-zone top (soffit of slab) */
   if(!flat){
-    /* wide, not-too-deep beams hung from the slab: primary at columns, secondaries within bay */
-    const priW=Math.min(150,Math.max(90,dPri*sc*1.6));
-    const secW=Math.min(110,Math.max(64,dSec*sc*(band?2.6:1.5)));
-    out+=`<rect x="${x0-26}" y="${y}" width="${priW}" height="${dPri*sc}" fill="#af52de" rx="3"/>
-      <rect x="${x0+bw+26-priW}" y="${y}" width="${priW}" height="${dPri*sc}" fill="#af52de" rx="3"/>
-      <text x="${x0-26+priW/2}" y="${y+dPri*sc+13}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#af52de">PRIMARY ${f0(dPri)}</text>`;
-    [0.33,0.66].forEach((f,i)=>{
-      const bx=x0+bw*f-secW/2;
-      out+=`<rect x="${bx}" y="${y}" width="${secW}" height="${dSec*sc}" fill="${s[5]==="timber"?"#c98a3d":s[5]==="steel"?"#0071e3":"#86868b"}" rx="3"/>`;
-      if(cellular)out+=`<circle cx="${bx+secW/2}" cy="${y+dSec*sc/2}" r="${Math.min(dSec*sc*.3,10)}" fill="#fff"/>`;
-      if(i===0)out+=`<text x="${bx+secW/2}" y="${y+dSec*sc+13}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0071e3">SECONDARY ${f0(dSec)}</text>`;
-    });
-    /* services nested between beams (or hanging below) */
-    const sy=nested?y:y; const nestH=nested?svcH:svcH;
-    const zones=[[x0+bw*0.12,x0+bw*0.33-70],[x0+bw*0.33+70,x0+bw*0.66-70],[x0+bw*0.66+70,x0+bw*0.9]];
-    const topY=nested?y+8:y+govern*sc+6;
-    zones.forEach(([a,b],i)=>{
-      if(b-a<40)return;
-      out+=`<rect x="${a}" y="${topY}" width="${b-a}" height="${Math.max(nestH-12,14)}" fill="rgba(255,149,0,.2)"/>`;
-      out+=`<circle cx="${(a+b)/2}" cy="${topY+nestH*.4}" r="${Math.min(nestH*.28,16)}" fill="none" stroke="#c46a00" stroke-width="2"/>`;
-      if(i===1)out+=`<line x1="${a+8}" y1="${topY+nestH*.78}" x2="${b-8}" y2="${topY+nestH*.78}" stroke="#ff3b30" stroke-width="2"/>`;
-    });
-    out+=`<text x="${x0+bw+34}" y="${topY+nestH/2}" font-size="10" fill="#c46a00">services ${f0(svcD)} mm — ${nested?"NESTED between beams":"below beams (don't fit)"}${cellular?" / through web":""}</text>`;
-    y+= (nested?govern*sc : govern*sc+svcH);
+    /* services shown FIRST, filling the pocket between beams (so beams overlap them cleanly) */
+    if(nested){
+      out+=`<rect x="${x0}" y="${bt}" width="${bw}" height="${Math.min(svcH,beamD)}" fill="rgba(255,149,0,.16)"/>`;
+      [0.39,0.61].forEach(f=>out+=`<circle cx="${x0+bw*f}" cy="${bt+Math.min(svcH,beamD)*0.42}" r="${Math.min(svcH*0.26,15)}" fill="none" stroke="#c46a00" stroke-width="2"/>`);
+      out+=`<line x1="${x0+bw*0.13}" y1="${bt+Math.min(svcH,beamD)*0.8}" x2="${x0+bw*0.87}" y2="${bt+Math.min(svcH,beamD)*0.8}" stroke="#ff3b30" stroke-width="2"/>`;
+    }
+    /* primary beams hang at the two column ends; secondaries within the bay */
+    const priW=Math.max(34,Math.min(56,bw*0.1)), secW=Math.max(20,Math.min(40,bw*0.05*(band?1.7:1.15)));
+    out+=`<rect x="${x0}" y="${bt}" width="${priW}" height="${priD}" fill="#af52de" rx="3"/><rect x="${x0+bw-priW}" y="${bt}" width="${priW}" height="${priD}" fill="#af52de" rx="3"/>`;
+    [0.3,0.5,0.7].forEach(f=>{const bx=x0+bw*f-secW/2;out+=`<rect x="${bx}" y="${bt}" width="${secW}" height="${secD}" fill="${beamCol}" rx="3"/>`;if(cellular)out+=`<circle cx="${bx+secW/2}" cy="${bt+secD*0.5}" r="${Math.min(secD*0.28,8)}" fill="#fff"/>`;});
+    /* services below the beams (don't fit) */
+    if(!nested){
+      const sy=bt+beamD;
+      out+=`<rect x="${x0}" y="${sy}" width="${bw}" height="${svcH}" fill="rgba(255,149,0,.16)"/>`;
+      [0.3,0.55].forEach(f=>out+=`<circle cx="${x0+bw*f}" cy="${sy+svcH*0.42}" r="${Math.min(svcH*0.26,15)}" fill="none" stroke="#c46a00" stroke-width="2"/>`);
+      out+=`<line x1="${x0+bw*0.1}" y1="${sy+svcH*0.8}" x2="${x0+bw*0.9}" y2="${sy+svcH*0.8}" stroke="#ff3b30" stroke-width="2"/>`;
+    }
+    out+=lbl(bt+priD/2,"primary "+f0(dPri)+" mm","#af52de",1);
+    out+=lbl(bt+priD/2+16,"secondary "+f0(dSec)+" mm"+(cellular?" (cellular)":""),beamCol,1);
+    out+=lbl(bt+(nested?beamD-8:beamD+svcH/2),"services "+f0(svcD)+" mm "+(nested?"— nested ✓":"— below beams"),"#c46a00",1);
+    y=bt+zoneH;
   } else {
-    out+=`<rect x="${x0}" y="${y+4}" width="${bw}" height="${Math.max(svcH-8,14)}" fill="rgba(255,149,0,.2)"/><circle cx="${x0+bw*.3}" cy="${y+svcH/2}" r="${Math.min(svcH*.3,16)}" fill="none" stroke="#c46a00" stroke-width="2"/><line x1="${x0+30}" y1="${y+svcH*.75}" x2="${x0+bw-30}" y2="${y+svcH*.75}" stroke="#ff3b30" stroke-width="2"/>
-      <text x="${x0+bw+34}" y="${y+svcH/2+4}" font-size="10" fill="#c46a00">services ${f0(svcD)} mm — clean run under the flat soffit</text>`;
+    out+=`<rect x="${x0}" y="${y}" width="${bw}" height="${svcH}" fill="rgba(255,149,0,.16)"/>`;
+    [0.3,0.55].forEach(f=>out+=`<circle cx="${x0+bw*f}" cy="${y+svcH*0.42}" r="${Math.min(svcH*0.26,15)}" fill="none" stroke="#c46a00" stroke-width="2"/>`);
+    out+=`<line x1="${x0+bw*0.1}" y1="${y+svcH*0.8}" x2="${x0+bw*0.9}" y2="${y+svcH*0.8}" stroke="#ff3b30" stroke-width="2"/>`;
+    out+=lbl(y+svcH/2,"services "+f0(svcD)+" mm — clean run under flat soffit","#c46a00",1);
     y+=svcH;
   }
-  if(ceilH){out+=`<rect x="${x0-26}" y="${y+2}" width="${bw+52}" height="${ceilH}" fill="#1d1d1f"/><text x="${x0+bw+34}" y="${y+ceilH+2}" font-size="10" fill="#86868b">ceiling ${ceil} mm</text>`;y+=ceilH+2;}
-  else{out+=`<text x="${x0+bw+34}" y="${y+10}" font-size="10" fill="#34c759">exposed — no ceiling</text>`;}
-  out+=`<line x1="${x0-26}" y1="${y+22}" x2="${x0+bw+26}" y2="${y+22}" stroke="#1d1d1f" stroke-width="1" stroke-dasharray="6 4"/>
-    <text x="${x0+bw/2}" y="${y+40}" text-anchor="middle" font-size="10.5" fill="#86868b">clear height below · 2.7 m office · 4–5 m data hall · 5 m+ pool hall</text>
-    <line x1="${x0+bw+150}" y1="34" x2="${x0+bw+150}" y2="${y}" stroke="#34c759" stroke-width="2"/>
-    <text x="${x0+bw+156}" y="${(34+y)/2}" font-size="11" font-weight="800" fill="#34c759" transform="rotate(90 ${x0+bw+156} ${(34+y)/2})">floor zone ≈ ${f0(zone)} mm</text>`;
+  /* ceiling */
+  if(ceilH){out+=`<rect x="${x0-colW}" y="${y+2}" width="${bw+2*colW}" height="${ceilH}" fill="#1d1d1f"/>`+lbl(y+ceilH/2+2,"ceiling "+ceil+" mm","#86868b");y+=ceilH+2;}
+  else out+=lbl(y+9,"exposed — no ceiling","#34c759",1);
+  /* clear height below + floor-zone bracket on the left */
+  out+=`<line x1="${x0-colW}" y1="${y+22}" x2="${x0+bw+colW}" y2="${y+22}" stroke="#1d1d1f" stroke-width="1" stroke-dasharray="6 4"/>
+    <text x="${x0+bw/2}" y="${y+40}" text-anchor="middle" font-size="11" fill="#86868b">clear height below · 2.7 m office · 4–5 m data hall · 5 m+ pool hall</text>`;
+  const zc=34+(slabH+zoneH+ceilH)/2;
+  out+=`<line x1="${x0-colW-18}" y1="34" x2="${x0-colW-18}" y2="${34+slabH+zoneH+ceilH}" stroke="#34c759" stroke-width="2"/>
+    <text x="${x0-colW-24}" y="${zc}" text-anchor="middle" font-size="11" font-weight="800" fill="#34c759" transform="rotate(-90 ${x0-colW-24} ${zc})">floor zone ≈ ${f0(zone)} mm</text>`;
   svg.innerHTML=out;
 }
 
@@ -1420,7 +1431,9 @@ function seg2(id,cb){const s=$(id);[...s.children].forEach(b=>b.addEventListener
 stCalc();egCalc();pkCalc();hvCalc();plCalc();exDefaults();exCalc();svcCalc();
 </script>
 <style>
-abbr.ab{text-decoration:underline dotted #9a9aa0;text-underline-offset:2px;text-decoration-thickness:1px;cursor:help;font-style:normal}
+abbr.ab{position:relative;text-decoration:underline dotted #9a9aa0;text-underline-offset:2px;text-decoration-thickness:1px;cursor:help;font-style:normal}
+abbr.ab::after{content:attr(data-def);position:absolute;left:50%;bottom:150%;transform:translateX(-50%);background:#1d1d1f;color:#fff;font-size:11px;line-height:1.45;font-weight:400;font-style:normal;letter-spacing:normal;text-align:left;text-decoration:none;padding:9px 11px;border-radius:9px;width:260px;max-width:72vw;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .12s;z-index:80;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+abbr.ab:hover::after{opacity:1;visibility:visible}
 </style>
 <script>
 /* ACRO_GLOSSARY — auto-tooltips for every acronym. Hover any dotted term. */
@@ -1534,7 +1547,7 @@ function annotate(root){
   busy=true;
   const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){
     const p=n.parentElement;
-    if(!p||SKIP.has(p.tagName)||p.closest("svg,abbr,.tip"))return NodeFilter.FILTER_REJECT;
+    if(!p||SKIP.has(p.tagName)||p.closest("svg,abbr,.tip,nav"))return NodeFilter.FILTER_REJECT;
     rx.lastIndex=0;
     return rx.test(n.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
   }});
@@ -1546,7 +1559,7 @@ function annotate(root){
     while((m=rx.exec(txt))){
       if(m.index>last)frag.appendChild(document.createTextNode(txt.slice(last,m.index)));
       const a=document.createElement("abbr");
-      a.className="ab"; a.title=G[m[1]]; a.textContent=m[1];
+      a.className="ab"; a.setAttribute("data-def",G[m[1]]); a.setAttribute("aria-label",G[m[1]]); a.textContent=m[1];
       frag.appendChild(a);
       last=m.index+m[1].length;
     }
