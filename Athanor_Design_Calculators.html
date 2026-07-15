@@ -1130,55 +1130,97 @@ function cyDepth(c){
 }
 /* ---- spacing plan: this component only, at typical spacing ---- */
 function cyPlan(c){
-  const svg=$("svc_plan"),Wm=8.4,sc=58,pad=32;
-  const W=Wm*sc+2*pad,H=Wm*sc+2*pad+26;
+  const svg=$("svc_plan"),Wm=8.4,sc=58,pad=36;
+  const W=Wm*sc+2*pad,H=Wm*sc+2*pad+30;
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
-  const X=m=>pad+m*sc;
+  const X=m=>pad+m*sc, col=c.c;
+  /* label with a white halo so it stays readable over patterns */
+  const T=(x,y,s,o)=>{o=o||{};const fs=o.s||10,fw=o.w||600,an=o.a||"middle",fl=o.f||"#1d1d1f",wpx=s.length*fs*0.55+8,bx=an==="middle"?x-wpx/2:an==="end"?x-wpx:x-4,halo=o.halo===false?"":`<rect x="${bx}" y="${y-fs+1}" width="${wpx}" height="${fs+5}" rx="3" fill="#fff" opacity=".85"/>`;return `${halo}<text x="${x}" y="${y}" text-anchor="${an}" font-size="${fs}" font-weight="${fw}" fill="${fl}">${s}</text>`;};
+  /* dimension line with end ticks + centred label */
+  const dim=(x1,y1,x2,y2,label,cc)=>{cc=cc||"#1d1d1f";const h=Math.abs(x2-x1)>=Math.abs(y2-y1),tk=h?`<line x1="${x1}" y1="${y1-4}" x2="${x1}" y2="${y1+4}"/><line x1="${x2}" y1="${y2-4}" x2="${x2}" y2="${y2+4}"/>`:`<line x1="${x1-4}" y1="${y1}" x2="${x1+4}" y2="${y1}"/><line x1="${x2-4}" y1="${y2}" x2="${x2+4}" y2="${y2}"/>`;return `<g stroke="${cc}" stroke-width="1.2"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>${tk}</g>`+T((x1+x2)/2,h?(y1+y2)/2-6:(y1+y2)/2+4,label,{s:10.5,w:800,f:cc});};
+  const note=t=>T(X(4.2),X(7.95),t,{s:10,w:600,f:col});
   let out=`<rect x="${pad}" y="${pad}" width="${Wm*sc}" height="${Wm*sc}" fill="#fff" stroke="#1d1d1f" stroke-width="1.6"/>`;
-  for(let m=0.6;m<Wm;m+=0.6)out+=`<line x1="${X(m)}" y1="${pad}" x2="${X(m)}" y2="${pad+Wm*sc}" stroke="#f2f2f4" stroke-width=".8"/><line x1="${pad}" y1="${X(m)}" x2="${pad+Wm*sc}" y2="${X(m)}" stroke="#f2f2f4" stroke-width=".8"/>`;
-  const dim=(x1,y1,x2,y2,label)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#1d1d1f" stroke-width="1.2"/><text x="${(x1+x2)/2}" y="${(y1+y2)/2-6}" text-anchor="middle" font-size="10.5" font-weight="800" fill="#1d1d1f">${label}</text>`;
+  for(let m=0.6;m<Wm;m+=0.6)out+=`<line x1="${X(m)}" y1="${pad}" x2="${X(m)}" y2="${pad+Wm*sc}" stroke="#f4f4f6" stroke-width=".8"/><line x1="${pad}" y1="${X(m)}" x2="${pad+Wm*sc}" y2="${X(m)}" stroke="#f4f4f6" stroke-width=".8"/>`;
+  [[0,0],[Wm,0],[0,Wm],[Wm,Wm]].forEach(a=>out+=`<rect x="${X(a[0])-4.5}" y="${X(a[1])-4.5}" width="9" height="9" fill="#1d1d1f"/>`);
   const k=CY;
-  if(k===0||k===1){ /* tray + data lanes */
-    out+=`<rect x="${X(0.9)}" y="${pad}" width="${0.5*sc}" height="${Wm*sc}" fill="rgba(175,82,222,.30)" stroke="#af52de"/><text x="${X(1.15)}" y="${X(4.2)}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#8f35c9" transform="rotate(-90 ${X(1.15)} ${X(4.2)})">POWER TRAY</text>`;
-    out+=`<rect x="${X(1.75)}" y="${pad}" width="${0.35*sc}" height="${Wm*sc}" fill="rgba(88,86,214,.28)" stroke="#5856d6"/><text x="${X(1.92)}" y="${X(4.2)}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4644b8" transform="rotate(-90 ${X(1.92)} ${X(4.2)})">DATA BASKET</text>`;
-    out+=dim(X(1.4),X(7.6),X(1.75),X(7.6),"≥300");
-    out+=`<line x1="${X(5)}" y1="${X(2)}" x2="${X(7.5)}" y2="${X(2)}" stroke="${k===1?"#5856d6":"#af52de"}" stroke-width="2" stroke-dasharray="4 3"/><text x="${X(6.25)}" y="${X(2)-9}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${k===1?"#4644b8":"#8f35c9"}">branches cross at 90°</text>`;
+  if(k===0||k===1){ /* power tray + data basket — main run on the grid, branches to devices */
+    out+=`<rect x="${X(0.85)}" y="${pad}" width="${0.5*sc}" height="${Wm*sc}" fill="rgba(175,82,222,.26)" stroke="#af52de" stroke-width="1.4"/>`;
+    out+=`<rect x="${X(1.5)}" y="${pad}" width="${0.35*sc}" height="${Wm*sc}" fill="rgba(88,86,214,.24)" stroke="#5856d6" stroke-width="1.4"/>`;
+    out+=`<text x="${X(1.1)}" y="${X(5.7)}" text-anchor="middle" font-size="10" font-weight="700" fill="#8f35c9" transform="rotate(-90 ${X(1.1)} ${X(5.7)})">POWER TRAY 300–600 w</text>`;
+    out+=`<text x="${X(1.67)}" y="${X(5.7)}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#4644b8" transform="rotate(-90 ${X(1.67)} ${X(5.7)})">DATA 150–450 w</text>`;
+    [2.0,4.2,6.4].forEach(by=>out+=`<line x1="${X(1.85)}" y1="${X(by)}" x2="${X(6.9)}" y2="${X(by)}" stroke="#af52de" stroke-width="2.6"/><rect x="${X(6.9)-6}" y="${X(by)-6}" width="12" height="12" rx="2" fill="#af52de"/>`);
+    out+=T(X(4.6),X(1.55),"branches cross at 90°",{s:10,f:"#8f35c9"});
+    out+=T(X(6.9),X(7.05),"GPO / floor-box drop",{s:9.5,f:"#8f35c9",a:"end"});
+    out+=T(X(4.7),X(3.25),"power ≥300 mm from data (or 50 with a metal divider)",{s:9.5,f:"#8f35c9"});
+    out+=note("mains on the grid line · horizontal data runs ≤ 90 m to the comms room");
   } else if(k===2){ /* air system at its spacing */
     const s=SVC.sys;
-    if(s==="acb"||s==="pcb"){[1.4,4.2,7.0].forEach(x=>{out+=`<rect x="${X(x)-0.3*sc}" y="${X(0.9)}" width="${0.6*sc}" height="${6.6*sc}" rx="5" fill="rgba(255,149,0,.25)" stroke="#c46a00" stroke-width="2"/>`;});out+=dim(X(1.4),X(7.9),X(4.2),X(7.9),"~2.8 m");}
-    else if(s==="cass"){[[2.4,2.4],[6.0,6.0],[6.0,2.4],[2.4,6.0]].forEach(([x,y])=>{out+=`<rect x="${X(x)-0.475*sc}" y="${X(y)-0.475*sc}" width="${0.95*sc}" height="${0.95*sc}" fill="rgba(255,149,0,.2)" stroke="#c46a00" stroke-width="2"/>`;});out+=dim(X(2.4),X(7.9),X(6),X(7.9),"~3.6 m");}
-    else if(s==="rad"){[[0.9,0.9],[4.5,0.9],[0.9,4.5],[4.5,4.5]].forEach(([x,y])=>{out+=`<rect x="${X(x)}" y="${X(y)}" width="${3*sc}" height="${3*sc}" fill="rgba(255,149,0,.15)" stroke="#c46a00" stroke-dasharray="6 4"/>`;});}
-    else{[[2.1,2.1],[6.3,2.1],[2.1,6.3],[6.3,6.3]].forEach(([x,y])=>{out+=`<rect x="${X(x)-0.3*sc}" y="${X(y)-0.3*sc}" width="${0.6*sc}" height="${0.6*sc}" fill="rgba(255,149,0,.2)" stroke="#c46a00" stroke-width="2"/><circle cx="${X(x)}" cy="${X(y)}" r="${0.13*sc}" fill="none" stroke="#c46a00" stroke-width="1.4"/>`;});out+=dim(X(2.1),X(7.9),X(6.3),X(7.9),"~4.2 m");out+=`<rect x="${X(3.9)}" y="${pad}" width="${0.6*sc}" height="${Wm*sc}" fill="rgba(255,149,0,.12)"/>`;}
-  } else if(k===3){ /* condensate */
-    out+=`<circle cx="${X(2.4)}" cy="${X(2.4)}" r="8" fill="rgba(48,176,199,.3)" stroke="#1f93a6" stroke-width="2"/><path d="M ${X(2.4)} ${X(2.4)} L ${X(2.4)} ${X(0.7)} L ${X(7.8)} ${X(0.7)}" fill="none" stroke="#30b0c7" stroke-width="2.4" stroke-dasharray="7 4"/><circle cx="${X(7.8)}" cy="${X(0.7)}" r="6" fill="#30b0c7"/><text x="${X(7.8)}" y="${X(0.7)-13}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f93a6">riser</text>
-      <text x="${X(5)}" y="${X(0.7)+18}" text-anchor="middle" font-size="10.5" font-weight="800" fill="#1f93a6">fall ≥1:100 →</text>
-      <rect x="${X(4.5)-11}" y="${X(4.5)-11}" width="22" height="22" fill="none" stroke="#1f93a6" stroke-width="1.5" stroke-dasharray="3 2"/><text x="${X(4.5)}" y="${X(4.5)+30}" text-anchor="middle" font-size="10" fill="#1f93a6">450 sq access panel at valves</text>`;
+    if(s==="acb"||s==="pcb"){const nm=(s==="acb"?"active":"passive")+" chilled beam";
+      [1.4,4.2,7.0].forEach(x=>out+=`<rect x="${X(x)-0.3*sc}" y="${X(0.9)}" width="${0.6*sc}" height="${6.4*sc}" rx="5" fill="rgba(255,149,0,.22)" stroke="#c46a00" stroke-width="1.8"/>`);
+      out+=`<text x="${X(1.4)}" y="${X(4.1)}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#c46a00" transform="rotate(-90 ${X(1.4)} ${X(4.1)})">${nm} ~600 w</text>`;
+      out+=dim(X(1.4),X(0.5),X(4.2),X(0.5),"~2.8 m rows");
+      out+=note("fresh air induces room air over the coil — small ducts, low fan energy");
+    } else if(s==="cass"){
+      [[2.4,2.4],[6.0,6.0],[6.0,2.4],[2.4,6.0]].forEach(([x,y])=>{out+=`<rect x="${X(x)-0.475*sc}" y="${X(y)-0.475*sc}" width="${0.95*sc}" height="${0.95*sc}" fill="rgba(255,149,0,.2)" stroke="#c46a00" stroke-width="1.8"/>`;[[-1,0],[1,0],[0,-1],[0,1]].forEach(([dx,dy])=>out+=`<line x1="${X(x)+dx*0.5*sc}" y1="${X(y)+dy*0.5*sc}" x2="${X(x)+dx*0.72*sc}" y2="${X(y)+dy*0.72*sc}" stroke="#c46a00" stroke-width="1.2"/>`);});
+      out+=dim(X(2.4),X(0.5),X(6.0),X(0.5),"~3.6 m");out+=T(X(2.4),X(2.4),"VRF cassette 950 sq",{s:9,f:"#c46a00"});
+      out+=note("4-way throw · centre of the tile · ≥2 m from walls for even throw");
+    } else if(s==="rad"){
+      [[0.9,0.9],[4.5,0.9],[0.9,4.5],[4.5,4.5]].forEach(([x,y])=>out+=`<rect x="${X(x)}" y="${X(y)}" width="${3*sc}" height="${3*sc}" fill="rgba(255,149,0,.14)" stroke="#c46a00" stroke-dasharray="6 4"/>`);
+      out+=T(X(2.4),X(2.4),"radiant panel zone",{s:9.5,f:"#c46a00"});
+      out+=note("panels cover ~30–60% of the ceiling · the slab / panel IS the emitter");
+    } else {
+      out+=`<rect x="${X(3.9)}" y="${pad}" width="${0.6*sc}" height="${Wm*sc}" fill="rgba(255,149,0,.14)" stroke="#c46a00" stroke-width="1.2" stroke-dasharray="4 3"/><text x="${X(4.2)}" y="${X(6.6)}" text-anchor="middle" font-size="9" font-weight="700" fill="#c46a00" transform="rotate(-90 ${X(4.2)} ${X(6.6)})">SUPPLY DUCT</text>`;
+      [[2.1,2.1],[6.3,2.1],[2.1,6.3],[6.3,6.3]].forEach(([x,y])=>{out+=`<rect x="${X(x)-0.3*sc}" y="${X(y)-0.3*sc}" width="${0.6*sc}" height="${0.6*sc}" fill="rgba(255,149,0,.2)" stroke="#c46a00" stroke-width="1.8"/><circle cx="${X(x)}" cy="${X(y)}" r="${0.13*sc}" fill="none" stroke="#c46a00" stroke-width="1.4"/>`;});
+      out+=dim(X(2.1),X(0.5),X(6.3),X(0.5),"~4.2 m");out+=T(X(2.1),X(1.35),"swirl diffuser 600 sq",{s:9,f:"#c46a00"});
+      out+=note("ducted air from the main duct on the grid · ~1 diffuser per 20–36 m²");
+    }
+  } else if(k===3){ /* hydronic + condensate pipework */
+    out+=`<rect x="${X(1.2)}" y="${pad}" width="${0.35*sc}" height="${Wm*sc}" fill="rgba(48,176,199,.2)" stroke="#1f93a6" stroke-width="1.4"/><text x="${X(1.37)}" y="${X(5.4)}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1f93a6" transform="rotate(-90 ${X(1.37)} ${X(5.4)})">chilled + heating mains Ø50–150</text>`;
+    out+=`<line x1="${X(1.55)}" y1="${X(2.4)}" x2="${X(5.4)}" y2="${X(2.4)}" stroke="#1f93a6" stroke-width="2"/>`;
+    out+=`<rect x="${X(3.4)-11}" y="${X(2.4)-11}" width="22" height="22" fill="none" stroke="#1f93a6" stroke-width="1.5" stroke-dasharray="3 2"/>`+T(X(3.4),X(2.4)-16,"450 sq access panel",{s:9,f:"#1f93a6"});
+    out+=`<circle cx="${X(5.4)}" cy="${X(2.4)}" r="7" fill="rgba(48,176,199,.35)" stroke="#1f93a6" stroke-width="2"/>`;
+    out+=`<path d="M ${X(5.4)} ${X(2.4)} L ${X(5.4)} ${X(6.9)} L ${X(7.7)} ${X(6.9)}" fill="none" stroke="#30b0c7" stroke-width="2.4" stroke-dasharray="7 4"/><circle cx="${X(7.7)}" cy="${X(6.9)}" r="6" fill="#30b0c7"/>`;
+    out+=T(X(7.7),X(6.9)+24,"riser / tundish",{s:9.5,f:"#1f93a6"});
+    out+=T(X(5.85),X(4.6),"condensate falls ≥1:100 →",{s:10,f:"#1f93a6",a:"start"});
+    out+=note("mains run level on the grid · condensate is the one layer that must fall");
   } else if(k===4){ /* sprinklers */
-    const hs=[[2.1,2.1],[6.3,2.1],[2.1,6.3],[6.3,6.3]];
-    out+=`<line x1="${X(1)}" y1="${X(2.1)}" x2="${X(7.4)}" y2="${X(2.1)}" stroke="#ff3b30" stroke-width="1.3" stroke-dasharray="5 4" opacity=".6"/><line x1="${X(1)}" y1="${X(6.3)}" x2="${X(7.4)}" y2="${X(6.3)}" stroke="#ff3b30" stroke-width="1.3" stroke-dasharray="5 4" opacity=".6"/>`;
-    hs.forEach(([x,y])=>{out+=`<circle cx="${X(x)}" cy="${X(y)}" r="6" fill="#ff3b30"/><circle cx="${X(x)}" cy="${X(y)}" r="${2.3*sc}" fill="rgba(255,59,48,.05)" stroke="#ff3b30" stroke-width=".8" stroke-dasharray="3 4"/>`;});
-    out+=dim(X(2.1),X(7.9),X(6.3),X(7.9),"≤ ~4.6 m")+dim(X(0.5),X(2.1),X(0.5),X(6.3),"≤ ~4.6 m");
-    out+=`<text x="${X(4.2)}" y="${X(4.4)}" text-anchor="middle" font-size="10" fill="#c22e26">circles = coverage · extra heads under ducts >1 m</text>`;
-  } else if(k===5){ /* detection */
-    out+=`<circle cx="${X(4.2)}" cy="${X(4.2)}" r="11" fill="none" stroke="#c22e26" stroke-width="2.2"/><text x="${X(4.2)}" y="${X(4.2)+4}" text-anchor="middle" font-size="10.5" font-weight="800" fill="#c22e26">S</text>
-      <circle cx="${X(4.2)}" cy="${X(4.2)}" r="${4.2*sc}" fill="rgba(194,46,38,.04)" stroke="#c22e26" stroke-width=".8" stroke-dasharray="4 4"/>
-      <rect x="${X(1.6)-0.25*sc}" y="${X(1.6)-0.25*sc}" width="${0.5*sc}" height="${0.5*sc}" fill="none" stroke="#c46a00" stroke-width="1.6"/>
-      ${dim(X(1.6),X(1.1),X(4.2),X(1.1),"≥1 m from diffuser (more is better)")}
-      <rect x="${X(0.4)}" y="${X(7.4)}" width="${0.9*sc}" height="16" fill="#34c759"/><text x="${X(0.85)}" y="${X(7.4)+12}" text-anchor="middle" font-size="9" font-weight="800" fill="#fff">EXIT</text>
-      <text x="${X(4.2)}" y="${X(7.95)}" text-anchor="middle" font-size="10" fill="#c22e26">1 detector per ~80–100 m² · grid ≤ ~10 m</text>`;
-  } else if(k===6){ /* lighting */
-    [2.1,4.2,6.3].forEach(y=>{out+=`<rect x="${X(1.2)}" y="${X(y)-6}" width="${2.4*sc}" height="12" fill="#0071e3"/><rect x="${X(4.8)}" y="${X(y)-6}" width="${2.4*sc}" height="12" fill="#0071e3"/>`;});
-    out+=dim(X(0.6),X(2.1),X(0.6),X(4.2),"~2.1–3.6 m");
-    out+=`<circle cx="${X(7.7)}" cy="${X(7.7)}" r="6" fill="#0071e3"/><text x="${X(7.7)-13}" y="${X(7.7)+4}" text-anchor="end" font-size="10" font-weight="700" fill="#0071e3">EM every 8–12 m</text>`;
-  } else if(k===7){ /* security */
-    out+=`<path d="M ${X(8.0)} ${X(0.4)} L ${X(6.2)} ${X(1.3)} L ${X(8.0)} ${X(2.0)} Z" fill="rgba(134,134,139,.35)" stroke="#57575b" stroke-width="1.4"/><text x="${X(6.0)}" y="${X(0.85)}" text-anchor="end" font-size="10" font-weight="700" fill="#57575b">CCTV — entries + nodes</text>
-      <rect x="${X(3.9)-0.25*sc}" y="${X(4.2)-0.25*sc}" width="${0.5*sc}" height="${0.5*sc}" rx="4" fill="none" stroke="#57575b" stroke-width="1.8"/><text x="${X(3.9)}" y="${X(4.2)+30}" text-anchor="middle" font-size="10" font-weight="700" fill="#57575b">WAP — every ~15–20 m</text>
-      <circle cx="${X(3.9)}" cy="${X(4.2)}" r="${3.5*sc}" fill="none" stroke="#86868b" stroke-width=".8" stroke-dasharray="4 4"/>`;
-  } else if(k===8){ /* bms */
-    out+=`<circle cx="${X(5.6)}" cy="${X(6.4)}" r="9" fill="none" stroke="#22a04c" stroke-width="2.2"/><text x="${X(5.6)}" y="${X(6.4)+4}" text-anchor="middle" font-size="10" font-weight="800" fill="#22a04c">T</text>
-      <rect x="${X(2.4)-0.25*sc}" y="${X(2.4)-0.25*sc}" width="${0.5*sc}" height="${0.5*sc}" fill="none" stroke="#c46a00" stroke-width="1.6"/>
-      ${dim(X(2.75),X(2.4),X(5.6),X(6.0),"≥1.5 m from diffusers")}
-      <text x="${X(4.2)}" y="${X(7.95)}" text-anchor="middle" font-size="10" fill="#22a04c">1+ per control zone · CO₂ on the return path · label everything for the digital twin</text>`;
+    const hd=[[2.1,2.1],[6.3,2.1],[2.1,6.3],[6.3,6.3]];
+    hd.forEach(([x,y])=>out+=`<circle cx="${X(x)}" cy="${X(y)}" r="${2.3*sc}" fill="rgba(255,59,48,.05)" stroke="#ff3b30" stroke-width=".8" stroke-dasharray="3 4"/>`);
+    out+=`<line x1="${X(1)}" y1="${X(2.1)}" x2="${X(7.4)}" y2="${X(2.1)}" stroke="#ff3b30" stroke-width="1.4" stroke-dasharray="6 4" opacity=".6"/><line x1="${X(1)}" y1="${X(6.3)}" x2="${X(7.4)}" y2="${X(6.3)}" stroke="#ff3b30" stroke-width="1.4" stroke-dasharray="6 4" opacity=".6"/>`;
+    hd.forEach(([x,y])=>out+=`<circle cx="${X(x)}" cy="${X(y)}" r="6" fill="#ff3b30"/>`);
+    out+=dim(X(2.1),X(0.5),X(6.3),X(0.5),"≤ ~4.6 m")+dim(X(0.5),X(2.1),X(0.5),X(6.3),"≤ ~4.6 m");
+    out+=T(X(3.35),X(2.1)-9,"range pipe",{s:9.5,f:"#c22e26"})+T(X(2.1)+14,X(2.1)+2,"head",{s:9.5,f:"#c22e26",a:"start"});
+    out+=note("dashed circles = coverage · extra heads under any duct wider than ~1 m");
+  } else if(k===5){ /* detection + EWIS */
+    out+=`<circle cx="${X(3.0)}" cy="${X(3.0)}" r="${3.6*sc}" fill="rgba(194,46,38,.035)" stroke="#c22e26" stroke-width=".8" stroke-dasharray="4 4"/>`;
+    out+=`<circle cx="${X(3.0)}" cy="${X(3.0)}" r="11" fill="#fff" stroke="#c22e26" stroke-width="2.2"/><text x="${X(3.0)}" y="${X(3.0)+4}" text-anchor="middle" font-size="10.5" font-weight="800" fill="#c22e26">S</text>`;
+    out+=T(X(3.0),X(3.0)+27,"smoke detector",{s:9.5,f:"#c22e26"});
+    out+=`<rect x="${X(6.2)-0.22*sc}" y="${X(2.0)-0.22*sc}" width="${0.44*sc}" height="${0.44*sc}" fill="none" stroke="#c46a00" stroke-width="1.6"/>`+T(X(6.2),X(2.0)-18,"supply diffuser",{s:9,f:"#c46a00"});
+    out+=dim(X(3.0),X(1.35),X(6.2),X(1.35),"≥1 m from a diffuser","#c22e26");
+    out+=`<path d="M ${X(6.5)-7} ${X(6.0)-4} h5 l4 -4 v16 l-4 -4 h-5 z" fill="#c22e26"/><path d="M ${X(6.5)+4} ${X(6.0)-3} a4 4 0 0 1 0 14" fill="none" stroke="#c22e26" stroke-width="1.2"/>`+T(X(6.5),X(6.0)+26,"EWIS speaker",{s:9.5,f:"#c22e26"});
+    out+=`<rect x="${X(0.5)}" y="${X(7.5)}" width="${0.95*sc}" height="16" fill="#34c759"/><text x="${X(0.5)+0.475*sc}" y="${X(7.5)+12}" text-anchor="middle" font-size="9" font-weight="800" fill="#fff">EXIT</text>`;
+    out+=note("1 detector per ~80–100 m² · grid ≤ ~10 m · speakers every 8–12 m");
+  } else if(k===6){ /* lighting + emergency */
+    [1.5,4.2,6.9].forEach(x=>[1.7,4.2,6.7].forEach(y=>out+=`<rect x="${X(x)-0.6*sc}" y="${X(y)-0.15*sc}" width="${1.2*sc}" height="${0.3*sc}" rx="2" fill="#0071e3"/>`));
+    out+=dim(X(1.5),X(0.55),X(4.2),X(0.55),"~2.7 m","#0071e3")+dim(X(0.55),X(1.7),X(0.55),X(4.2),"~2.5 m","#0071e3");
+    out+=T(X(4.2),X(4.2)-19,"recessed troffer 1200 × 300",{s:9.5,f:"#0071e3"});
+    out+=`<rect x="${X(6.9)-0.6*sc-3}" y="${X(6.7)-0.15*sc-3}" width="${1.2*sc+6}" height="${0.3*sc+6}" rx="4" fill="none" stroke="#34c759" stroke-width="2.4"/>`+T(X(6.9),X(6.7)+22,"emergency-rated fitting",{s:9,f:"#0071e3"});
+    out+=note("~2.4–3.6 m grid · emergency fittings every 8–12 m + at every exit");
+  } else if(k===7){ /* security, CCTV + WAPs */
+    out+=`<path d="M ${X(7.9)} ${X(0.5)} L ${X(4.4)} ${X(2.4)} L ${X(6.4)} ${X(3.7)} Z" fill="rgba(134,134,139,.25)" stroke="#57575b" stroke-width="1.2"/>`;
+    out+=`<circle cx="${X(7.9)}" cy="${X(0.5)}" r="7" fill="#57575b"/>`+T(X(6.4),X(1.05),"dome camera — entries + nodes",{s:9.5,f:"#57575b",a:"end"});
+    out+=`<circle cx="${X(3.4)}" cy="${X(5.4)}" r="${3*sc}" fill="rgba(134,134,139,.05)" stroke="#86868b" stroke-width=".8" stroke-dasharray="4 4"/>`;
+    out+=`<rect x="${X(3.4)-0.22*sc}" y="${X(5.4)-0.22*sc}" width="${0.44*sc}" height="${0.44*sc}" rx="4" fill="none" stroke="#57575b" stroke-width="1.8"/>`+T(X(3.4),X(5.4)+30,"WAP — every ~15–20 m",{s:9.5,f:"#57575b"});
+    out+=note("cameras by sight-lines · WAPs clear of large metal ducts — not on the grid");
+  } else if(k===8){ /* bms sensors */
+    out+=`<rect x="${X(4.0)-0.3*sc}" y="${X(5.4)-0.3*sc}" width="${0.6*sc}" height="${0.6*sc}" fill="none" stroke="#c46a00" stroke-width="1.6"/>`;
+    for(let g=-0.22;g<=0.221;g+=0.11)out+=`<line x1="${X(4.0-0.28)}" y1="${X(5.4+g)}" x2="${X(4.0+0.28)}" y2="${X(5.4+g)}" stroke="#c46a00" stroke-width=".8"/>`;
+    out+=T(X(4.0),X(5.4)+34,"return-air grille",{s:9,f:"#c46a00"});
+    out+=`<circle cx="${X(4.0)}" cy="${X(4.3)}" r="10" fill="#fff" stroke="#22a04c" stroke-width="2.2"/><text x="${X(4.0)}" y="${X(4.3)+4}" text-anchor="middle" font-size="10" font-weight="800" fill="#22a04c">T</text>`;
+    out+=T(X(4.0),X(4.3)-17,"temp / CO₂ sensor — on the return path",{s:9.5,f:"#22a04c"});
+    out+=`<rect x="${X(6.6)-0.22*sc}" y="${X(2.2)-0.22*sc}" width="${0.44*sc}" height="${0.44*sc}" fill="none" stroke="#c46a00" stroke-width="1.4"/>`+T(X(6.6),X(2.2)-18,"supply diffuser",{s:9,f:"#c46a00"});
+    out+=dim(X(4.0),X(3.0),X(6.6),X(3.0),"≥1.5 m","#22a04c");
+    out+=note("≥1 sensor per control zone · away from diffusers + doors (false readings)");
   } else { /* fire & smoke dampers */
     out+=`<rect x="${pad}" y="${X(4.0)}" width="${Wm*sc}" height="${0.45*sc}" fill="rgba(224,85,43,.16)" stroke="#e0552b" stroke-width="1.4"/>`;
     for(let hx=0.15;hx<Wm;hx+=0.5)out+=`<line x1="${X(hx)}" y1="${X(4.0)}" x2="${X(hx+0.28)}" y2="${X(4.45)}" stroke="#e0552b" stroke-width=".6" opacity=".5"/>`;
@@ -1186,8 +1228,8 @@ function cyPlan(c){
     out+=`<rect x="${X(3.6)}" y="${pad}" width="${1.2*sc}" height="${Wm*sc}" fill="rgba(255,149,0,.12)" stroke="#c46a00" stroke-width="1.4"/><text x="${X(4.2)}" y="${X(1.35)}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#c46a00">duct</text>`;
     out+=`<rect x="${X(3.6)}" y="${X(3.95)}" width="${1.2*sc}" height="${0.55*sc}" fill="rgba(224,85,43,.45)" stroke="#e0552b" stroke-width="2"/>`;
     out+=`<line x1="${X(3.75)}" y1="${X(4.02)}" x2="${X(4.65)}" y2="${X(4.42)}" stroke="#fff" stroke-width="1.3"/><line x1="${X(3.75)}" y1="${X(4.42)}" x2="${X(4.65)}" y2="${X(4.02)}" stroke="#fff" stroke-width="1.3"/>`;
-    out+=`<text x="${X(5.0)}" y="${X(4.32)}" font-size="10" font-weight="700" fill="#e0552b">damper at the wall line</text>`;
-    out+=`<text x="${X(4.2)}" y="${X(7.95)}" text-anchor="middle" font-size="10" fill="#e0552b">one at EVERY compartment penetration · fusible link / motor to the FIP</text>`;
+    out+=T(X(5.0),X(4.32),"damper at the wall line",{s:10,w:700,f:"#e0552b",a:"start"});
+    out+=note("one at EVERY compartment penetration · fusible link / motor to the FIP");
   }
   out+=`<text x="${pad}" y="${H-7}" font-size="10" fill="#86868b">8.4 × 8.4 m bay · spacings are RULES OF THUMB — verify ${c.vf}</text>`;
   svg.innerHTML=out;
