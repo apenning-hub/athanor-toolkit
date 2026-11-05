@@ -2,15 +2,15 @@
 <html lang="en-AU">
 <head>
 <meta charset="utf-8">
-<title>Sam on the GPT100</title>
+<title>Rosen tracker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Sam GPT100">
+<meta name="apple-mobile-web-app-title" content="Rosen tracker">
 <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-<meta name="description" content="Live tracker for bib 187, Sam Rosenzweig, in the 2026 GPT100 Miler: course, aid stations, cut-offs and official splits.">
+<meta name="description" content="Rosen tracker: Sam Rosenzweig, bib 187, GPT100 Miler 2026.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007AFF'/%3E%3Cpath d='M10 48 L24 24 L33 38 L40 30 L54 48 Z' fill='white'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" crossorigin="">
 <style>
@@ -82,7 +82,7 @@ a{color:var(--blue);text-decoration:none}
 .sam-pin .halo{position:absolute;left:50%;top:22px;width:22px;height:22px;margin:-11px;border-radius:50%;background:rgba(0,122,255,.35);animation:halo 2.4s ease-out infinite}
 @keyframes halo{0%{transform:scale(1);opacity:.9}100%{transform:scale(4.2);opacity:0}}
 .sam-pin .bubble{position:absolute;left:50%;top:0;width:44px;height:44px;margin-left:-22px;border-radius:50%;
-  background:linear-gradient(160deg,#4DA3FF,#0A5FD6);color:#fff;font-weight:700;font-size:16px;letter-spacing:.01em;display:grid;place-items:center;
+  background:#0A84FF;color:#fff;font-weight:700;font-size:16px;letter-spacing:.01em;display:grid;place-items:center;
   border:3px solid #fff;box-shadow:0 6px 16px rgba(0,0,0,.28)}
 .sam-pin .tail{position:absolute;left:50%;top:40px;width:12px;height:12px;margin-left:-6px;background:#fff;transform:rotate(45deg);border-radius:0 0 3px 0;box-shadow:3px 3px 6px rgba(0,0,0,.12)}
 .sam-pin.stale .bubble{filter:saturate(.3)}
@@ -105,7 +105,7 @@ a{color:var(--blue);text-decoration:none}
 .grab{height:22px;display:grid;place-items:center;flex:none;cursor:grab}
 .grab:before{content:"";width:36px;height:5px;border-radius:3px;background:var(--label3)}
 .shead{display:flex;align-items:center;gap:12px;padding:2px 18px 14px;flex:none}
-.avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(160deg,#4DA3FF,#0A5FD6);color:#fff;font-weight:700;font-size:17px;display:grid;place-items:center;flex:none;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
+.avatar{width:48px;height:48px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:17px;display:grid;place-items:center;flex:none;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
 .shead .who{min-width:0;flex:1}
 .shead .name{font-size:17px;font-weight:600;letter-spacing:-.01em;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .shead .state{font-size:14px;color:var(--label2);margin-top:2px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -240,7 +240,7 @@ pre.code{margin:0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;bac
     </button>
   </div>
 
-  <div class="offbanner glass" id="offbanner" hidden><span class="ldot dead"></span><span id="offtext">GPS relay unavailable</span><button id="offbtn" style="color:var(--blue);font-weight:600;white-space:nowrap">Use official map</button></div>
+  <div class="offbanner glass" id="offbanner" hidden><span class="ldot dead"></span><span id="offtext">GPS relay unavailable</span><button id="offbtn" style="color:var(--blue);font-weight:600;white-space:nowrap">Official map</button></div>
 
   <section class="sheet" id="sheet" aria-label="Sam's progress">
     <div class="grab" id="grab" role="button" aria-label="Expand or collapse" tabindex="0"></div>
@@ -270,7 +270,7 @@ pre.code{margin:0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;bac
         <div class="pane" id="pane-overview">
           <div class="profile" id="miniprofile"></div>
           <div>
-            <div class="gh">Right now</div>
+            <div class="gh">Status</div>
             <div class="group" id="nowgroup"></div>
           </div>
           <div>
@@ -278,25 +278,23 @@ pre.code{margin:0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;bac
             <div class="group" id="nextgroup"></div>
           </div>
           <div>
-            <div class="gh">Elsewhere</div>
+            <div class="gh">Links</div>
             <div class="group links">
-              <a class="row withicon" href="https://www.tulospalvelu.fi/gps/20261106gpt100/" target="_blank" rel="noopener"><span class="ic" style="background:var(--green)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg></span><div class="mid"><div class="k">Official GPS map</div><div class="d">Every tracker, tulospalvelu.fi</div></div><svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
-              <a class="row withicon" href="https://my.raceresult.com/427342/" target="_blank" rel="noopener"><span class="ic" style="background:var(--indigo)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v4H4zm0 6h16v4H4zm0 6h16v4H4z"/></svg></span><div class="mid"><div class="k">Live results</div><div class="d">Official timing, raceresult</div></div><svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
-              <a class="row withicon" href="https://gpt.livingitlive.com.au" target="_blank" rel="noopener"><span class="ic" style="background:var(--teal)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-6l-2 3-2-3H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg></span><div class="mid"><div class="k">Living It Live</div><div class="d">Event hub and finish camera</div></div><svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
+              <a class="row withicon" href="https://www.tulospalvelu.fi/gps/20261106gpt100/" target="_blank" rel="noopener"><span class="ic" style="background:var(--green)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg></span><div class="mid"><div class="k">Official GPS map</div><div class="d">Every runner</div></div><svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
+              <a class="row withicon" href="https://my.raceresult.com/427342/" target="_blank" rel="noopener"><span class="ic" style="background:var(--indigo)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v4H4zm0 6h16v4H4zm0 6h16v4H4z"/></svg></span><div class="mid"><div class="k">Live results</div><div class="d">Official timing</div></div><svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
+              <a class="row withicon" href="https://gpt.livingitlive.com.au" target="_blank" rel="noopener"><span class="ic" style="background:var(--teal)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-6l-2 3-2-3H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg></span><div class="mid"><div class="k">Living It Live</div><div class="d">Finish camera</div></div><svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
             </div>
           </div>
         </div>
         <div class="pane" id="pane-splits" hidden>
           <div><div class="gh">Official timing</div><div class="group" id="splitsgroup"></div></div>
-          <div class="muted" style="font-size:12px;padding:0 4px">Times from the raceresult timing mats. Rank is overall at that point. Upcoming rows show the cut-off.</div>
         </div>
         <div class="pane" id="pane-aid" hidden>
           <div><div class="gh">Aid stations and cut-offs</div><div class="group" id="aidgroup"></div></div>
-          <div class="muted" style="font-size:12px;padding:0 4px">Every station has water, PURE electrolyte, salt, sugar, sunscreen and ice. Cup-free event. Drop bags: Halls Gap/Jimmy Creek (one bag), Mt William, Griffin Fireline, Dunkeld.</div>
         </div>
         <div class="pane" id="pane-profile" hidden>
           <div class="profile" id="fullprofile"></div>
-          <div class="muted" style="font-size:12px;padding:0 4px">Elevation from the event's course file (approximate; the summit of Durd Durd is 1,167 m). Orange marker is Sam.</div>
+          <div class="muted" style="font-size:12px;padding:0 4px">Orange dot is Sam. Heights are from the event's course file.</div>
         </div>
       </div>
     </div>
@@ -304,11 +302,11 @@ pre.code{margin:0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;bac
 
   <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mtitle">
     <div class="mcard">
-      <div class="mhead"><h2 id="mtitle">Map and settings</h2><button class="closebtn" id="btnClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+      <div class="mhead"><h2 id="mtitle">Settings</h2><button class="closebtn" id="btnClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
       <div>
         <div class="gh">Map</div>
         <div class="seg small four" id="segMap"><div class="thumb"></div><button data-v="standard" aria-selected="true">Standard</button><button data-v="terrain" aria-selected="false">Terrain</button><button data-v="satellite" aria-selected="false">Satellite</button><button data-v="official" aria-selected="false">Official</button></div>
-        <div class="muted" style="font-size:12px;padding:8px 4px 0">Official shows the event's own tracking map (every runner) kept centred on Sam. It needs no relay, so it always works.</div>
+        <div class="muted" style="font-size:12px;padding:8px 4px 0">Official is the event's own map, centred on Sam.</div>
       </div>
       <div>
         <div class="gh">Appearance</div>
@@ -319,36 +317,9 @@ pre.code{margin:0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;bac
         <div class="seg small two" id="segTz"><div class="thumb"></div><button data-v="device" aria-selected="true">My time zone</button><button data-v="race" aria-selected="false">Race time (AEDT)</button></div>
       </div>
       <div class="group">
-        <div class="row"><div class="mid"><div class="k">Show the whole field</div><div class="d">Every tracker as a grey dot</div></div><button class="switch" id="swEveryone" role="switch" aria-checked="false" aria-label="Show the whole field"></button></div>
-        <div class="row"><div class="mid"><div class="k">Keep screen awake</div><div class="d">While this page is open</div></div><button class="switch" id="swWake" role="switch" aria-checked="false" aria-label="Keep screen awake"></button></div>
+        <div class="row"><div class="mid"><div class="k">Show the whole field</div><div class="d">Grey dots</div></div><button class="switch" id="swEveryone" role="switch" aria-checked="false" aria-label="Show the whole field"></button></div>
+        <div class="row"><div class="mid"><div class="k">Keep screen awake</div><div class="d">While this is open</div></div><button class="switch" id="swWake" role="switch" aria-checked="false" aria-label="Keep screen awake"></button></div>
       </div>
-      <div>
-        <div class="gh">GPS relay</div>
-        <div class="group" id="relaygroup"></div>
-        <div class="muted" style="font-size:12px;padding:8px 4px 0">The tracker feed only talks to its own website. A GitHub job copies it here every six minutes (the baseline), and a relay is tried as well for fresher fixes. Timing data comes straight from raceresult.</div>
-      </div>
-      <details class="group ar" id="relaySetup">
-        <summary class="row"><div class="mid"><div class="k">Run your own relay</div><div class="d">A free Cloudflare Worker, about a minute to deploy</div></div><svg class="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2"><path d="m1 1 6 6-6 6"/></svg></summary>
-        <div class="arbody" style="padding-left:14px">
-          <div>Paste this into a new Worker at workers.cloudflare.com, deploy, then enter <b>https://your-worker.workers.dev/?url={url}</b> in the custom relay field.</div>
-          <pre class="code" id="workercode">export default {
-  async fetch(req) {
-    const u = new URL(req.url).searchParams.get("url") || "";
-    if (!u.startsWith("https://www.tulospalvelu.fi/")) return new Response("blocked", { status: 400 });
-    const h = { "User-Agent": "Mozilla/5.0 (gpt100 relay)" };
-    const range = req.headers.get("Range"); if (range) h["Range"] = range;
-    const r = await fetch(u, { headers: h });
-    const out = new Headers(r.headers);
-    out.set("Access-Control-Allow-Origin", "*");
-    out.set("Access-Control-Allow-Headers", "*");
-    out.set("Access-Control-Expose-Headers", "*");
-    if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: out });
-    return new Response(r.body, { status: r.status, headers: out });
-  }
-}</pre>
-          <button class="btn" id="btnCopyWorker">Copy worker code</button>
-        </div>
-      </details>
     </div>
   </div>
   <div class="toast" id="toast"></div>
@@ -903,12 +874,11 @@ function render() {
   const st = samStatus();
   document.getElementById('stateline').textContent = st.text;
   // live pill
-  const viaGit = feed.source !== 'relay' && feed.baseline;
-  if (feed.err && !sam.latest) setLive('No GPS', (feed.err.message || 'relay down') + ' · retrying', 'dead');
-  else if (sam.latest) { const age = now - sam.latest.t; setLive(age > 15 * 60000 ? 'No signal' : 'Live', (age > 15 * 60000 ? 'last fix ' : 'fix ') + fmtAgo(sam.latest.t) + (viaGit ? ' · via GitHub' : ''), age > 15 * 60000 ? 'stale' : ''); }
+  if (feed.err && !sam.latest) setLive('No GPS', 'retrying', 'dead');
+  else if (sam.latest) { const age = now - sam.latest.t; setLive(age > 15 * 60000 ? 'No signal' : 'Live', (age > 15 * 60000 ? 'last fix ' : 'fix ') + fmtAgo(sam.latest.t), age > 15 * 60000 ? 'stale' : ''); }
   else if (!feed.lastOk) setLive('Connecting', feed.trying ? 'via ' + feed.trying : 'to the tracker feed');
   document.getElementById('offbanner').hidden = !(feed.err && !sam.latest && settings.map !== 'official');
-  document.getElementById('offtext').textContent = feed.err ? (feed.err.message || 'Tracker relay unavailable') : '';
+  document.getElementById('offtext').textContent = feed.err ? 'GPS feed is down' : '';
   // place chip
   const pc = document.getElementById('placechip');
   if (rr.placeText) { const n = parseInt(rr.placeText, 10); pc.textContent = isNaN(n) ? rr.placeText : ordinal(n) + (rr.fieldSize ? ' of ' + rr.fieldSize : ''); pc.className = 'chip' + (/DNF|DSQ|DNS/i.test(rr.placeText) ? ' red' : ''); }
@@ -936,12 +906,12 @@ function renderNow() {
   const g = document.getElementById('nowgroup'); let h = '';
   if (sam.latest) {
     const spd = sam.pace != null ? sam.pace : sam.spdFeed;
-    h += rowHTML('speed', 'var(--blue)', 'Pace', 'Last 25 min on course', spd != null ? spd.toFixed(1) + ' km/h' : '—', spd ? paceStr(spd) : '');
+    h += rowHTML('speed', 'var(--blue)', 'Pace', 'Last 25 min', spd != null ? spd.toFixed(1) + ' km/h' : '—', spd ? paceStr(spd) : '');
     const avg = sam.km != null && elapsedMs() > 600000 ? sam.km / (elapsedMs() / 3600000) : null;
-    if (avg) h += rowHTML('clock', 'var(--indigo)', 'Average since the start', 'Includes stops', avg.toFixed(1) + ' km/h', paceStr(avg));
+    if (avg) h += rowHTML('clock', 'var(--indigo)', 'Average', 'Since the start, stops included', avg.toFixed(1) + ' km/h', paceStr(avg));
     h += rowHTML('pin', 'var(--green)', 'Last fix', fmtDayTime(sam.latest.t) + ' ' + tzAbbr() + (sam.off != null ? ' · ' + Math.round(sam.off) + ' m from the line' : ''), fmtAgo(sam.latest.t), '');
-    if (sam.latest.bat != null) h += rowHTML('battery', sam.latest.bat < 20 ? 'var(--red)' : 'var(--gray)', 'Tracker battery', 'Reported by the GPS unit', sam.latest.bat + '%', '');
-  } else h += '<div class="row pad"><p class="muted">' + (feed.err ? 'The tracker feed could not be reached. The official map link below always works.' : 'Loading the tracker feed…') + '</p></div>';
+    if (sam.latest.bat != null) h += rowHTML('battery', sam.latest.bat < 20 ? 'var(--red)' : 'var(--gray)', 'Tracker battery', '', sam.latest.bat + '%', '');
+  } else h += '<div class="row pad"><p class="muted">' + (feed.err ? 'No GPS yet. The official map below still works.' : 'Loading…') + '</p></div>';
   if (rr.lastSplit && rr.lastSplit !== 'Start') h += rowHTML('flag', 'var(--orange)', 'Last timing mat', rr.lastSplit + (rr.ag ? ' · ' + rr.ag : ''), rr.lastTime || '', rr.placeText ? 'overall ' + rr.placeText : '');
   g.innerHTML = h;
 }
@@ -1030,16 +1000,7 @@ function renderProfile(el, full) {
 }
 function lowerIdx(m) { let lo = 0, hi = N - 1; while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (CUM[mid] <= m) lo = mid; else hi = mid; } return lo; }
 
-// ---------- settings UI ----------
-function renderRelays() {
-  const g = document.getElementById('relaygroup'); let h = '';
-  const opts = [{ id: 'auto', name: 'Automatic', d: 'Try each relay in turn' }].concat(RELAYS.map(r => ({ id: r.id, name: r.name, d: (relayBad.get(r.id) || 0) > Date.now() ? 'Resting after an error' : 'Public relay' })));
-  opts.forEach(o => { h += '<div class="row" role="radio" aria-checked="' + String(settings.relay === o.id) + '" data-relay="' + o.id + '" style="cursor:pointer"><div class="mid"><div class="k">' + o.name + '</div><div class="d">' + o.d + (feed.relay === o.name ? ' · in use' : '') + '</div></div><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg></div>'; });
-  h += '<div class="row pad"><div class="d" style="margin-bottom:6px">Custom relay URL (use {url} where the feed address goes)</div><input class="field" id="customRelay" type="url" placeholder="https://your-worker.workers.dev/?url={url}" value="' + (settings.custom || '').replace(/"/g, '&quot;') + '"></div>';
-  g.innerHTML = h;
-  g.querySelectorAll('[data-relay]').forEach(r => r.addEventListener('click', () => { settings.relay = r.dataset.relay; saveSettings(); renderRelays(); toast('Relay: ' + (RELAYS.find(x => x.id === settings.relay) || { name: 'automatic' }).name); relayBad.clear(); schedulePoll(500); }));
-  const inp = document.getElementById('customRelay'); inp.addEventListener('change', () => { settings.custom = inp.value.trim(); saveSettings(); relayBad.clear(); if (settings.custom) { settings.relay = 'custom'; toast('Using your relay'); } schedulePoll(500); });
-}
+// ---------- settings ----------
 function applyTheme() { const t = settings.theme; if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t); if (map) applyBase(); }
 async function setWake(on) {
   settings.wake = on; saveSettings();
@@ -1056,10 +1017,10 @@ function boot() {
   setupSheet();
   openSheet(matchMedia('(min-width: 900px)').matches ? 'full' : 'half');
   document.querySelectorAll('#seg [role=tab]').forEach(b => b.addEventListener('click', () => { showPane(b.dataset.pane); if (detent === 'collapsed') openSheet('half'); }));
-  document.getElementById('btnFollow').addEventListener('click', () => { if (settings.map === 'official') { applyBase(); toast('Centring the official map on Sam'); return; } setFollow(!followSam); if (followSam) toast('Following Sam'); });
+  document.getElementById('btnFollow').addEventListener('click', () => { if (settings.map === 'official') { applyBase(); toast('Centred on Sam'); return; } setFollow(!followSam); if (followSam) toast('Following Sam'); });
   let segMapSet = null;
   document.getElementById('offbtn').addEventListener('click', () => { settings.map = 'official'; saveSettings(); if (segMapSet) segMapSet('official'); applyBase(); render(); });
-  document.getElementById('btnLayers').addEventListener('click', () => { renderRelays(); document.getElementById('modal').classList.add('open'); });
+  document.getElementById('btnLayers').addEventListener('click', () => { document.getElementById('modal').classList.add('open'); });
   document.getElementById('btnClose').addEventListener('click', () => document.getElementById('modal').classList.remove('open'));
   document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') e.currentTarget.classList.remove('open'); });
   segMapSet = segInit('segMap', settings.map, v => { settings.map = v; saveSettings(); applyBase(); render(); });
@@ -1069,7 +1030,6 @@ function boot() {
   swE.addEventListener('click', () => { settings.everyone = !settings.everyone; saveSettings(); swE.setAttribute('aria-checked', String(settings.everyone)); if (settings.everyone) loadNames(); renderField(); });
   const swW = document.getElementById('swWake'); swW.setAttribute('aria-checked', String(!!settings.wake));
   swW.addEventListener('click', () => { const on = swW.getAttribute('aria-checked') !== 'true'; swW.setAttribute('aria-checked', String(on)); setWake(on); });
-  document.getElementById('btnCopyWorker').addEventListener('click', e => { const txt = document.getElementById('workercode').textContent; navigator.clipboard && navigator.clipboard.writeText(txt).then(() => toast('Copied')).catch(() => { const r = document.createRange(); r.selectNodeContents(document.getElementById('workercode')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); }); });
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (settings.theme === 'auto') { applyBase(); render(); } });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { loadBaseline(); schedulePoll(300); pollList(); if (settings.wake) setWake(true); } });
   renderAids(); renderSplits(); renderNextGroup(nextAid(), null); renderNow(); renderProfile(document.getElementById('miniprofile'), false);
