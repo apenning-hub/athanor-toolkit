@@ -537,12 +537,15 @@ function addSamFix(t, lat, lon, spd, bat) {
   if (sam.fixes.some(f => f.t === t)) return false;
   sam.fixes.push({ t, lat, lon, bat, spd }); sam.fixes.sort((a, b) => a.t - b.t); return true;
 }
-// Baseline feed: a GitHub Actions job reads the tracker server-side every few minutes and publishes feed.json next to this page.
+// Baseline feed: a GitHub Actions job reads the tracker server-side every two minutes and pushes feed.json to the repo's feed branch.
 let baselineTimer = null;
 async function loadBaseline() {
   if (location.protocol === 'file:') return false;
   try {
-    const res = await fetch('feed.json?t=' + Date.now(), { cache: 'no-store' }); if (!res.ok) return false;
+    let res = null;
+    try { res = await fetch('https://raw.githubusercontent.com/apenning-hub/athanor-toolkit/feed/feed.json?t=' + Date.now(), { cache: 'no-store' }); } catch (e) { res = null; }
+    if (!res || !res.ok) res = await fetch('feed.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return false;
     const d = await res.json(); let added = 0;
     (d.sam || []).forEach(p => { if (addSamFix(p[0] * 1000, p[1], p[2], p[3], p[4])) added++; });
     Object.entries(d.field || {}).forEach(([id, p]) => { const cur = field.get(id); if (!cur || p[0] * 1000 > cur.t) field.set(id, { t: p[0] * 1000, lat: p[1], lon: p[2] }); });
@@ -579,7 +582,7 @@ function rememberLine() { if (feed.lastLine) saveLS('gpt100.lastline', { line: f
 async function bootstrapFeed() {
   setLive('Connecting', 'to the tracker feed');
   const gotBase = await loadBaseline();
-  clearInterval(baselineTimer); baselineTimer = setInterval(loadBaseline, 150000);
+  clearInterval(baselineTimer); baselineTimer = setInterval(loadBaseline, 90000);
   const cached = loadLS('gpt100.lastline', null);
   try {
     let r;

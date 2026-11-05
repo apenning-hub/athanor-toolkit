@@ -1,26 +1,43 @@
 name: GPT100 feed
 on:
   schedule:
-    - cron: '*/6 * * * *'
+    - cron: '*/30 * * * *'   # watchdog only; the job below keeps itself running
   workflow_dispatch:
 permissions:
   contents: write
+  actions: write
 concurrency:
   group: gpt100-feed
   cancel-in-progress: false
 jobs:
-  fetch:
+  loop:
     runs-on: ubuntu-latest
+    timeout-minutes: 355
     steps:
       - uses: actions/checkout@v4
-      - name: Fetch tracker feed
-        run: python3 gpt100/fetch_feed.py
-      - name: Commit feed
+      - name: Prepare feed branch
         run: |
           git config user.name "gpt100-feed-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add gpt100/feed.json
-          if git diff --cached --quiet; then echo "no change"; exit 0; fi
-          git commit -m "gpt100 feed $(date -u +%H:%M)"
-          git pull --rebase origin main
-          git push
+          if git ls-remote --exit-code --heads origin feed >/dev/null 2>&1; then
+            git fetch -q origin feed
+            git worktree add -q feedwt origin/feed
+          else
+            git worktree add -q --detach feedwt
+            cd feedwt && git checkout -q --orphan feed && git rm -rfq . && cp ../gpt100/feed.json feed.json 2>/dev/null || true
+          fi
+      - name: Poll the tracker and push feed.json
+        run: python3 gpt100/feed_loop.py "$GITHUB_WORKSPACE/feedwt"
+        continue-on-error: true
+        id: loop
+      - name: Keep going
+        if: steps.loop.outcome != 'failure' || steps.loop.conclusion == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # exit code 2 means the race is over; anything else chains the next job
+          if python3 - <<'EOF'
+          import datetime, sys
+          sys.exit(0 if datetime.datetime.now(datetime.timezone.utc) < datetime.datetime(2026, 11, 8, 0, 30, tzinfo=datetime.timezone.utc) else 1)
+          EOF
+          then gh workflow run gpt100-feed.yml --ref main || true; fi
