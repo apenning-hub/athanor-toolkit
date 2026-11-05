@@ -132,7 +132,7 @@ a{color:var(--blue);text-decoration:none}
 .seg{display:flex;background:var(--fill);border-radius:9px;padding:2px;position:relative;flex:none}
 .seg button{flex:1;position:relative;z-index:1;font-size:13px;font-weight:600;color:var(--label);padding:7px 0;border-radius:7px;transition:color .2s;white-space:nowrap}
 .seg button[aria-selected="true"]{color:var(--label)}
-.seg .thumb{position:absolute;top:2px;bottom:2px;left:2px;width:calc((100% - 4px)/4);background:var(--card);border-radius:7px;box-shadow:0 3px 8px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.seg .thumb{position:absolute;top:2px;bottom:2px;left:2px;width:calc((100% - 4px)/5);background:var(--card);border-radius:7px;box-shadow:0 3px 8px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
 .panes{flex:1;min-height:0;display:flex;flex-direction:column;gap:14px}
 .pane{display:flex;flex-direction:column;gap:14px}
 .pane[hidden]{display:none}
@@ -187,6 +187,9 @@ details.ar[open] .chev{transform:rotate(90deg)}
 .mhead h2{font-size:20px;font-weight:700;letter-spacing:-.02em;margin:0}
 .closebtn{width:30px;height:30px;border-radius:50%;background:var(--fill);color:var(--label2);display:grid;place-items:center}
 .closebtn svg{width:12px;height:12px}
+.stepper{display:flex;align-items:center;gap:0;background:var(--fill);border-radius:9px;overflow:hidden;flex:none}
+.stepper button{width:36px;height:32px;font-size:18px;font-weight:500;color:var(--label);display:grid;place-items:center}
+.stepper span{min-width:58px;text-align:center;font-size:15px;font-weight:600}
 .switch{width:51px;height:31px;border-radius:16px;background:var(--fill);position:relative;flex:none;transition:background .2s}
 .switch:after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.25);transition:transform .2s}
 .switch[aria-checked="true"]{background:var(--green)}
@@ -262,6 +265,7 @@ pre.code{margin:0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;bac
       <div class="seg" role="tablist" id="seg">
         <div class="thumb"></div>
         <button role="tab" aria-selected="true" data-pane="overview">Now</button>
+        <button role="tab" aria-selected="false" data-pane="stats">Stats</button>
         <button role="tab" aria-selected="false" data-pane="splits">Splits</button>
         <button role="tab" aria-selected="false" data-pane="aid">Aid</button>
         <button role="tab" aria-selected="false" data-pane="profile">Profile</button>
@@ -285,6 +289,12 @@ pre.code{margin:0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;bac
               <a class="row withicon" href="https://gpt.livingitlive.com.au" target="_blank" rel="noopener"><span class="ic" style="background:var(--teal)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-6l-2 3-2-3H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg></span><div class="mid"><div class="k">Living It Live</div><div class="d">Finish camera</div></div><svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
             </div>
           </div>
+        </div>
+        <div class="pane" id="pane-stats" hidden>
+          <div><div class="gh">Climbing</div><div class="group" id="climbgroup"></div></div>
+          <div><div class="gh">Effort</div><div class="group" id="effortgroup"></div></div>
+          <div><div class="gh">Legs</div><div class="group" id="legsgroup"></div></div>
+          <div><div class="gh">Conditions where Sam is</div><div class="group" id="wxgroup"></div></div>
         </div>
         <div class="pane" id="pane-splits" hidden>
           <div><div class="gh">Official timing</div><div class="group" id="splitsgroup"></div></div>
@@ -319,6 +329,7 @@ pre.code{margin:0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;bac
       <div class="group">
         <div class="row"><div class="mid"><div class="k">Show the whole field</div><div class="d">Grey dots</div></div><button class="switch" id="swEveryone" role="switch" aria-checked="false" aria-label="Show the whole field"></button></div>
         <div class="row"><div class="mid"><div class="k">Keep screen awake</div><div class="d">While this is open</div></div><button class="switch" id="swWake" role="switch" aria-checked="false" aria-label="Keep screen awake"></button></div>
+        <div class="row"><div class="mid"><div class="k">Sam's weight</div><div class="d">For the energy estimate</div></div><div class="stepper"><button id="wtMinus" aria-label="Less">−</button><span class="num" id="wtVal">70 kg</span><button id="wtPlus" aria-label="More">+</button></div></div>
       </div>
     </div>
   </div>
@@ -349,7 +360,7 @@ const RACE = {
 const POLL_MS = 90000, LIST_MS = 150000;
 
 // ---------- settings (per device) ----------
-const settings = Object.assign({ map: 'standard', theme: 'auto', tz: 'device', everyone: false, wake: false, relay: 'auto', custom: '' }, loadLS('gpt100.settings', {}));
+const settings = Object.assign({ map: 'standard', theme: 'auto', tz: 'device', everyone: false, wake: false, relay: 'auto', custom: '', weight: 70 }, loadLS('gpt100.settings', {}));
 function loadLS(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
 function saveLS(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 function saveSettings() { saveLS('gpt100.settings', settings); }
@@ -365,6 +376,16 @@ for (let i = 0; i < N; i++) { CX[i] = (COURSE[i][1] - LON0) * KX; CY[i] = (COURS
 for (let i = 1; i < N; i++) { const dx = CX[i] - CX[i - 1], dy = CY[i] - CY[i - 1]; SEG[i - 1] = Math.hypot(dx, dy); CUM[i] = CUM[i - 1] + SEG[i - 1]; }
 const POLY_TOTAL = CUM[N - 1];
 AIDS.forEach(a => { a.polyM = CUM[a.idx]; a.cutMs = Date.parse(a.cutoff); });
+// cumulative climb and descent along the course, scaled so the totals match the official 7,700 m
+const GAIN = new Float64Array(N), LOSS = new Float64Array(N);
+for (let i = 1; i < N; i++) { const d = COURSE[i][2] - COURSE[i - 1][2]; GAIN[i] = GAIN[i - 1] + (d > 0 ? d : 0); LOSS[i] = LOSS[i - 1] + (d < 0 ? -d : 0); }
+const OFFICIAL_CLIMB = 7700, GAIN_SCALE = OFFICIAL_CLIMB / GAIN[N - 1], LOSS_SCALE = OFFICIAL_CLIMB / LOSS[N - 1];
+function idxBelow(m) { let lo = 0, hi = N - 1; while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (CUM[mid] <= m) lo = mid; else hi = mid; } return lo; }
+function interpArr(arr, m) { if (m <= 0) return arr[0]; if (m >= POLY_TOTAL) return arr[N - 1]; const i = idxBelow(m); const f = SEG[i] ? (m - CUM[i]) / SEG[i] : 0; return arr[i] + f * (arr[i + 1] - arr[i]); }
+function gainAt(m) { return interpArr(GAIN, m) * GAIN_SCALE; }
+function lossAt(m) { return interpArr(LOSS, m) * LOSS_SCALE; }
+function eleAt(m) { if (m <= 0) return COURSE[0][2]; if (m >= POLY_TOTAL) return COURSE[N - 1][2]; const i = idxBelow(m); const f = SEG[i] ? (m - CUM[i]) / SEG[i] : 0; return COURSE[i][2] + f * (COURSE[i + 1][2] - COURSE[i][2]); }
+function gradeAt(m) { const a = Math.max(0, m - 150), b = Math.min(POLY_TOTAL, m + 150); return (eleAt(b) - eleAt(a)) / Math.max(1, b - a); }
 
 // polyline metres -> official race km (piecewise between aid stations so numbers match the race's own km)
 function officialKm(polyM) {
@@ -839,7 +860,8 @@ function setupSheet() {
 }
 function showPane(name) {
   document.querySelectorAll('#seg [role=tab]').forEach((b, i) => { const on = b.dataset.pane === name; b.setAttribute('aria-selected', String(on)); if (on) document.querySelector('#seg .thumb').style.transform = 'translateX(' + (i * 100) + '%)'; });
-  ['overview', 'splits', 'aid', 'profile'].forEach(p => { document.getElementById('pane-' + p).hidden = p !== name; });
+  ['overview', 'stats', 'splits', 'aid', 'profile'].forEach(p => { document.getElementById('pane-' + p).hidden = p !== name; });
+  if (name === 'stats') { renderStats(); loadWeather(); }
   if (name === 'profile') renderProfile(document.getElementById('fullprofile'), true);
 }
 function segInit(id, value, cb) {
@@ -899,6 +921,7 @@ function render() {
   document.getElementById('tRaceS').textContent = band ? (band.edge === 'slow' ? 'Behind the 50 h cut-off pace' : band.edge === 'fast' ? 'Ahead of the 21.5 h band' : 'On a ' + fmtHours(band.hours) + ' finish · ' + fmtDayTime(RACE.start + band.hours * 3600000)) : (sam.km != null && sam.km < 10 ? 'Finish projection after 10 km' : 'Started Fri 8:00 am AEDT');
   renderNow(); renderNextGroup(nx, eta); renderSplits(); renderAids(); renderProfile(document.getElementById('miniprofile'), false);
   if (!document.getElementById('pane-profile').hidden) renderProfile(document.getElementById('fullprofile'), true);
+  if (!document.getElementById('pane-stats').hidden) renderStats();
   renderMap();
 }
 function rowHTML(ic, color, k, d, r1, r2) { return '<div class="row withicon"><span class="ic" style="background:' + color + '">' + svgIcon(ic) + '</span><div class="mid"><div class="k">' + k + '</div>' + (d ? '<div class="d">' + d + '</div>' : '') + '</div>' + (r1 != null ? '<div class="r"><div class="k num">' + r1 + '</div>' + (r2 ? '<div class="d num">' + r2 + '</div>' : '') + '</div>' : '') + '</div>'; }
@@ -966,6 +989,111 @@ function renderAids() {
     if (passed) { r.textContent = 'passed'; r.style.color = 'var(--label2)'; } else if (missed) { r.textContent = 'closed'; r.style.color = 'var(--red)'; } else { const left = a.cutMs - Date.now(); r.textContent = fmtDur(left) + ' left'; r.style.color = left < 2 * 3600000 ? 'var(--orange)' : ''; }
   });
 }
+// ---------- stats: climbing, effort, legs, conditions ----------
+function computeStats() {
+  const st = { climbed: null, descended: null, toNextClimb: null, toNextDesc: null, grade: null, vam: null, vdesc: null, moving: 0, stopped: 0, longest: 0, nosig: 0, observedFrom: null };
+  const fx = sam.fixes.filter(f => f.t >= RACE.start);
+  if (sam.along != null) {
+    st.climbed = gainAt(sam.along); st.descended = lossAt(sam.along);
+    const nx = nextAid(); st.toNextClimb = Math.max(0, gainAt(nx.polyM) - st.climbed); st.toNextDesc = Math.max(0, lossAt(nx.polyM) - st.descended);
+    st.grade = gradeAt(sam.along);
+  }
+  if (fx.length >= 2) {
+    st.observedFrom = fx[0].t; let cur = 0;
+    for (let i = 1; i < fx.length; i++) {
+      const a = fx[i - 1], b = fx[i], dt = b.t - a.t; if (dt <= 0) continue;
+      if (dt > 6 * 60000) { st.nosig += dt; cur = 0; continue; }
+      const v = (a.along != null && b.along != null) ? Math.abs(b.along - a.along) / dt * 3600 : (b.spd != null ? b.spd : 1);   // km/h
+      if (v < 0.6) { st.stopped += dt; cur += dt; if (cur > st.longest) st.longest = cur; } else { st.moving += dt; cur = 0; }
+    }
+    const last = fx[fx.length - 1], t0 = last.t - 30 * 60000; const win = fx.filter(f => f.t >= t0 && f.along != null);
+    if (win.length >= 2) { const a = win[0], b = win[win.length - 1], h = (b.t - a.t) / 3600000; if (h > 0.15) { st.vam = (gainAt(b.along) - gainAt(a.along)) / h; st.vdesc = (lossAt(b.along) - lossAt(a.along)) / h; } }
+  }
+  return st;
+}
+function fmtM(m) { return Math.round(m).toLocaleString('en-AU') + ' m'; }
+function renderStats() {
+  const st = computeStats(); const now = Date.now(); const el = Math.max(0, elapsedMs());
+  // climbing
+  let h = '';
+  if (st.climbed != null) {
+    h += rowHTML('mountain', 'var(--green)', 'Climbed', fmtM(OFFICIAL_CLIMB - st.climbed) + ' still to climb', fmtM(st.climbed), Math.round(st.climbed / OFFICIAL_CLIMB * 100) + '% of 7,700 m');
+    h += rowHTML('mountain', 'var(--teal)', 'Descended', fmtM(OFFICIAL_CLIMB - st.descended) + ' still to descend', fmtM(st.descended), '');
+    const nx = nextAid(); h += rowHTML('flag', 'var(--orange)', 'To ' + nx.short, (nx.km - sam.km).toFixed(1) + ' km', '+' + fmtM(st.toNextClimb), '−' + fmtM(st.toNextDesc));
+    if (st.grade != null) { const g = st.grade * 100; h += rowHTML('speed', 'var(--indigo)', 'Grade here', g > 3 ? 'Climbing' : g < -3 ? 'Descending' : 'About flat', (g >= 0 ? '+' : '') + g.toFixed(0) + '%', ''); }
+    if (st.vam != null) h += rowHTML('clock', 'var(--blue)', 'Vertical speed', 'Last 30 min', '+' + Math.round(st.vam) + ' m/h', '−' + Math.round(st.vdesc) + ' m/h');
+  } else h += '<div class="row pad"><p class="muted">Waiting for a position on the course.</p></div>';
+  document.getElementById('climbgroup').innerHTML = h;
+  // effort
+  h = '';
+  if (sam.km != null && el > 0) {
+    const hrs = el / 3600000; const movingH = Math.max(0.1, (el - st.stopped) / 3600000);
+    h += rowHTML('clock', 'var(--blue)', 'Moving', st.observedFrom ? 'Stops seen since ' + fmtTime(st.observedFrom) : '', fmtDur(el - st.stopped), 'stopped ' + fmtDur(st.stopped));
+    if (st.longest > 60000) h += rowHTML('bed', 'var(--gray)', 'Longest stop', '', fmtDur(st.longest), '');
+    const overall = sam.km / hrs, moving = sam.km / movingH;
+    h += rowHTML('speed', 'var(--indigo)', 'Pace', 'Overall · moving', paceStr(overall), paceStr(moving) + ' moving');
+    const effort = sam.km + (st.climbed || 0) / 100;
+    h += rowHTML('mountain', 'var(--green)', 'Effort distance', 'km plus 1 km per 100 m of climb', effort.toFixed(1) + ' km', 'of ' + (RACE.totalKm + OFFICIAL_CLIMB / 100).toFixed(0));
+    const kcal = settings.weight * (sam.km * 1.0 + (st.climbed || 0) / 100 * 0.94);
+    h += rowHTML('food', 'var(--orange)', 'Energy', 'Estimate at ' + settings.weight + ' kg', Math.round(kcal / 50) * 50 + ' kcal', Math.round(kcal / hrs) + ' kcal/h');
+  } else h += '<div class="row pad"><p class="muted">Nothing yet.</p></div>';
+  document.getElementById('effortgroup').innerHTML = h;
+  // legs from the timing mats
+  h = ''; let legs = 0;
+  for (let i = 1; i < AIDS.length; i++) {
+    const prev = AIDS[i - 1], a = AIDS[i];
+    const sOutPrev = prev.rrOut ? rr.splits[prev.rrOut] : null, sInPrev = prev.rrIn ? rr.splits[prev.rrIn] : null, sIn = a.rrIn ? rr.splits[a.rrIn] : null;
+    const startMs = (sOutPrev && sOutPrev.Exists) ? todToMs(sOutPrev.TOD) : (sInPrev && sInPrev.Exists ? todToMs(sInPrev.TOD) : null);
+    const endMs = sIn && sIn.Exists ? todToMs(sIn.TOD) : null;
+    if (!startMs || !endMs || endMs <= startMs) continue;
+    const km = a.km - prev.km, legH = (endMs - startMs) / 3600000; legs++;
+    const climb = (gainAt(a.polyM) - gainAt(prev.polyM)), desc = (lossAt(a.polyM) - lossAt(prev.polyM));
+    h += '<div class="row"><span class="num-circle done">' + a.n + '</span><div class="mid"><div class="k">' + prev.short + ' → ' + a.short + '</div><div class="d num">' + km.toFixed(1) + ' km · +' + Math.round(climb) + ' / −' + Math.round(desc) + ' m</div></div><div class="r"><div class="k num" style="font-size:15px">' + fmtDur(endMs - startMs) + '</div><div class="d num">' + paceStr(km / legH) + (sIn.RO > 0 ? ' · ' + ordinal(sIn.RO) : '') + '</div></div></div>';
+  }
+  if (!legs) h = '<div class="row pad"><p class="muted">Leg times appear as Sam crosses each timing mat.</p></div>';
+  document.getElementById('legsgroup').innerHTML = h;
+  renderWeather();
+}
+// weather at Sam's position (open-meteo, free, no key)
+const wx = { data: null, at: 0, lat: null, lon: null, err: null };
+const WMO = { 0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast', 45: 'Fog', 48: 'Fog', 51: 'Drizzle', 53: 'Drizzle', 55: 'Drizzle', 56: 'Freezing drizzle', 57: 'Freezing drizzle', 61: 'Light rain', 63: 'Rain', 65: 'Heavy rain', 66: 'Freezing rain', 67: 'Freezing rain', 71: 'Light snow', 73: 'Snow', 75: 'Heavy snow', 77: 'Snow grains', 80: 'Showers', 81: 'Showers', 82: 'Heavy showers', 85: 'Snow showers', 86: 'Snow showers', 95: 'Thunderstorm', 96: 'Thunderstorm with hail', 99: 'Thunderstorm with hail' };
+async function loadWeather() {
+  const lat = sam.latest ? sam.latest.lat : -37.14, lon = sam.latest ? sam.latest.lon : 142.52;
+  const moved = wx.lat == null || Math.hypot((lat - wx.lat) * KY, (lon - wx.lon) * KX) > 3000;
+  if (wx.data && Date.now() - wx.at < 15 * 60000 && !moved) return;
+  try {
+    const ele = sam.along != null ? Math.round(eleAt(sam.along)) : 400;
+    const u = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat.toFixed(3) + '&longitude=' + lon.toFixed(3) + '&elevation=' + ele + '&current=temperature_2m,apparent_temperature,precipitation,wind_speed_10m,wind_gusts_10m,weather_code,is_day&hourly=temperature_2m,precipitation_probability,precipitation,wind_speed_10m&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min&timezone=Australia%2FMelbourne&forecast_days=3&wind_speed_unit=kmh';
+    const res = await fetch(u, { cache: 'no-store' }); if (!res.ok) throw new Error(res.status);
+    wx.data = await res.json(); wx.at = Date.now(); wx.lat = lat; wx.lon = lon; wx.err = null;
+  } catch (e) { wx.err = e; }
+  renderWeather();
+}
+function renderWeather() {
+  const g = document.getElementById('wxgroup'); if (!g) return; let h = '';
+  const d = wx.data;
+  if (d && d.current) {
+    const c = d.current; const desc = WMO[c.weather_code] || '';
+    h += rowHTML('clock', 'var(--blue)', Math.round(c.temperature_2m) + '°', 'Feels like ' + Math.round(c.apparent_temperature) + '° · ' + desc + (c.precipitation ? ' · ' + c.precipitation + ' mm/h' : ''), Math.round(c.wind_speed_10m) + ' km/h', 'gusts ' + Math.round(c.wind_gusts_10m));
+    // next 12 hours: temperature band and rain chance
+    const hv = d.hourly; const idx = hv.time.findIndex(t => Date.parse(t + ':00+11:00') >= Date.now() - 3600000);
+    if (idx >= 0) {
+      const slice = i => hv[i].slice(idx, idx + 12);
+      const temps = slice('temperature_2m'), rain = slice('precipitation_probability'), mm = slice('precipitation');
+      const maxRain = Math.max(...rain), totalMm = mm.reduce((a, b) => a + b, 0);
+      h += rowHTML('speed', 'var(--teal)', 'Next 12 hours', 'Rain chance up to ' + maxRain + '%' + (totalMm > 0.1 ? ' · ' + totalMm.toFixed(1) + ' mm' : ''), Math.round(Math.min(...temps)) + '° to ' + Math.round(Math.max(...temps)) + '°', '');
+      const night = hv.temperature_2m.slice(idx, idx + 18); const lowI = night.indexOf(Math.min(...night));
+      h += rowHTML('bed', 'var(--indigo)', 'Low ahead', 'around ' + fmtTime(Date.parse(hv.time[idx + lowI] + ':00+11:00')), Math.round(night[lowI]) + '°', '');
+    }
+    if (d.daily && d.daily.sunset) {
+      const now = Date.now(); let ss = null, sr = null;
+      for (let i = 0; i < d.daily.time.length; i++) { const s1 = Date.parse(d.daily.sunset[i] + ':00+11:00'), r1 = Date.parse(d.daily.sunrise[i] + ':00+11:00'); if (ss == null && s1 > now) ss = s1; if (sr == null && r1 > now) sr = r1; }
+      if (ss != null && sr != null) h += rowHTML('pin', 'var(--orange)', ss < sr ? 'Sunset' : 'Sunrise', ss < sr ? 'in ' + fmtDur(ss - now) + ' · dark until ' + fmtTime(sr) : 'in ' + fmtDur(sr - now) + ' · sunset ' + fmtTime(ss), fmtTime(ss < sr ? ss : sr), '');
+    }
+    h += '<div class="row pad"><p class="muted" style="font-size:12px">Open-Meteo forecast for Sam\u2019s position, updated ' + fmtTime(wx.at) + '.</p></div>';
+  } else h += '<div class="row pad"><p class="muted">' + (wx.err ? 'Weather unavailable right now.' : 'Loading forecast…') + '</p></div>';
+  g.innerHTML = h;
+}
 // ---------- elevation profile (SVG, drawn from the course data) ----------
 let profileCache = null;
 function renderProfile(el, full) {
@@ -995,7 +1123,7 @@ function renderProfile(el, full) {
   if (full) for (let k = 0; k <= RACE.totalKm; k += 20) s += '<text class="ptxt" x="' + xOf(polyMForKm(k)).toFixed(1) + '" y="' + (H - 10) + '" text-anchor="middle">' + k + '</text>';
   if (sam.along != null) { const x = xOf(sam.along), i = Math.min(N - 1, Math.max(0, lowerIdx(sam.along))), y = yOf(COURSE[i][2]); s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (full ? 11 : 8) + '" fill="#FF9500" fill-opacity=".25"/><circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (full ? 6 : 4.5) + '" fill="#FF9500" stroke="#fff" stroke-width="2"/>'; }
   s += '</svg>';
-  if (!full) s += '<div class="cap"><span>Mt Zero</span><span>' + (sam.km != null ? sam.km.toFixed(1) + ' of 163 km' : '163 km · 7,700 m of climb') + '</span><span>Dunkeld</span></div>';
+  if (!full) s += '<div class="cap"><span>Mt Zero</span><span>' + (sam.along != null ? sam.km.toFixed(1) + ' km · ' + Math.round(gainAt(sam.along)).toLocaleString('en-AU') + ' m climbed' : '163 km · 7,700 m of climb') + '</span><span>Dunkeld</span></div>';
   el.innerHTML = s;
 }
 function lowerIdx(m) { let lo = 0, hi = N - 1; while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (CUM[mid] <= m) lo = mid; else hi = mid; } return lo; }
@@ -1028,6 +1156,8 @@ function boot() {
   segInit('segTz', settings.tz, v => { settings.tz = v; saveSettings(); render(); });
   const swE = document.getElementById('swEveryone'); swE.setAttribute('aria-checked', String(!!settings.everyone));
   swE.addEventListener('click', () => { settings.everyone = !settings.everyone; saveSettings(); swE.setAttribute('aria-checked', String(settings.everyone)); if (settings.everyone) loadNames(); renderField(); });
+  const wtVal = document.getElementById('wtVal'); const setWt = d => { settings.weight = Math.max(40, Math.min(140, settings.weight + d)); saveSettings(); wtVal.textContent = settings.weight + ' kg'; if (!document.getElementById('pane-stats').hidden) renderStats(); }; setWt(0);
+  document.getElementById('wtMinus').addEventListener('click', () => setWt(-1)); document.getElementById('wtPlus').addEventListener('click', () => setWt(1));
   const swW = document.getElementById('swWake'); swW.setAttribute('aria-checked', String(!!settings.wake));
   swW.addEventListener('click', () => { const on = swW.getAttribute('aria-checked') !== 'true'; swW.setAttribute('aria-checked', String(on)); setWake(on); });
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (settings.theme === 'auto') { applyBase(); render(); } });
@@ -1035,6 +1165,7 @@ function boot() {
   renderAids(); renderSplits(); renderNextGroup(nextAid(), null); renderNow(); renderProfile(document.getElementById('miniprofile'), false);
   render();
   setInterval(render, 15000);     // keeps "ago" text, countdowns and the race clock fresh
+  setInterval(() => { if (!document.getElementById('pane-stats').hidden) loadWeather(); }, 5 * 60000);
   setInterval(pollList, LIST_MS);
   if (settings.wake) setWake(true);
   bootstrapFeed(); startSSE(); pollList();
