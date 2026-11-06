@@ -96,6 +96,10 @@ a{color:var(--blue);text-decoration:none}
 .aid-pin.missed{border-color:var(--red);color:var(--red)}
 .aid-pin.flag{border-radius:7px;font-size:11px;letter-spacing:.02em}
 .aid-pin.emerg{border-style:dashed}
+.fpill{transform:translate(-50%,-50%);font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.25);border:2px solid #fff;letter-spacing:.01em}
+.fpill.gold{background:#FFB800;color:#1C1C1E}
+.fpill.grey{background:#8E8E93;color:#fff}
+.fpill.avg{background:var(--card);color:var(--blue);border-color:var(--blue)}
 .km-label{color:var(--label2);font-size:10px;font-weight:600;background:var(--glass);padding:1px 5px;border-radius:6px;white-space:nowrap;border:1px solid var(--glass-border)}
 
 /* ---------- bottom sheet ---------- */
@@ -132,9 +136,9 @@ a{color:var(--blue);text-decoration:none}
 .bar i{display:block;height:100%;width:0;background:var(--blue);border-radius:3px;transition:width .6s}
 
 .seg{display:flex;background:var(--fill);border-radius:9px;padding:2px;position:relative;flex:none}
-.seg button{flex:1;position:relative;z-index:1;font-size:13px;font-weight:600;color:var(--label);padding:7px 0;border-radius:7px;transition:color .2s;white-space:nowrap}
+.seg button{flex:1;position:relative;z-index:1;min-width:0;font-size:12.5px;font-weight:600;color:var(--label);padding:7px 0;border-radius:7px;transition:color .2s;white-space:nowrap}
 .seg button[aria-selected="true"]{color:var(--label)}
-.seg .thumb{position:absolute;top:2px;bottom:2px;left:2px;width:calc((100% - 4px)/5);background:var(--card);border-radius:7px;box-shadow:0 3px 8px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.seg .thumb{position:absolute;top:2px;bottom:2px;left:2px;width:calc((100% - 4px)/6);background:var(--card);border-radius:7px;box-shadow:0 3px 8px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
 .panes{flex:1;min-height:0;display:flex;flex-direction:column;gap:14px}
 .pane{display:flex;flex-direction:column;gap:14px}
 .pane[hidden]{display:none}
@@ -267,6 +271,7 @@ pre.code{margin:0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;bac
       <div class="seg" role="tablist" id="seg">
         <div class="thumb"></div>
         <button role="tab" aria-selected="true" data-pane="overview">Now</button>
+        <button role="tab" aria-selected="false" data-pane="field">Field</button>
         <button role="tab" aria-selected="false" data-pane="stats">Stats</button>
         <button role="tab" aria-selected="false" data-pane="splits">Splits</button>
         <button role="tab" aria-selected="false" data-pane="aid">Aid</button>
@@ -291,6 +296,10 @@ pre.code{margin:0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;bac
               <a class="row withicon" href="https://gpt.livingitlive.com.au" target="_blank" rel="noopener"><span class="ic" style="background:var(--teal)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-6l-2 3-2-3H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg></span><div class="mid"><div class="k">Living It Live</div><div class="d">Finish camera</div></div><svg class="ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
             </div>
           </div>
+        </div>
+        <div class="pane" id="pane-field" hidden>
+          <div><div class="gh">On course</div><div class="group" id="fieldgroup"></div></div>
+          <div><div class="gh" id="dnfhead">Dropped out</div><div class="group" id="dnfgroup"></div></div>
         </div>
         <div class="pane" id="pane-stats" hidden>
           <div><div class="gh">Climbing</div><div class="group" id="climbgroup"></div></div>
@@ -416,14 +425,15 @@ function latLngAtPolyM(m) {
   return [COURSE[lo][0] + f * (COURSE[hi][0] - COURSE[lo][0]), COURSE[lo][1] + f * (COURSE[hi][1] - COURSE[lo][1])];
 }
 // nearest point on the course within 400 m, biased towards the previous position so out-and-backs resolve sensibly
-function projectToCourse(lat, lon, prevAlong) {
+function projectToCourse(lat, lon, prevAlong, reach) {
+  const R2 = (reach || 400) * (reach || 400);
   const x = (lon - LON0) * KX, y = (lat - LAT0) * KY;
   let best = null;
   for (let i = 0; i < N - 1; i++) {
     const ax = CX[i], ay = CY[i], dx = CX[i + 1] - ax, dy = CY[i + 1] - ay, L2 = dx * dx + dy * dy;
     let t = L2 ? ((x - ax) * dx + (y - ay) * dy) / L2 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
     const px = ax + t * dx, py = ay + t * dy, d2 = (x - px) * (x - px) + (y - py) * (y - py);
-    if (d2 > 160000) continue;
+    if (d2 > R2) continue;
     const along = CUM[i] + t * SEG[i];
     const dist = Math.sqrt(d2);
     const score = dist + (prevAlong == null ? 0 : Math.abs(along - prevAlong) * 0.06 + (along < prevAlong - 300 ? 150 : 0));
@@ -657,6 +667,7 @@ async function pollList() {
     const res = await fetch(rrListUrl, { cache: 'no-store' }); const j = await res.json();
     const groups = j.data || {}; const key = Object.keys(groups).find(k => /Solo\/Pairs/.test(k)) || Object.keys(groups)[0];
     const rows = groups[key] || [];
+    rr.rows = rows;
     rr.fieldSize = rows.filter(r => r[6]).length || rows.length;   // rows with a timing point are starters
     const row = rows.find(r => String(r[0]) === RACE.bib);
     if (row) {
@@ -865,7 +876,8 @@ function setupSheet() {
 }
 function showPane(name) {
   document.querySelectorAll('#seg [role=tab]').forEach((b, i) => { const on = b.dataset.pane === name; b.setAttribute('aria-selected', String(on)); if (on) document.querySelector('#seg .thumb').style.transform = 'translateX(' + (i * 100) + '%)'; });
-  ['overview', 'stats', 'splits', 'aid', 'profile'].forEach(p => { document.getElementById('pane-' + p).hidden = p !== name; });
+  ['overview', 'field', 'stats', 'splits', 'aid', 'profile'].forEach(p => { document.getElementById('pane-' + p).hidden = p !== name; });
+  if (name === 'field') renderRacePane();
   if (name === 'stats') { renderStats(); loadWeather(); }
   if (name === 'profile') renderProfile(document.getElementById('fullprofile'), true);
 }
@@ -927,6 +939,7 @@ function render() {
   renderNow(); renderNextGroup(nx, eta); renderSplits(); renderAids(); renderProfile(document.getElementById('miniprofile'), false);
   if (!document.getElementById('pane-profile').hidden) renderProfile(document.getElementById('fullprofile'), true);
   if (!document.getElementById('pane-stats').hidden) renderStats();
+  if (!document.getElementById('pane-field').hidden) renderRacePane(); else renderFieldMarkers(computeField());
   renderMap();
 }
 function rowHTML(ic, color, k, d, r1, r2) { return '<div class="row withicon"><span class="ic" style="background:' + color + '">' + svgIcon(ic) + '</span><div class="mid"><div class="k">' + k + '</div>' + (d ? '<div class="d">' + d + '</div>' : '') + '</div>' + (r1 != null ? '<div class="r"><div class="k num">' + r1 + '</div>' + (r2 ? '<div class="d num">' + r2 + '</div>' : '') + '</div>' : '') + '</div>'; }
@@ -993,6 +1006,79 @@ function renderAids() {
     const r = document.getElementById('aidr-' + a.n);
     if (passed) { r.textContent = 'passed'; r.style.color = 'var(--label2)'; } else if (missed) { r.textContent = 'closed'; r.style.color = 'var(--red)'; } else { const left = a.cutMs - Date.now(); r.textContent = fmtDur(left) + ' left'; r.style.color = left < 2 * 3600000 ? 'var(--orange)' : ''; }
   });
+}
+// ---------- the field: leader, average, last place, dropouts ----------
+const SPLIT_NAMES = { HGAnnouncer: 'Halls Gap', 'Halls Gap In': 'Halls Gap', 'Halls Gap Out': 'after Halls Gap', 'Rosea Car Park': 'Rosea', 'Borough Huts IN': 'Borough Huts', 'Borough Huts Out': 'after Borough Huts', 'Mt William In': 'Mt William', 'Mt William Out': 'after Mt William', 'Jimmy Creek In': 'Jimmy Creek', 'Jimmy Creek Out': 'after Jimmy Creek', 'Yarrum Gap': 'Yarram Gap', 'Griffin Fireline IN': 'Griffin Fireline', 'Griffin Fireline Out': 'after Griffin', "Cassidy's Gap": 'Cassidys Gap', 'Bainggug CP In': 'Bainggug', 'Bainggug CP Out': 'after Bainggug', 'Mt Difficult': 'Mt Difficult', 'GAR Trailhead IN': 'GAR Trailhead', 'GAR Trailhead OUT': 'after GAR', Start: 'the start', Finish: 'the finish' };
+function splitName(n) { return SPLIT_NAMES[n] || n || 'unknown'; }
+function titleName(n) { return (n || '').split(' ').map(w => w.length > 1 && w === w.toUpperCase() ? w[0] + w.slice(1).toLowerCase() : w).join(' '); }
+const fieldKm = new Map();   // tracker id -> {km, t}
+function trackerForBib(bib) { for (const [id, n] of names) if (parseInt(n, 10) === +bib) return id; return 'au' + bib; }
+function computeField() {
+  const rows = rr.rows || [];
+  if (!rows.length) return null;
+  const active = rows.filter(r => /^\d/.test(r[2] || ''));
+  const dnf = rows.filter(r => /DNF|DSQ/i.test(r[2] || ''));
+  const dns = rows.filter(r => /DNS/i.test(r[2] || ''));
+  const fin = rows.filter(r => r[6] === 'Finish');
+  // GPS distance for every active runner with a recent fix
+  const now = Date.now(), on = [];
+  active.forEach(r => {
+    const id = trackerForBib(r[0]); const p = r[0] === RACE.bib && sam.latest ? { t: sam.latest.t, lat: sam.latest.lat, lon: sam.latest.lon } : field.get(id);
+    if (!p || now - p.t > 45 * 60000) return;
+    let c = fieldKm.get(id);
+    if (!c || c.t !== p.t) { const pr = projectToCourse(p.lat, p.lon, c ? c.along : null, 1500); c = { t: p.t, along: pr ? pr.along : (c ? c.along : null) }; fieldKm.set(id, c); }
+    if (c.along == null) return;
+    on.push({ bib: r[0], name: titleName(r[3]), km: r[0] === RACE.bib && sam.km != null ? sam.km : officialKm(c.along), along: c.along, t: p.t, split: r[6], time: r[7], place: r[2] });
+  });
+  on.sort((a, b) => b.km - a.km);
+  const byPlace = active.slice().sort((a, b) => parseInt(a[2], 10) - parseInt(b[2], 10));
+  const leaderRow = byPlace[0], lastRow = byPlace[byPlace.length - 1];
+  const leader = on[0] || null, last = on[on.length - 1] || null;
+  const avgKm = on.length ? on.reduce((a, o) => a + o.km, 0) / on.length : null;
+  const samIdx = on.findIndex(o => o.bib === RACE.bib);
+  return { active, dnf, dns, fin, on, leader, last, avgKm, samPos: samIdx >= 0 ? samIdx + 1 : null, leaderRow, lastRow };
+}
+let fieldMarkers = null;
+function pillIcon(text, cls) { return L.divIcon({ className: '', html: '<div class="fpill ' + cls + '">' + text + '</div>', iconSize: null, iconAnchor: [0, 0] }); }
+function renderFieldMarkers(F) {
+  if (!map) return;
+  if (!fieldMarkers) fieldMarkers = L.layerGroup().addTo(map);
+  fieldMarkers.clearLayers();
+  if (!F || settings.map === 'official') return;
+  const add = (along, text, cls, tip) => { const ll = latLngAtPolyM(along); L.marker(ll, { icon: pillIcon(text, cls), zIndexOffset: 800, keyboard: false }).bindTooltip(tip, { direction: 'top', offset: [0, -12] }).addTo(fieldMarkers); };
+  if (F.leader && F.leader.bib !== RACE.bib) add(F.leader.along, '1st', 'gold', F.leader.name + ' · ' + F.leader.km.toFixed(1) + ' km');
+  if (F.last && F.last.bib !== RACE.bib && F.on.length > 1) add(F.last.along, 'Last', 'grey', F.last.name + ' · ' + F.last.km.toFixed(1) + ' km');
+  if (F.avgKm != null) add(polyMForKm(F.avgKm), 'Avg', 'avg', 'Field average · ' + F.avgKm.toFixed(1) + ' km');
+}
+function renderRacePane() {
+  const F = computeField(); renderFieldMarkers(F);
+  const g = document.getElementById('fieldgroup'), d = document.getElementById('dnfgroup');
+  if (!F) { g.innerHTML = '<div class="row pad"><p class="muted">Loading the field…</p></div>'; d.innerHTML = ''; return; }
+  let h = '';
+  const samKm = sam.km;
+  const vs = km => samKm == null ? '' : (km > samKm ? (km - samKm).toFixed(1) + ' km ahead of Sam' : km < samKm ? (samKm - km).toFixed(1) + ' km behind Sam' : 'level with Sam');
+  if (F.leader) h += rowHTML('flag', '#FFB800', 'Leader · ' + F.leader.name, '#' + F.leader.bib + ' · ' + splitName(F.leader.split) + (F.leader.time ? ' in ' + F.leader.time : '') + (F.leader.bib !== RACE.bib ? ' · ' + vs(F.leader.km) : ''), F.leader.km.toFixed(1) + ' km', fmtAgo(F.leader.t));
+  else if (F.leaderRow) h += rowHTML('flag', '#FFB800', 'Leader · ' + titleName(F.leaderRow[3]), '#' + F.leaderRow[0] + ' · ' + splitName(F.leaderRow[6]), F.leaderRow[7] || '', '');
+  if (F.avgKm != null) h += rowHTML('people', 'var(--blue)', 'Field average', F.on.length + ' runners with a live fix' + (samKm != null ? ' · Sam is ' + (samKm >= F.avgKm ? (samKm - F.avgKm).toFixed(1) + ' km ahead' : (F.avgKm - samKm).toFixed(1) + ' km behind') : ''), F.avgKm.toFixed(1) + ' km', '');
+  if (F.samPos) h += rowHTML('pin', 'var(--indigo)', 'Sam on the trail', 'By GPS distance, ' + (rr.placeText ? 'officially ' + ordinal(parseInt(rr.placeText, 10)) + ' at the last mat' : 'among runners with a fix'), ordinal(F.samPos) + ' of ' + F.on.length, '');
+  if (F.last) {
+    const nx = AIDS.find(a => a.km > F.last.km + 0.05) || AIDS[AIDS.length - 1]; const left = nx.cutMs - Date.now();
+    h += rowHTML('clock', 'var(--gray)', 'Last place · ' + F.last.name, '#' + F.last.bib + ' · ' + (left > 0 ? nx.short + ' closes in ' + fmtDur(left) : 'past the ' + nx.short + ' cut-off') + (F.last.bib !== RACE.bib ? ' · ' + vs(F.last.km) : ''), F.last.km.toFixed(1) + ' km', fmtAgo(F.last.t));
+  }
+  h += rowHTML('people', 'var(--green)', 'Still racing', F.dns.length + ' did not start' + (F.fin.length ? ' · ' + F.fin.length + ' finished' : ''), String(F.active.length - F.fin.length), 'of ' + (F.active.length + F.dnf.length));
+  g.innerHTML = h;
+  // dropouts, grouped by where they stopped
+  document.getElementById('dnfhead').textContent = 'Dropped out · ' + F.dnf.length;
+  if (!F.dnf.length) { d.innerHTML = '<div class="row pad"><p class="muted">Nobody yet.</p></div>'; return; }
+  const by = new Map(); F.dnf.forEach(r => { const w = splitName(r[6]); if (!by.has(w)) by.set(w, []); by.get(w).push(r); });
+  const order = [...by.entries()].sort((a, b) => b[1].length - a[1].length);
+  h = '';
+  order.forEach(([where, list]) => {
+    h += '<details class="ar"><summary class="row"><span class="num-circle missed">' + list.length + '</span><div class="mid"><div class="k">' + where + '</div><div class="d">' + list.map(r => titleName(r[3]).split(' ')[0]).join(', ') + '</div></div><svg class="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2"><path d="m1 1 6 6-6 6"/></svg></summary><div class="arbody">';
+    list.sort((a, b) => (a[7] || '').localeCompare(b[7] || '', undefined, { numeric: true })).forEach(r => { h += '<div><b>' + titleName(r[3]) + '</b> · #' + r[0] + (r[7] ? ' · stopped at ' + r[7] + ' race time' : '') + (r[11] ? ' · ' + r[11] : '') + '</div>'; });
+    h += '</div></details>';
+  });
+  d.innerHTML = h;
 }
 // ---------- stats: climbing, effort, legs, conditions ----------
 function computeStats() {
