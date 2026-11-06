@@ -27,7 +27,7 @@ def load_feed():
         with open(FEED) as f:
             return json.load(f)
     except Exception:
-        return {'sam': [], 'field': {}, 'names': {}, 'lastLine': None, 'offset': 0, 'generated': None}
+        return {'sam': [], 'field': {}, 'tracks': {}, 'names': {}, 'lastLine': None, 'offset': 0, 'generated': None}
 
 
 def parse(text, feed, drop_first=False):
@@ -64,6 +64,10 @@ def parse(text, feed, drop_first=False):
             cur = feed['field'].get(tid)
             if not cur or t > cur[0]:
                 feed['field'][tid] = [t, round(lat, 5), round(lon, 5)]
+            # short recent track for every runner, one point every ~2 minutes, so the page can show their pace
+            tr = feed['tracks'].setdefault(tid, [])
+            if not tr or t >= tr[-1][0] + 175:
+                tr.append([t, round(lat, 5), round(lon, 5), spd, bat])
     if last_complete:
         feed['lastLine'] = last_complete[:29]
     feed['sam'].sort(key=lambda p: p[0])
@@ -72,6 +76,7 @@ def parse(text, feed, drop_first=False):
 
 def main():
     feed = load_feed()
+    feed.setdefault('tracks', {})
     if not feed.get('names'):
         try:
             _, _, body = get(BASE + 'init.txt')
@@ -120,6 +125,9 @@ def main():
     # keep the field to the last 3 hours so the file stays small
     cutoff = time.time() - 3 * 3600
     feed['field'] = {k: v for k, v in feed['field'].items() if v[0] >= cutoff}
+    tcut = time.time() - 60 * 60
+    feed['tracks'] = {k: [p for p in v if p[0] >= tcut] for k, v in feed['tracks'].items()}
+    feed['tracks'] = {k: v for k, v in feed['tracks'].items() if v}
     feed['generated'] = datetime.now(timezone.utc).isoformat(timespec='seconds')
     feed['generatedMs'] = int(time.time() * 1000)
     with open(FEED, 'w') as f:

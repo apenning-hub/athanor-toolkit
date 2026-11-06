@@ -74,6 +74,15 @@ a{color:var(--blue);text-decoration:none}
 .ldot.dead{background:var(--red);animation:none}
 @keyframes ping{0%{box-shadow:0 0 0 0 rgba(52,199,89,.55)}70%{box-shadow:0 0 0 8px rgba(52,199,89,0)}100%{box-shadow:0 0 0 0 rgba(52,199,89,0)}}
 .spacer{flex:1}
+.backpill{height:40px;border-radius:20px;padding:0 14px 0 10px;display:flex;align-items:center;gap:6px;font-size:15px;font-weight:600;color:var(--blue);flex:none}
+.backpill svg{width:10px;height:16px}
+.avatar.other{background:var(--orange)}
+.sam-pin.other .bubble{background:#FF9500}
+.sam-pin.other .halo{background:rgba(255,149,0,.35)}
+.row[data-bib]{cursor:pointer}
+.row[data-bib]:active{background:var(--fill2)}
+.row[data-bib] .mid .k:after{content:" ›";color:var(--label3);font-weight:600}
+.namebtn{color:var(--blue);font-weight:600}
 .iconbtn{width:40px;height:40px;border-radius:20px;display:grid;place-items:center;color:var(--blue);flex:none;transition:transform .15s}
 .iconbtn:active{transform:scale(.92)}
 .iconbtn svg{width:20px;height:20px}
@@ -241,6 +250,7 @@ pre.code{margin:0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;bac
       <span class="t"><span id="liveMain">Connecting</span> <span class="sub" id="liveSub"></span></span>
     </div>
     <div class="spacer"></div>
+    <button class="backpill glass" id="btnBack" hidden aria-label="Back to Sam"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2 2 8l6 6"/></svg>Sam</button>
     <button class="iconbtn glass" id="btnLayers" aria-label="Map type and settings" title="Map type and settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3 2.5 8.5 12 14l9.5-5.5z"/><path d="M2.5 13.5 12 19l9.5-5.5"/></svg>
     </button>
@@ -254,9 +264,9 @@ pre.code{margin:0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;bac
   <section class="sheet" id="sheet" aria-label="Sam's progress">
     <div class="grab" id="grab" role="button" aria-label="Expand or collapse" tabindex="0"></div>
     <header class="shead" id="shead">
-      <div class="avatar">SR</div>
+      <div class="avatar" id="avatar">SR</div>
       <div class="who">
-        <div class="name">Sam Rosenzweig <span class="muted" style="font-weight:500">· 187</span></div>
+        <div class="name"><span id="subjName">Sam Rosenzweig</span> <span class="muted" style="font-weight:500" id="subjBib">· 187</span></div>
         <div class="state" id="stateline">Waiting for the first GPS fix…</div>
       </div>
       <div class="chip gray" id="placechip">—</div>
@@ -284,6 +294,10 @@ pre.code{margin:0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;bac
             <div class="gh">Status</div>
             <div class="group" id="nowgroup"></div>
           </div>
+          <div id="nearwrap" hidden>
+            <div class="gh">Nearby runners</div>
+            <div class="group" id="neargroup"></div>
+          </div>
           <div>
             <div class="gh">Next aid station</div>
             <div class="group" id="nextgroup"></div>
@@ -305,7 +319,7 @@ pre.code{margin:0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;bac
           <div><div class="gh">Climbing</div><div class="group" id="climbgroup"></div></div>
           <div><div class="gh">Effort</div><div class="group" id="effortgroup"></div></div>
           <div><div class="gh">Legs</div><div class="group" id="legsgroup"></div></div>
-          <div><div class="gh">Conditions where Sam is</div><div class="group" id="wxgroup"></div></div>
+          <div><div class="gh">Conditions on course</div><div class="group" id="wxgroup"></div></div>
         </div>
         <div class="pane" id="pane-splits" hidden>
           <div><div class="gh">Official timing</div><div class="group" id="splitsgroup"></div></div>
@@ -315,7 +329,7 @@ pre.code{margin:0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;bac
         </div>
         <div class="pane" id="pane-profile" hidden>
           <div class="profile" id="fullprofile"></div>
-          <div class="muted" style="font-size:12px;padding:0 4px">Orange dot is Sam. Heights are from the event's course file.</div>
+          <div class="muted" style="font-size:12px;padding:0 4px">Orange dot is the runner. Heights are from the event's course file.</div>
         </div>
       </div>
     </div>
@@ -358,8 +372,9 @@ const AIDS = [{"n":0,"name":"Mt Zero","full":"Mt Zero Picnic Area","km":0,"cutof
 const BANDS = [21.5, 24, 26, 30, 34, 38, 42, 46, 50];     // expected finish bands in hours
 const EXP = [[0.0,1.417,3.583,4.9,6.267,7.65,10.0,12.883,15.5,16.867,18.383,20.167,21.5],[0.0,1.55,3.933,5.383,6.917,8.467,11.133,14.4,17.217,18.75,20.45,22.483,24.0],[0.0,1.65,4.217,5.767,7.417,9.1,12.033,15.617,18.567,20.233,22.1,24.317,26.0],[0.0,1.85,4.75,6.5,8.367,10.35,13.8,18.033,21.25,23.167,25.367,27.983,30.0],[0.0,2.017,5.25,7.2,9.283,11.55,15.55,20.467,23.867,26.067,28.433,31.617,34.0],[0.0,2.167,5.717,7.85,10.15,12.717,17.283,22.9,26.45,28.933,31.8,35.233,38.0],[0.0,2.3,6.15,8.45,10.967,13.85,19.0,25.333,28.983,31.733,34.95,38.833,42.0],[0.0,2.417,6.55,9.017,11.733,14.933,20.683,27.783,31.467,34.5,38.083,42.417,46.0],[0.0,2.517,6.917,9.533,12.467,15.983,22.35,30.233,33.9,37.217,41.167,45.967,50.0]];         // EXP[band][aidIndex] = elapsed hours from the start (event guide, expected splits)
 
+const SAM = { bib: '187', trackerId: 'au187', name: 'Sam Rosenzweig' };
 const RACE = {
-  bib: '187', trackerId: 'au187', name: 'Sam Rosenzweig',
+  bib: '187', trackerId: 'au187', name: 'Sam Rosenzweig',   // the runner currently shown; Sam unless another is tapped
   start: Date.parse('2026-11-06T08:00:00+11:00'),
   finishCutoff: Date.parse('2026-11-08T10:00:00+11:00'),
   tz: 'Australia/Melbourne',
@@ -559,7 +574,10 @@ async function loadBaseline() {
     if (!res || !res.ok) res = await fetch('feed.json?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) return false;
     const d = await res.json(); let added = 0;
-    (d.sam || []).forEach(p => { if (addSamFix(p[0] * 1000, p[1], p[2], p[3], p[4])) added++; });
+    feed.lastData = d;
+    const track = RACE.bib === SAM.bib ? (d.sam || []) : ((d.tracks || {})[RACE.trackerId] || []);
+    track.forEach(p => { if (addSamFix(p[0] * 1000, p[1], p[2], p[3], p[4])) added++; });
+    if (RACE.bib !== SAM.bib && !track.length && d.field && d.field[RACE.trackerId]) { const p = d.field[RACE.trackerId]; if (addSamFix(p[0] * 1000, p[1], p[2], null, null)) added++; }
     Object.entries(d.field || {}).forEach(([id, p]) => { const cur = field.get(id); if (!cur || p[0] * 1000 > cur.t) field.set(id, { t: p[0] * 1000, lat: p[1], lon: p[2] }); });
     if (d.names && !names.size) Object.entries(d.names).forEach(([id, n]) => names.set(id, n));
     if (d.lastLine && (!feed.lastOk || d.generatedMs > feed.lastOk)) { feed.lastLine = d.lastLine; }
@@ -635,25 +653,27 @@ function todToMs(tod) {
 // raceresult: official splits (server-sent events) and the live list (place)
 // ====================================================================
 const RR_BASE = 'https://my.raceresult.com/' + RACE.rrEvent;
-const rrDetailsUrl = RR_BASE + '/details/view?lang=en&mid=0&standalone=0&embedded=1&bib=' + RACE.bib + '&contest=' + RACE.rrContest;
-let es = null, esGotData = false;
+function rrDetailsUrl() { return RR_BASE + '/details/view?lang=en&mid=0&standalone=0&embedded=1&bib=' + RACE.bib + '&contest=' + RACE.rrContest; }
+let es = null, esGotData = false, sseTimersSet = false;
 function startSSE() {
   try {
-    es = new EventSource(rrDetailsUrl);
+    if (es) es.close(); esGotData = false;
+    es = new EventSource(rrDetailsUrl());
     es.addEventListener('update', ev => { try { handleRR(JSON.parse(ev.data)); esGotData = true; } catch (e) {} });
     es.onerror = () => { /* EventSource retries itself; the fallback poll below covers it */ };
   } catch (e) {}
   setTimeout(() => { if (!esGotData) rrFetchOnce(); }, 20000);
-  setInterval(() => { if (!esGotData || (rr.updated && Date.now() - rr.updated > 10 * 60000)) rrFetchOnce(); }, 5 * 60000);
+  if (!sseTimersSet) { sseTimersSet = true; setInterval(() => { if (!esGotData || (rr.updated && Date.now() - rr.updated > 10 * 60000)) rrFetchOnce(); }, 5 * 60000); }
 }
 async function rrFetchOnce() { // read one event from the SSE stream with a plain fetch, then abort
   try {
     const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 15000);
-    const res = await fetch(rrDetailsUrl, { headers: { Accept: 'text/event-stream' }, signal: ctl.signal, cache: 'no-store' });
+    const bibAtStart = RACE.bib;
+    const res = await fetch(rrDetailsUrl(), { headers: { Accept: 'text/event-stream' }, signal: ctl.signal, cache: 'no-store' });
     const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = '';
     while (true) { const { value, done } = await reader.read(); if (done) break; buf += dec.decode(value, { stream: true }); const i = buf.indexOf('\n\n', buf.indexOf('data:')); if (buf.indexOf('data:') >= 0 && i > 0) break; if (buf.length > 2e6) break; }
     clearTimeout(tm); ctl.abort();
-    const m = /^data: (.*)$/m.exec(buf); if (m) handleRR(JSON.parse(m[1]));
+    const m = /^data: (.*)$/m.exec(buf); if (m && bibAtStart === RACE.bib) handleRR(JSON.parse(m[1]));
   } catch (e) {}
 }
 function handleRR(j) {
@@ -807,7 +827,9 @@ function applyBase() {
 }
 function visibleMapHeight() { if (matchMedia('(min-width: 900px)').matches) return map.getSize().y; return Math.max(140, sheet.getBoundingClientRect().top); }
 function offsetLatLng(ll, z) { const dy = (map.getSize().y - visibleMapHeight()) / 2; return map.unproject(map.project(L.latLng(ll), z).add([0, dy]), z); }
-function samIcon(stale) { return L.divIcon({ className: '', html: '<div class="sam-pin' + (stale ? ' stale' : '') + '"><div class="halo"></div><div class="bubble">SR</div><div class="tail"></div></div>', iconSize: [52, 60], iconAnchor: [26, 50], tooltipAnchor: [0, -46] }); }
+function initials(n) { const w = (n || '').split(' ').filter(Boolean); return ((w[0] || '')[0] || '') + ((w[w.length - 1] || '')[0] || ''); }
+function firstName() { return (RACE.name || '').split(' ')[0]; }
+function samIcon(stale) { return L.divIcon({ className: '', html: '<div class="sam-pin' + (stale ? ' stale' : '') + (RACE.bib !== SAM.bib ? ' other' : '') + '"><div class="halo"></div><div class="bubble">' + initials(RACE.name).toUpperCase() + '</div><div class="tail"></div></div>', iconSize: [52, 60], iconAnchor: [26, 50], tooltipAnchor: [0, -46] }); }
 function setFollow(on) { followSam = on; const b = document.getElementById('btnFollow'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); if (on && sam.latest) centreOnSam(true); }
 function centreOnSam(zoomIn) { if (!sam.latest) return; const z = Math.max(map.getZoom(), zoomIn ? 13.5 : map.getZoom()); map.setView(offsetLatLng([sam.latest.lat, sam.latest.lon], z), z, { animate: true, duration: .8 }); }
 function renderMap() {
@@ -816,7 +838,7 @@ function renderMap() {
   const ll = [sam.latest.lat, sam.latest.lon];
   if (!samMarker) { samMarker = L.marker(ll, { icon: samIcon(stale), zIndexOffset: 1000, keyboard: false }).addTo(map); samMarker.bindTooltip('', { direction: 'top', permanent: false }); if (followSam) centreOnSam(true); }
   else { samMarker.setLatLng(ll); samMarker.setIcon(samIcon(stale)); if (followSam) map.panTo(offsetLatLng(ll, map.getZoom()), { animate: true, duration: .6 }); }
-  samMarker.setTooltipContent('Sam · ' + (sam.km != null ? sam.km.toFixed(1) + ' km · ' : '') + fmtTime(sam.latest.t));
+  samMarker.setTooltipContent(firstName() + ' · ' + (sam.km != null ? sam.km.toFixed(1) + ' km · ' : '') + fmtTime(sam.latest.t));
   if (sam.along != null) {
     const done = [], m = sam.along; let i = 0;
     for (; i < N && CUM[i] <= m; i++) done.push([COURSE[i][0], COURSE[i][1]]);
@@ -835,6 +857,7 @@ function renderField() {
     if (p.t < cutoff) return;
     const c = L.circleMarker([p.lat, p.lon], { radius: 4, color: '#fff', weight: 1.5, fillColor: '#8E8E93', fillOpacity: .9, interactive: true });
     c.bindTooltip((names.get(id) || id) + ' · ' + fmtTime(p.t), { direction: 'top' });
+    c.on('click', () => { const b = parseInt(names.get(id), 10); if (b) setSubject(String(b)); });
     c.addTo(fieldLayer);
   });
   if (!map.hasLayer(fieldLayer)) fieldLayer.addTo(map);
@@ -950,11 +973,21 @@ function renderNow() {
     h += rowHTML('speed', 'var(--blue)', 'Pace', 'Last 25 min', spd != null ? spd.toFixed(1) + ' km/h' : '—', spd ? paceStr(spd) : '');
     const avg = sam.km != null && elapsedMs() > 600000 ? sam.km / (elapsedMs() / 3600000) : null;
     if (avg) h += rowHTML('clock', 'var(--indigo)', 'Average', 'Since the start, stops included', avg.toFixed(1) + ' km/h', paceStr(avg));
+    if (wx.data && wx.data.current) {
+      const c = wx.data.current, hv = wx.data.hourly; let rain = '';
+      const i0 = hv ? hv.time.findIndex(t => Date.parse(t + ':00+11:00') >= Date.now() - 3600000) : -1;
+      if (i0 >= 0) rain = ' · rain ' + Math.max(...hv.precipitation_probability.slice(i0, i0 + 6)) + '% next 6 h';
+      h += rowHTML('mountain', 'var(--teal)', 'Weather here', (WMO[c.weather_code] || '') + ' · feels ' + Math.round(c.apparent_temperature) + '°' + rain, Math.round(c.temperature_2m) + '°', Math.round(c.wind_speed_10m) + ' km/h wind');
+    }
     h += rowHTML('pin', 'var(--green)', 'Last fix', fmtDayTime(sam.latest.t) + ' ' + tzAbbr() + (sam.off != null ? ' · ' + Math.round(sam.off) + ' m from the line' : ''), fmtAgo(sam.latest.t), '');
     if (sam.latest.bat != null) h += rowHTML('battery', sam.latest.bat < 20 ? 'var(--red)' : 'var(--gray)', 'Tracker battery', '', sam.latest.bat + '%', '');
   } else h += '<div class="row pad"><p class="muted">' + (feed.err ? 'No GPS yet. The official map below still works.' : 'Loading…') + '</p></div>';
   if (rr.lastSplit && rr.lastSplit !== 'Start') h += rowHTML('flag', 'var(--orange)', 'Last timing mat', rr.lastSplit + (rr.ag ? ' · ' + rr.ag : ''), rr.lastTime || '', rr.placeText ? 'overall ' + rr.placeText : '');
   g.innerHTML = h;
+  const nb = neighbours(computeField()); let n = '';
+  if (nb.ahead) n += tap(nb.ahead.bib, rowHTML('people', 'var(--teal)', 'Ahead · ' + nb.ahead.name, nb.ahead.gapTxt, '+' + nb.ahead.gap.toFixed(2) + ' km', nb.ahead.timeTxt));
+  if (nb.behind) n += tap(nb.behind.bib, rowHTML('people', 'var(--teal)', 'Behind · ' + nb.behind.name, nb.behind.gapTxt, '−' + nb.behind.gap.toFixed(2) + ' km', nb.behind.timeTxt));
+  document.getElementById('neargroup').innerHTML = n; document.getElementById('nearwrap').hidden = !n;
 }
 function renderNextGroup(nx, eta) {
   const g = document.getElementById('nextgroup');
@@ -1007,6 +1040,31 @@ function renderAids() {
     if (passed) { r.textContent = 'passed'; r.style.color = 'var(--label2)'; } else if (missed) { r.textContent = 'closed'; r.style.color = 'var(--red)'; } else { const left = a.cutMs - Date.now(); r.textContent = fmtDur(left) + ' left'; r.style.color = left < 2 * 3600000 ? 'var(--orange)' : ''; }
   });
 }
+// ---------- switching the runner on screen ----------
+function bibName(bib) {
+  const row = (rr.rows || []).find(r => String(r[0]) === String(bib)); if (row) return titleName(row[3]);
+  const n = names.get(trackerForBib(bib)); return n ? titleName(n.replace(/^\d+\s*/, '')) : 'Bib ' + bib;
+}
+function setSubject(bib) {
+  bib = String(bib); if (bib === RACE.bib) return;
+  RACE.bib = bib; RACE.trackerId = bib === SAM.bib ? SAM.trackerId : trackerForBib(bib); RACE.name = bib === SAM.bib ? SAM.name : bibName(bib);
+  Object.assign(sam, { fixes: [], latest: null, along: null, km: null, off: null, pace: null, moving: null, atAid: null, spdFeed: null });
+  rr.splits = {}; rr.placeText = null; rr.lastSplit = null; rr.lastTime = null; rr.ag = null;
+  const d = feed.lastData;
+  if (d) { const track = bib === SAM.bib ? (d.sam || []) : ((d.tracks || {})[RACE.trackerId] || []); track.forEach(p => addSamFix(p[0] * 1000, p[1], p[2], p[3], p[4])); }
+  if (!sam.fixes.length) { const p = field.get(RACE.trackerId); if (p) addSamFix(p.t, p.lat, p.lon, null, null); }
+  const other = bib !== SAM.bib;
+  document.getElementById('subjName').textContent = RACE.name;
+  document.getElementById('subjBib').textContent = '· ' + bib;
+  const av = document.getElementById('avatar'); av.textContent = initials(RACE.name).toUpperCase(); av.classList.toggle('other', other);
+  document.getElementById('btnBack').hidden = !other;
+  document.getElementById('btnFollow').setAttribute('aria-label', 'Follow ' + firstName());
+  if (samMarker) { map.removeLayer(samMarker); samMarker = null; }
+  fieldKm.clear(); wx.data = null;
+  recompute(); startSSE(); pollList(); render(); setFollow(true);
+  loadWeather(); if (!document.getElementById('pane-stats').hidden) renderStats();
+  toast(other ? 'Showing ' + RACE.name : 'Back to Sam');
+}
 // ---------- the field: leader, average, last place, dropouts ----------
 const SPLIT_NAMES = { HGAnnouncer: 'Halls Gap', 'Halls Gap In': 'Halls Gap', 'Halls Gap Out': 'after Halls Gap', 'Rosea Car Park': 'Rosea', 'Borough Huts IN': 'Borough Huts', 'Borough Huts Out': 'after Borough Huts', 'Mt William In': 'Mt William', 'Mt William Out': 'after Mt William', 'Jimmy Creek In': 'Jimmy Creek', 'Jimmy Creek Out': 'after Jimmy Creek', 'Yarrum Gap': 'Yarram Gap', 'Griffin Fireline IN': 'Griffin Fireline', 'Griffin Fireline Out': 'after Griffin', "Cassidy's Gap": 'Cassidys Gap', 'Bainggug CP In': 'Bainggug', 'Bainggug CP Out': 'after Bainggug', 'Mt Difficult': 'Mt Difficult', 'GAR Trailhead IN': 'GAR Trailhead', 'GAR Trailhead OUT': 'after GAR', Start: 'the start', Finish: 'the finish' };
 function splitName(n) { return SPLIT_NAMES[n] || n || 'unknown'; }
@@ -1038,6 +1096,18 @@ function computeField() {
   const samIdx = on.findIndex(o => o.bib === RACE.bib);
   return { active, dnf, dns, fin, on, leader, last, avgKm, samPos: samIdx >= 0 ? samIdx + 1 : null, leaderRow, lastRow };
 }
+function neighbours(F) {
+  const out = { ahead: null, behind: null };
+  if (!F || sam.km == null) return out;
+  const on = F.on.filter(o => o.bib !== RACE.bib);
+  const pace = sam.pace && sam.pace > 0.8 ? sam.pace : (sam.km / Math.max(0.5, elapsedMs() / 3600000));
+  const mk = (o, ahead) => { const gap = Math.abs(o.km - sam.km); const mins = pace > 0.3 ? gap / pace * 60 : null;
+    return { bib: o.bib, name: o.name, gap, gapTxt: '#' + o.bib + ' · ' + splitName(o.split) + ' · fix ' + fmtAgo(o.t), timeTxt: mins == null ? '' : (mins < 1 ? 'under a minute' : '≈ ' + fmtDur(mins * 60000)) + (ahead ? ' ahead' : ' back') }; };
+  const ahead = on.filter(o => o.km >= sam.km).sort((a, b) => a.km - b.km)[0];
+  const behind = on.filter(o => o.km < sam.km).sort((a, b) => b.km - a.km)[0];
+  if (ahead) out.ahead = mk(ahead, true); if (behind) out.behind = mk(behind, false);
+  return out;
+}
 let fieldMarkers = null;
 function pillIcon(text, cls) { return L.divIcon({ className: '', html: '<div class="fpill ' + cls + '">' + text + '</div>', iconSize: null, iconAnchor: [0, 0] }); }
 function renderFieldMarkers(F) {
@@ -1045,25 +1115,29 @@ function renderFieldMarkers(F) {
   if (!fieldMarkers) fieldMarkers = L.layerGroup().addTo(map);
   fieldMarkers.clearLayers();
   if (!F || settings.map === 'official') return;
-  const add = (along, text, cls, tip) => { const ll = latLngAtPolyM(along); L.marker(ll, { icon: pillIcon(text, cls), zIndexOffset: 800, keyboard: false }).bindTooltip(tip, { direction: 'top', offset: [0, -12] }).addTo(fieldMarkers); };
-  if (F.leader && F.leader.bib !== RACE.bib) add(F.leader.along, '1st', 'gold', F.leader.name + ' · ' + F.leader.km.toFixed(1) + ' km');
-  if (F.last && F.last.bib !== RACE.bib && F.on.length > 1) add(F.last.along, 'Last', 'grey', F.last.name + ' · ' + F.last.km.toFixed(1) + ' km');
+  const add = (along, text, cls, tip, bib) => { const ll = latLngAtPolyM(along); const m = L.marker(ll, { icon: pillIcon(text, cls), zIndexOffset: 800, keyboard: false }).bindTooltip(tip, { direction: 'top', offset: [0, -12] }).addTo(fieldMarkers); if (bib) m.on('click', () => setSubject(bib)); };
+  if (F.leader && F.leader.bib !== RACE.bib) add(F.leader.along, '1st', 'gold', F.leader.name + ' · ' + F.leader.km.toFixed(1) + ' km', F.leader.bib);
+  if (F.last && F.last.bib !== RACE.bib && F.on.length > 1) add(F.last.along, 'Last', 'grey', F.last.name + ' · ' + F.last.km.toFixed(1) + ' km', F.last.bib);
   if (F.avgKm != null) add(polyMForKm(F.avgKm), 'Avg', 'avg', 'Field average · ' + F.avgKm.toFixed(1) + ' km');
 }
+function tap(bib, html) { return bib == null ? html : html.replace('<div class="row', '<div data-bib="' + bib + '" role="button" tabindex="0" class="row'); }
 function renderRacePane() {
   const F = computeField(); renderFieldMarkers(F);
   const g = document.getElementById('fieldgroup'), d = document.getElementById('dnfgroup');
   if (!F) { g.innerHTML = '<div class="row pad"><p class="muted">Loading the field…</p></div>'; d.innerHTML = ''; return; }
   let h = '';
   const samKm = sam.km;
-  const vs = km => samKm == null ? '' : (km > samKm ? (km - samKm).toFixed(1) + ' km ahead of Sam' : km < samKm ? (samKm - km).toFixed(1) + ' km behind Sam' : 'level with Sam');
-  if (F.leader) h += rowHTML('flag', '#FFB800', 'Leader · ' + F.leader.name, '#' + F.leader.bib + ' · ' + splitName(F.leader.split) + (F.leader.time ? ' in ' + F.leader.time : '') + (F.leader.bib !== RACE.bib ? ' · ' + vs(F.leader.km) : ''), F.leader.km.toFixed(1) + ' km', fmtAgo(F.leader.t));
-  else if (F.leaderRow) h += rowHTML('flag', '#FFB800', 'Leader · ' + titleName(F.leaderRow[3]), '#' + F.leaderRow[0] + ' · ' + splitName(F.leaderRow[6]), F.leaderRow[7] || '', '');
-  if (F.avgKm != null) h += rowHTML('people', 'var(--blue)', 'Field average', F.on.length + ' runners with a live fix' + (samKm != null ? ' · Sam is ' + (samKm >= F.avgKm ? (samKm - F.avgKm).toFixed(1) + ' km ahead' : (F.avgKm - samKm).toFixed(1) + ' km behind') : ''), F.avgKm.toFixed(1) + ' km', '');
-  if (F.samPos) h += rowHTML('pin', 'var(--indigo)', 'Sam on the trail', 'By GPS distance, ' + (rr.placeText ? 'officially ' + ordinal(parseInt(rr.placeText, 10)) + ' at the last mat' : 'among runners with a fix'), ordinal(F.samPos) + ' of ' + F.on.length, '');
+  const vs = km => samKm == null ? '' : (km > samKm ? (km - samKm).toFixed(1) + ' km ahead of ' + firstName() : km < samKm ? (samKm - km).toFixed(1) + ' km behind ' + firstName() : 'level with Sam');
+  if (F.leader) h += tap(F.leader.bib === RACE.bib ? null : F.leader.bib, rowHTML('flag', '#FFB800', 'Leader · ' + F.leader.name, '#' + F.leader.bib + ' · ' + splitName(F.leader.split) + (F.leader.time ? ' in ' + F.leader.time : '') + (F.leader.bib !== RACE.bib ? ' · ' + vs(F.leader.km) : ''), F.leader.km.toFixed(1) + ' km', fmtAgo(F.leader.t)));
+  else if (F.leaderRow) h += tap(F.leaderRow[0], rowHTML('flag', '#FFB800', 'Leader · ' + titleName(F.leaderRow[3]), '#' + F.leaderRow[0] + ' · ' + splitName(F.leaderRow[6]), F.leaderRow[7] || '', ''));
+  if (F.avgKm != null) h += rowHTML('people', 'var(--blue)', 'Field average', F.on.length + ' runners with a live fix' + (samKm != null ? ' · ' + firstName() + ' is ' + (samKm >= F.avgKm ? (samKm - F.avgKm).toFixed(1) + ' km ahead' : (F.avgKm - samKm).toFixed(1) + ' km behind') : ''), F.avgKm.toFixed(1) + ' km', '');
+  const nb = neighbours(F);
+  if (nb.ahead) h += tap(nb.ahead.bib, rowHTML('people', 'var(--teal)', 'Next ahead · ' + nb.ahead.name, nb.ahead.gapTxt, '+' + nb.ahead.gap.toFixed(2) + ' km', nb.ahead.timeTxt));
+  if (nb.behind) h += tap(nb.behind.bib, rowHTML('people', 'var(--teal)', 'Next behind · ' + nb.behind.name, nb.behind.gapTxt, '−' + nb.behind.gap.toFixed(2) + ' km', nb.behind.timeTxt));
+  if (F.samPos) h += rowHTML('pin', 'var(--indigo)', firstName() + ' on the trail', 'By GPS distance, ' + (rr.placeText ? 'officially ' + ordinal(parseInt(rr.placeText, 10)) + ' at the last mat' : 'among runners with a fix'), ordinal(F.samPos) + ' of ' + F.on.length, '');
   if (F.last) {
     const nx = AIDS.find(a => a.km > F.last.km + 0.05) || AIDS[AIDS.length - 1]; const left = nx.cutMs - Date.now();
-    h += rowHTML('clock', 'var(--gray)', 'Last place · ' + F.last.name, '#' + F.last.bib + ' · ' + (left > 0 ? nx.short + ' closes in ' + fmtDur(left) : 'past the ' + nx.short + ' cut-off') + (F.last.bib !== RACE.bib ? ' · ' + vs(F.last.km) : ''), F.last.km.toFixed(1) + ' km', fmtAgo(F.last.t));
+    h += tap(F.last.bib === RACE.bib ? null : F.last.bib, rowHTML('clock', 'var(--gray)', 'Last place · ' + F.last.name, '#' + F.last.bib + ' · ' + (left > 0 ? nx.short + ' closes in ' + fmtDur(left) : 'past the ' + nx.short + ' cut-off') + (F.last.bib !== RACE.bib ? ' · ' + vs(F.last.km) : ''), F.last.km.toFixed(1) + ' km', fmtAgo(F.last.t)));
   }
   h += rowHTML('people', 'var(--green)', 'Still racing', F.dns.length + ' did not start' + (F.fin.length ? ' · ' + F.fin.length + ' finished' : ''), String(F.active.length - F.fin.length), 'of ' + (F.active.length + F.dnf.length));
   g.innerHTML = h;
@@ -1075,7 +1149,7 @@ function renderRacePane() {
   h = '';
   order.forEach(([where, list]) => {
     h += '<details class="ar"><summary class="row"><span class="num-circle missed">' + list.length + '</span><div class="mid"><div class="k">' + where + '</div><div class="d">' + list.map(r => titleName(r[3]).split(' ')[0]).join(', ') + '</div></div><svg class="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2"><path d="m1 1 6 6-6 6"/></svg></summary><div class="arbody">';
-    list.sort((a, b) => (a[7] || '').localeCompare(b[7] || '', undefined, { numeric: true })).forEach(r => { h += '<div><b>' + titleName(r[3]) + '</b> · #' + r[0] + (r[7] ? ' · stopped at ' + r[7] + ' race time' : '') + (r[11] ? ' · ' + r[11] : '') + '</div>'; });
+    list.sort((a, b) => (a[7] || '').localeCompare(b[7] || '', undefined, { numeric: true })).forEach(r => { h += '<div><button class="namebtn" data-bib="' + r[0] + '">' + titleName(r[3]) + '</button> · #' + r[0] + (r[7] ? ' · stopped at ' + r[7] + ' race time' : '') + (r[11] ? ' · ' + r[11] : '') + '</div>'; });
     h += '</div></details>';
   });
   d.innerHTML = h;
@@ -1141,7 +1215,7 @@ function renderStats() {
     const climb = (gainAt(a.polyM) - gainAt(prev.polyM)), desc = (lossAt(a.polyM) - lossAt(prev.polyM));
     h += '<div class="row"><span class="num-circle done">' + a.n + '</span><div class="mid"><div class="k">' + prev.short + ' → ' + a.short + '</div><div class="d num">' + km.toFixed(1) + ' km · +' + Math.round(climb) + ' / −' + Math.round(desc) + ' m</div></div><div class="r"><div class="k num" style="font-size:15px">' + fmtDur(endMs - startMs) + '</div><div class="d num">' + paceStr(km / legH) + (sIn.RO > 0 ? ' · ' + ordinal(sIn.RO) : '') + '</div></div></div>';
   }
-  if (!legs) h = '<div class="row pad"><p class="muted">Leg times appear as Sam crosses each timing mat.</p></div>';
+  if (!legs) h = '<div class="row pad"><p class="muted">Leg times appear as ' + firstName() + ' crosses each timing mat.</p></div>';
   document.getElementById('legsgroup').innerHTML = h;
   renderWeather();
 }
@@ -1158,7 +1232,7 @@ async function loadWeather() {
     const res = await fetch(u, { cache: 'no-store' }); if (!res.ok) throw new Error(res.status);
     wx.data = await res.json(); wx.at = Date.now(); wx.lat = lat; wx.lon = lon; wx.err = null;
   } catch (e) { wx.err = e; }
-  renderWeather();
+  renderWeather(); renderNow();
 }
 function renderWeather() {
   const g = document.getElementById('wxgroup'); if (!g) return; let h = '';
@@ -1181,7 +1255,7 @@ function renderWeather() {
       for (let i = 0; i < d.daily.time.length; i++) { const s1 = Date.parse(d.daily.sunset[i] + ':00+11:00'), r1 = Date.parse(d.daily.sunrise[i] + ':00+11:00'); if (ss == null && s1 > now) ss = s1; if (sr == null && r1 > now) sr = r1; }
       if (ss != null && sr != null) h += rowHTML('pin', 'var(--orange)', ss < sr ? 'Sunset' : 'Sunrise', ss < sr ? 'in ' + fmtDur(ss - now) + ' · dark until ' + fmtTime(sr) : 'in ' + fmtDur(sr - now) + ' · sunset ' + fmtTime(ss), fmtTime(ss < sr ? ss : sr), '');
     }
-    h += '<div class="row pad"><p class="muted" style="font-size:12px">Open-Meteo forecast for Sam\u2019s position, updated ' + fmtTime(wx.at) + '.</p></div>';
+    h += '<div class="row pad"><p class="muted" style="font-size:12px">Open-Meteo forecast for ' + firstName() + '\u2019s position, updated ' + fmtTime(wx.at) + '.</p></div>';
   } else h += '<div class="row pad"><p class="muted">' + (wx.err ? 'Weather unavailable right now.' : 'Loading forecast…') + '</p></div>';
   g.innerHTML = h;
 }
@@ -1236,7 +1310,10 @@ function boot() {
   setupSheet();
   openSheet(matchMedia('(min-width: 900px)').matches ? 'full' : 'half');
   document.querySelectorAll('#seg [role=tab]').forEach(b => b.addEventListener('click', () => { showPane(b.dataset.pane); if (detent === 'collapsed') openSheet('half'); }));
-  document.getElementById('btnFollow').addEventListener('click', () => { if (settings.map === 'official') { applyBase(); toast('Centred on Sam'); return; } setFollow(!followSam); if (followSam) toast('Following Sam'); });
+  document.getElementById('sheet').addEventListener('click', e => { const el = e.target.closest('[data-bib]'); if (el) { e.preventDefault(); setSubject(el.dataset.bib); } });
+  document.getElementById('sheet').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-bib]')) { e.preventDefault(); setSubject(e.target.dataset.bib); } });
+  document.getElementById('btnBack').addEventListener('click', () => setSubject(SAM.bib));
+  document.getElementById('btnFollow').addEventListener('click', () => { if (settings.map === 'official') { applyBase(); toast('Centred on ' + firstName()); return; } setFollow(!followSam); if (followSam) toast('Following ' + firstName()); });
   let segMapSet = null;
   document.getElementById('offbtn').addEventListener('click', () => { settings.map = 'official'; saveSettings(); if (segMapSet) segMapSet('official'); applyBase(); render(); });
   document.getElementById('btnLayers').addEventListener('click', () => { document.getElementById('modal').classList.add('open'); });
@@ -1256,7 +1333,8 @@ function boot() {
   renderAids(); renderSplits(); renderNextGroup(nextAid(), null); renderNow(); renderProfile(document.getElementById('miniprofile'), false);
   render();
   setInterval(render, 15000);     // keeps "ago" text, countdowns and the race clock fresh
-  setInterval(() => { if (!document.getElementById('pane-stats').hidden) loadWeather(); }, 5 * 60000);
+  setInterval(loadWeather, 10 * 60000);
+  setTimeout(loadWeather, 4000);
   setInterval(pollList, LIST_MS);
   if (settings.wake) setWake(true);
   bootstrapFeed(); startSSE(); pollList();
