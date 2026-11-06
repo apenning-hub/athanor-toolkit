@@ -83,6 +83,15 @@ a{color:var(--blue);text-decoration:none}
 .row[data-bib]:active{background:var(--fill2)}
 .row[data-bib] .mid .k:after{content:" ›";color:var(--label3);font-weight:600}
 .namebtn{color:var(--blue);font-weight:600}
+.num-circle.gold{background:#FFB800;color:#1C1C1E}
+.num-circle.silver{background:#A8A9AD;color:#fff}
+.num-circle.bronze{background:#C77B30;color:#fff}
+.fstats{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;padding-top:4px}
+.fstats .l{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--label2)}
+.fstats .v{font-size:16px;font-weight:600;color:var(--label);font-variant-numeric:tabular-nums}
+.fstats .s{font-size:12px;color:var(--label2)}
+.cr{color:var(--green);font-weight:600}
+.followbtn{margin-top:8px;align-self:flex-start}
 .iconbtn{width:40px;height:40px;border-radius:20px;display:grid;place-items:center;color:var(--blue);flex:none;transition:transform .15s}
 .iconbtn:active{transform:scale(.92)}
 .iconbtn svg{width:20px;height:20px}
@@ -312,6 +321,7 @@ pre.code{margin:0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;bac
           </div>
         </div>
         <div class="pane" id="pane-field" hidden>
+          <div id="finwrap" hidden><div class="gh" id="finhead">Finishers</div><div class="group" id="fingroup"></div></div>
           <div><div class="gh">On course</div><div class="group" id="fieldgroup"></div></div>
           <div><div class="gh" id="dnfhead">Dropped out</div><div class="group" id="dnfgroup"></div></div>
         </div>
@@ -1040,6 +1050,70 @@ function renderAids() {
     if (passed) { r.textContent = 'passed'; r.style.color = 'var(--label2)'; } else if (missed) { r.textContent = 'closed'; r.style.color = 'var(--red)'; } else { const left = a.cutMs - Date.now(); r.textContent = fmtDur(left) + ' left'; r.style.color = left < 2 * 3600000 ? 'var(--orange)' : ''; }
   });
 }
+// ---------- finishers leaderboard ----------
+const CR = { M: { ms: hmsMs('21:19:39'), who: 'Caleb Olson' }, F: { ms: hmsMs('27:58:45'), who: 'Man Yee Cheung' } };   // record splits in the 2026 event guide
+function hmsMs(t) { const p = String(t || '').split(':').map(Number); if (p.some(isNaN)) return null; while (p.length < 3) p.unshift(0); return ((p[0] * 60 + p[1]) * 60 + p[2]) * 1000; }
+function fmtHms(ms) { const s = Math.round(ms / 1000); return Math.floor(s / 3600) + ':' + String(Math.floor(s % 3600 / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+const finCache = new Map(), finOpen = new Set(); let finLoading = false;
+async function rrDetailsOnce(bib) {
+  const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 15000);
+  try {
+    const res = await fetch(RR_BASE + '/details/view?lang=en&mid=0&standalone=0&embedded=1&bib=' + bib + '&contest=' + RACE.rrContest, { headers: { Accept: 'text/event-stream' }, signal: ctl.signal, cache: 'no-store' });
+    const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = '';
+    while (true) { const { value, done } = await reader.read(); if (done) break; buf += dec.decode(value, { stream: true }); if (buf.indexOf('data:') >= 0 && buf.indexOf('\n\n', buf.indexOf('data:')) > 0) break; if (buf.length > 2e6) break; }
+    ctl.abort(); const m = /^data: (.*)$/m.exec(buf); if (!m) return null;
+    const D = JSON.parse(m[1]).Data.Data; const by = {}; (D.SplitsAndLegs.Splits || []).forEach(x => { by[x.Name] = x; }); return by;
+  } catch (e) { return null; } finally { clearTimeout(tm); }
+}
+async function loadFinDetails(bibs) {
+  if (finLoading) return; finLoading = true;
+  for (const b of bibs) { const c = finCache.get(b); if (c && Date.now() - c.t < 30 * 60000) continue; const sp = await rrDetailsOnce(b); if (sp) { finCache.set(b, { t: Date.now(), splits: sp }); renderFinishers(); } }
+  finLoading = false;
+}
+function finStats(r) {
+  const ms = hmsMs(r[7]); if (!ms) return null; const h = ms / 3600000;
+  const sex = /F/.test(r[9] || '') ? 'F' : 'M'; const gp = parseInt(r[9], 10);
+  const o = { ms, sex, gp, pace: paceStr(RACE.totalKm / h), speed: (RACE.totalKm / h).toFixed(2), vam: Math.round(OFFICIAL_CLIMB / h), clock: RACE.start + ms, cr: CR[sex] ? ms - CR[sex].ms : null };
+  const c = finCache.get(r[0]); if (c) {
+    const sp = c.splits, at = n => sp[n] && sp[n].Exists ? todToMs(sp[n].TOD) : null;
+    const mw = at('Mt William In'); if (mw) { o.first = mw - RACE.start; o.second = ms - o.first; }
+    let aid = 0, n = 0; AIDS.forEach(a => { if (!a.rrOut) return; const i = at(a.rrIn), out = at(a.rrOut); if (i && out && out > i) { aid += out - i; n++; } }); if (n) { o.aid = aid; o.aidN = n; }
+    let best = null; for (let i = 1; i < AIDS.length; i++) { const a = AIDS[i - 1], b = AIDS[i]; const st = at(a.rrOut) || at(a.rrIn) || (i === 1 ? RACE.start : null), en = at(b.rrIn); if (st && en && en > st) { const kmh = (b.km - a.km) / ((en - st) / 3600000); if (!best || kmh > best.kmh) best = { kmh, leg: a.short + ' → ' + b.short }; } } o.best = best;
+  }
+  return o;
+}
+function renderFinishers() {
+  const wrap = document.getElementById('finwrap'); if (!wrap) return;
+  const fin = (rr.rows || []).filter(r => r[6] === 'Finish').sort((a, b) => parseInt(a[2], 10) - parseInt(b[2], 10));
+  wrap.hidden = !fin.length; if (!fin.length) return;
+  const onCourse = (rr.rows || []).filter(r => /^\d/.test(r[2] || '') && r[6] !== 'Finish').length;
+  document.getElementById('finhead').textContent = 'Finishers · ' + fin.length + (onCourse ? ' · ' + onCourse + ' still out' : '');
+  const top = fin.slice(0, 10), win = finStats(fin[0]);
+  let h = '';
+  // headline: first man and first woman against the record
+  const firsts = ['M', 'F'].map(sx => fin.find(r => /^1\./.test(r[9] || '') && (sx === 'F') === /F/.test(r[9] || ''))).filter(Boolean);
+  firsts.forEach(r => { const st = finStats(r); const crTxt = st.cr != null ? (st.cr < 0 ? '<span class="cr">' + fmtHms(-st.cr) + ' under the course record</span>' : fmtHms(st.cr) + ' outside the course record') : ''; h += tap(r[0], rowHTML('flag', st.sex === 'F' ? 'var(--indigo)' : '#FFB800', (st.sex === 'F' ? 'First woman · ' : 'Winner · ') + titleName(r[3]), crTxt + ' · finished ' + fmtDayTime(st.clock), r[7], st.pace)); });
+  top.forEach((r, i) => {
+    const st = finStats(r); if (!st) return; const place = parseInt(r[2], 10); const cls = place === 1 ? 'gold' : place === 2 ? 'silver' : place === 3 ? 'bronze' : 'done';
+    const cc = ((r[4] || '').match(/flags\/([A-Z]{2})/) || [])[1] || '';
+    h += '<details class="ar" data-fin="' + r[0] + '"' + (finOpen.has(r[0]) ? ' open' : '') + '><summary class="row"><span class="num-circle ' + cls + '">' + place + '</span><div class="mid"><div class="k">' + titleName(r[3]) + '</div><div class="d">' + (cc ? cc + ' · ' : '') + (st.gp ? ordinal(st.gp) + (st.sex === 'F' ? ' woman' : ' man') : '') + (r[11] ? ' · ' + r[11] : '') + '</div></div><div class="r"><div class="k num" style="font-size:15px">' + r[7] + '</div><div class="d num">' + (i ? (r[8] || '') : 'winner') + '</div></div><svg class="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2"><path d="m1 1 6 6-6 6"/></svg></summary>';
+    h += '<div class="arbody"><div class="fstats">';
+    const cell = (l, v, sub) => '<div><div class="l">' + l + '</div><div class="v">' + v + '</div>' + (sub ? '<div class="s">' + sub + '</div>' : '') + '</div>';
+    h += cell('Pace', st.pace, st.speed + ' km/h average');
+    h += cell('Climbing', st.vam + ' m/h', '7,700 m in ' + fmtHms(st.ms).replace(/:\d\d$/, ''));
+    h += cell('Finished', fmtDayTime(st.clock), tzAbbr());
+    h += cell('Record', st.cr == null ? '—' : (st.cr < 0 ? '−' : '+') + fmtHms(Math.abs(st.cr)), st.cr < 0 ? 'under the course record' : 'vs the course record');
+    if (st.first) h += cell('Halves', fmtHms(st.first).replace(/:\d\d$/, '') + ' / ' + fmtHms(st.second).replace(/:\d\d$/, ''), 'to Mt William (86.6 km) / to the finish');
+    if (st.aid != null) h += cell('Aid stations', fmtDur(st.aid), 'stopped at ' + st.aidN + ' timed stations');
+    if (st.best) h += cell('Fastest leg', st.best.kmh.toFixed(1) + ' km/h', st.best.leg);
+    if (win && i) h += cell('Behind winner', '+' + fmtHms(st.ms - win.ms), Math.round((st.ms / win.ms - 1) * 100) + '% slower');
+    h += '</div><button class="btn followbtn" data-bib="' + r[0] + '">Open ' + titleName(r[3]).split(' ')[0] + '\u2019s race</button></div></details>';
+  });
+  if (fin.length > 10) h += '<div class="row pad"><p class="muted" style="font-size:13px">' + fin.slice(10).map(r => parseInt(r[2], 10) + '. ' + titleName(r[3]) + ' ' + r[7]).join(' · ') + '</p></div>';
+  const g = document.getElementById('fingroup'); g.innerHTML = h;
+  g.querySelectorAll('details[data-fin]').forEach(d => d.addEventListener('toggle', () => { if (d.open) finOpen.add(d.dataset.fin); else finOpen.delete(d.dataset.fin); }));
+  loadFinDetails(top.map(r => r[0]));
+}
 // ---------- switching the runner on screen ----------
 function bibName(bib) {
   const row = (rr.rows || []).find(r => String(r[0]) === String(bib)); if (row) return titleName(row[3]);
@@ -1122,7 +1196,7 @@ function renderFieldMarkers(F) {
 }
 function tap(bib, html) { return bib == null ? html : html.replace('<div class="row', '<div data-bib="' + bib + '" role="button" tabindex="0" class="row'); }
 function renderRacePane() {
-  const F = computeField(); renderFieldMarkers(F);
+  const F = computeField(); renderFieldMarkers(F); renderFinishers();
   const g = document.getElementById('fieldgroup'), d = document.getElementById('dnfgroup');
   if (!F) { g.innerHTML = '<div class="row pad"><p class="muted">Loading the field…</p></div>'; d.innerHTML = ''; return; }
   let h = '';
